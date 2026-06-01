@@ -55,10 +55,12 @@ if (myEvents === 'true' && req.user) {
 where.creatorId = req.user.id;
 } else if (
 !req.user ||
-req.user.role === 'VIEWER' ||
-req.user.role === 'CLUB_MEMBER'
+req.user.role === 'VIEWER'
 ) {
 where.visibility = 'PUBLIC';
+} else if (req.user.role === 'CLUB_MEMBER') {
+// Club members see all events (public + private) — no filter
+if (visibility) where.visibility = visibility;
 } else if (req.user.role === 'PHOTOGRAPHER') {
 // Photographers can see ALL events (public + private) so they can request access.
 // Access control is enforced per-event when they click into it.
@@ -129,8 +131,7 @@ return res.status(404).json({ success: false, message: 'Event not found' });
 if (event.visibility === 'PRIVATE') {
 if (
 !req.user ||
-req.user.role === 'VIEWER' ||
-req.user.role === 'CLUB_MEMBER'
+req.user.role === 'VIEWER'
 ) {
 return res
 .status(403)
