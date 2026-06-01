@@ -8,6 +8,7 @@ import { Calendar, Image, Users, TrendingUp, ArrowRight, Camera } from 'lucide-r
 import { motion } from 'framer-motion';
 import MediaCard from '@/components/media/MediaCard';
 import EventCard from '@/components/events/EventCard';
+import ClubSetupModal from '@/components/admin/ClubSetupModal';
 
 export default function HomePage() {
   const { user } = useAuthStore();
@@ -15,22 +16,33 @@ export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState({ media: 0, events: 0, albums: 0, users: 0 });
   const [loading, setLoading] = useState(true);
+  const [clubName, setClubName] = useState<string | null>(null);
+  const [showClubSetup, setShowClubSetup] = useState(false);
 
   const canUpload = user && user.role !== 'VIEWER' && user.role !== 'CLUB_MEMBER';
+  const isAdmin = user?.role === 'ADMIN';
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [mediaRes, eventsRes, analyticsRes] = await Promise.all([
+        const [mediaRes, eventsRes, analyticsRes, settingsRes] = await Promise.all([
           api.get('/media?limit=8&sortBy=createdAt&sortOrder=desc'),
           api.get('/events?limit=6'),
           api.get('/media/analytics').catch(() => ({ data: { data: { totals: { media: 0, events: 0, albums: 0, users: 0 } } } })),
+          api.get('/settings/club').catch(() => ({ data: { data: { clubName: null, isConfigured: false } } })),
         ]);
         setRecentMedia(mediaRes.data.data || []);
         setEvents(eventsRes.data.data || []);
         if (analyticsRes.data?.data?.totals) {
           setStats(analyticsRes.data.data.totals);
+        }
+        const fetchedClubName: string | null = settingsRes.data?.data?.clubName || null;
+        setClubName(fetchedClubName);
+
+        // Show setup modal if admin and club name not yet configured
+        if (isAdmin && !fetchedClubName) {
+          setShowClubSetup(true);
         }
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -40,10 +52,23 @@ export default function HomePage() {
     };
 
     fetchData();
-  }, [user?.id]);
+  }, [user?.id, isAdmin]);
+
+  const handleClubSetupComplete = (name: string) => {
+    setClubName(name);
+    setShowClubSetup(false);
+  };
 
   return (
     <div className="space-y-10">
+      {/* Admin Club Setup Modal */}
+      {showClubSetup && (
+        <ClubSetupModal
+          onComplete={handleClubSetupComplete}
+          onDismiss={() => setShowClubSetup(false)}
+        />
+      )}
+
       {/* Hero Section */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -51,6 +76,18 @@ export default function HomePage() {
         className="hero-surface relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-900/50 via-slate-900 to-blue-900/50 border border-slate-800 p-8 md:p-12"
       >
         <div className="relative z-10">
+          {/* Club name banner */}
+          {clubName && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300 text-sm font-medium"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              {clubName}
+            </motion.div>
+          )}
+
           <h1 className="hero-title text-3xl md:text-5xl font-bold mb-4">
             {user ? `Welcome back, ${user.fullName.split(' ')[0]}!` : 'Event & Media Platform'}
           </h1>
@@ -69,6 +106,15 @@ export default function HomePage() {
                 <Link href="/my-photos" className="btn-secondary">
                   Find My Photos
                 </Link>
+                {/* Admin: re-open club setup */}
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowClubSetup(true)}
+                    className="btn-secondary text-xs opacity-70 hover:opacity-100"
+                  >
+                    {clubName ? '✏ Edit Club Name' : '⚙ Set Club Name'}
+                  </button>
+                )}
               </>
             ) : (
               <>

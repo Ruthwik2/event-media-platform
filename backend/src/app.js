@@ -20,6 +20,7 @@ const eventRoutes = require('./routes/eventRoutes');
 const albumRoutes = require('./routes/albumRoutes');
 const mediaRoutes = require('./routes/mediaRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -81,6 +82,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/albums', albumRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Error handling
 app.use(notFound);

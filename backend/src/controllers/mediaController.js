@@ -564,11 +564,11 @@ const downloadMedia = async (req, res) => {
       .replace(/"/g, "'");
 
     // ── Watermark info ────────────────────────────────────────────────────────
-    // clubName  → event creator's full name (best proxy for the club organiser)
+    // clubName  → club name set by admin in settings (falls back to 'EventMedia')
     // eventName → the event this media belongs to
     // userRole  → role of the person downloading
     const watermarkInfo = {
-      clubName:  media.album?.event?.creator?.fullName || 'EventMedia',
+      clubName:  (await prisma.clubSettings.findUnique({ where: { id: 'singleton' } }))?.clubName || 'EventMedia',
       eventName: media.album?.event?.name || '',
       userRole:  req.user.role,
       username:  req.user.username || req.user.fullName || '',

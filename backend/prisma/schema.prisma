@@ -231,3 +231,10 @@ model AccessRequest {
   @@unique([userId, targetId, type])
   @@map("access_requests")
 }
+model ClubSettings {
+  id        String   @id @default("singleton")
+  clubName  String
+  updatedAt DateTime @updatedAt
+
+  @@map("club_settings")
+}
