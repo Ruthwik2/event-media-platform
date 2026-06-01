@@ -19,7 +19,6 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success('Welcome back!');
-      router.refresh(); // Clear stale router cache so middleware re-checks the cookie
       router.push('/');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Login failed');
