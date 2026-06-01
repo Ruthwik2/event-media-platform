@@ -47,8 +47,11 @@ if (error.response?.status === 403) {
 // Show access-denied UI — do NOT toast or redirect
 setAccessDenied(true);
 setRequestStatus(error.response?.data?.requestStatus ?? null);
-} else {
+} else if (error.response?.status === 404) {
 toast.error('Album not found');
+router.push('/events');
+} else {
+toast.error(error.response?.data?.message || 'Failed to load album');
 router.push('/events');
 }
 return false;
