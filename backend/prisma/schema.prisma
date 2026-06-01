@@ -51,6 +51,7 @@ model User {
   taggedBy          MediaTag[]  @relation("TaggerUser")
   albumCollabs      AlbumCollaborator[]
   downloads         Download[]
+  accessRequests    AccessRequest[] // Added for Photographer requests
 
   @@map("users")
 }
@@ -177,14 +178,14 @@ model Favourite {
 }
 
 model MediaTag {
-  id          String   @id @default(uuid())
-  mediaId     String
+  id           String   @id @default(uuid())
+  mediaId      String
   taggedUserId String
   taggerUserId String
-  media       Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
-  taggedUser  User     @relation("TaggedUser", fields: [taggedUserId], references: [id], onDelete: Cascade)
-  taggerUser  User     @relation("TaggerUser", fields: [taggerUserId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
+  media        Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  taggedUser   User     @relation("TaggedUser", fields: [taggedUserId], references: [id], onDelete: Cascade)
+  taggerUser   User     @relation("TaggerUser", fields: [taggerUserId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
 
   @@unique([mediaId, taggedUserId])
   @@map("media_tags")
@@ -215,4 +216,18 @@ model Download {
   createdAt DateTime @default(now())
 
   @@map("downloads")
+}
+
+model AccessRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  targetId  String   
+  type      String   // 'EVENT' or 'ALBUM'
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, targetId, type])
+  @@map("access_requests")
 }

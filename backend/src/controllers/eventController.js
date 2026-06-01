@@ -5,7 +5,6 @@ const createEvent = async (req, res) => {
   try {
     const { name, description, category, startDate, endDate, location, visibility } = req.body;
 
-    // BUG FIX #4: server-side guard — reject if endDate is before startDate.
     if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
       return res.status(400).json({ success: false, message: 'End date cannot be before the start date' });
     }
@@ -48,17 +47,13 @@ const getEvents = async (req, res) => {
     } = req.query;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
-
     const where = {};
 
-    // Access control
     if (myEvents === 'true' && req.user) {
       where.creatorId = req.user.id;
     } else if (!req.user || req.user.role === 'VIEWER' || req.user.role === 'CLUB_MEMBER') {
-      // Unauthenticated users, VIEWERs, and CLUB_MEMBERs can only see public events
       where.visibility = 'PUBLIC';
     } else if (req.user.role === 'PHOTOGRAPHER') {
-      // PHOTOGRAPHERs can see public events + their own private events
       if (visibility === 'PRIVATE') {
         where.visibility = 'PRIVATE';
         where.creatorId = req.user.id;
@@ -71,7 +66,6 @@ const getEvents = async (req, res) => {
         ];
       }
     } else if (req.user.role === 'ADMIN') {
-      // ADMINs can see everything; optionally filter by visibility param
       if (visibility) where.visibility = visibility;
     }
 
@@ -139,15 +133,18 @@ const getEvent = async (req, res) => {
     }
 
     if (event.visibility === 'PRIVATE') {
-      // Unauthenticated users, VIEWERs, and CLUB_MEMBERs cannot view private events
       if (!req.user || req.user.role === 'VIEWER' || req.user.role === 'CLUB_MEMBER') {
         return res.status(403).json({ success: false, message: 'Access denied' });
       }
-      // PHOTOGRAPHERs can only view private events they created
       if (req.user.role === 'PHOTOGRAPHER' && event.creatorId !== req.user.id) {
-        return res.status(403).json({ success: false, message: 'Access denied' });
+        const approvedAccess = await prisma.accessRequest.findFirst({
+          where: { userId: req.user.id, targetId: event.id, type: 'EVENT', status: 'APPROVED' }
+        });
+        
+        if (!approvedAccess) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
       }
-      // ADMINs can view all private events (no restriction needed)
     }
 
     res.json({ success: true, data: event });
@@ -172,7 +169,6 @@ const updateEvent = async (req, res) => {
     if (req.body.startDate) updateData.startDate = new Date(req.body.startDate);
     if (req.body.endDate) updateData.endDate = new Date(req.body.endDate);
 
-    // BUG FIX #4: also guard updates — resolve final dates before comparing.
     const resolvedStart = updateData.startDate || event.startDate;
     const resolvedEnd = updateData.endDate || event.endDate;
     if (resolvedStart && resolvedEnd && resolvedEnd < resolvedStart) {
@@ -233,4 +229,25 @@ const getCategories = async (req, res) => {
   }
 };
 
-module.exports = { createEvent, getEvents, getEvent, updateEvent, deleteEvent, getCategories };
+const requestAccess = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await prisma.accessRequest.findUnique({
+      where: { userId_targetId_type: { userId: req.user.id, targetId: id, type: 'EVENT' } }
+    });
+
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Access already requested' });
+    }
+
+    await prisma.accessRequest.create({
+      data: { userId: req.user.id, targetId: id, type: 'EVENT' }
+    });
+
+    res.json({ success: true, message: 'Request sent successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { createEvent, getEvents, getEvent, updateEvent, deleteEvent, getCategories, requestAccess };

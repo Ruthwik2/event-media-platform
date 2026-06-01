@@ -20,6 +20,7 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
   const [deletingAlbumId, setDeletingAlbumId] = useState<string | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     fetchEvent();
@@ -30,9 +31,15 @@ export default function EventDetailPage() {
       const res = await api.get(`/events/${id}`);
       setEvent(res.data.data);
       setAlbums(res.data.data.albums || []);
-    } catch (error) {
-      toast.error('Event not found');
-      router.push('/events');
+    } catch (error: any) {
+      // IF it is an access denied error, stop the redirect!
+      if (error.response?.status === 403) {
+        setAccessDenied(true); 
+      } else {
+        // Only toast and redirect if it's genuinely missing
+        toast.error('Event not found');
+        router.push('/events');
+      }
     } finally {
       setLoading(false);
     }
@@ -72,14 +79,49 @@ export default function EventDetailPage() {
     );
   }
 
+  if (accessDenied) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center card mt-10">
+        <Lock className="w-16 h-16 text-slate-500 mb-4" />
+        <h1 className="text-3xl font-bold mb-2">Access Restricted</h1>
+        <p className="text-slate-400 max-w-md mb-6">
+          This event is private. You do not have permission to view its contents.
+        </p>
+        {user?.role === 'PHOTOGRAPHER' && (
+          <button
+            onClick={async () => {
+              try {
+                await api.post(`/events/${id}/request-access`);
+                toast.success('Access request sent to Admin!');
+              } catch (err: any) {
+                toast.error(err.response?.data?.message || 'Already requested');
+              }
+            }}
+            className="btn-primary"
+          >
+            Request Access from Admin
+          </button>
+        )}
+        <button onClick={() => router.push('/events')} className="btn-secondary mt-4">
+          Back to Events
+        </button>
+      </div>
+    );
+  }
+
   if (!event) return null;
 
   const isOwner = user?.id === (event.creator as any)?.id || user?.role === 'ADMIN';
   const canCreateAlbum = user && ['ADMIN', 'PHOTOGRAPHER'].includes(user.role);
 
-  // Only ADMIN and event owner can delete albums
   const canDeleteAlbum = (album: Album) =>
     user?.role === 'ADMIN' || user?.id === (event.creator as any)?.id;
+
+  const visibleAlbums = albums.filter((album) => {
+    if (album.visibility === 'PUBLIC') return true;
+    if (!user || user?.role === 'VIEWER') return false; 
+    return true; 
+  });
 
   return (
     <div className="space-y-6">
@@ -87,7 +129,6 @@ export default function EventDetailPage() {
         <ArrowLeft className="w-4 h-4" /> Back to Events
       </Link>
 
-      {/* Event Header */}
       <div className="card overflow-hidden">
         {event.coverImage && (
           <div className="h-48 md:h-64 relative">
@@ -136,9 +177,8 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      {/* Albums */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Albums ({albums.length})</h2>
+        <h2 className="text-xl font-bold">Albums ({visibleAlbums.length})</h2>
         {canCreateAlbum && (
           <button onClick={() => setShowCreateAlbum(true)} className="btn-primary text-sm">
             <Plus className="w-4 h-4" /> Create Album
@@ -146,10 +186,10 @@ export default function EventDetailPage() {
         )}
       </div>
 
-      {albums.length > 0 ? (
+      {visibleAlbums.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence>
-            {albums.map((album, i) => (
+            {visibleAlbums.map((album, i) => (
               <motion.div
                 key={album.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -167,7 +207,6 @@ export default function EventDetailPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <h3 className="font-medium truncate">{album.name}</h3>
-                          {/* Visibility badge */}
                           {album.visibility === 'PRIVATE' ? (
                             <span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-red-900/40 text-red-400 border border-red-800/50 flex-shrink-0">
                               <Lock className="w-2.5 h-2.5" /> Private
@@ -189,7 +228,6 @@ export default function EventDetailPage() {
                   </div>
                 </Link>
 
-                {/* Delete button — shown on hover for authorised roles */}
                 {canDeleteAlbum(album) && (
                   <button
                     onClick={(e) => {
