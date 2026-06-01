@@ -40,6 +40,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 }));
+app.options('*', cors());
 
 // Rate limiting
 app.use('/api/', rateLimit({
