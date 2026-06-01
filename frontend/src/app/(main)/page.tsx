@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/axios';
 import { Event, Media } from '@/types';
-import { Calendar, Image, Users, TrendingUp, ArrowRight, Camera } from 'lucide-react';
+import { Calendar, Image, Users, TrendingUp, ArrowRight, Camera, Pencil } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MediaCard from '@/components/media/MediaCard';
 import EventCard from '@/components/events/EventCard';
@@ -34,23 +34,16 @@ export default function HomePage() {
         ]);
         setRecentMedia(mediaRes.data.data || []);
         setEvents(eventsRes.data.data || []);
-        if (analyticsRes.data?.data?.totals) {
-          setStats(analyticsRes.data.data.totals);
-        }
+        if (analyticsRes.data?.data?.totals) setStats(analyticsRes.data.data.totals);
         const fetchedClubName: string | null = settingsRes.data?.data?.clubName || null;
         setClubName(fetchedClubName);
-
-        // Show setup modal if admin and club name not yet configured
-        if (isAdmin && !fetchedClubName) {
-          setShowClubSetup(true);
-        }
+        if (isAdmin && !fetchedClubName) setShowClubSetup(true);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [user?.id, isAdmin]);
 
@@ -61,7 +54,6 @@ export default function HomePage() {
 
   return (
     <div className="space-y-10">
-      {/* Admin Club Setup Modal */}
       {showClubSetup && (
         <ClubSetupModal
           onComplete={handleClubSetupComplete}
@@ -76,28 +68,29 @@ export default function HomePage() {
         className="hero-surface relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-900/50 via-slate-900 to-blue-900/50 border border-slate-800 p-8 md:p-12"
       >
         <div className="relative z-10">
-          {/* Club name banner */}
-          {clubName && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
+          {/* Club name — the biggest thing on the page */}
+          {clubName ? (
+            <motion.h1
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300 text-sm font-medium"
+              className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight"
             >
-              <Camera className="w-3.5 h-3.5" />
               {clubName}
-            </motion.div>
+            </motion.h1>
+          ) : (
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight">
+              Event Media
+            </h1>
           )}
 
-          <h1 className="hero-title text-3xl md:text-5xl font-bold mb-4">
-            {user ? `Welcome back, ${user.fullName.split(' ')[0]}!` : 'Event & Media Platform'}
-          </h1>
-          <p className="hero-subtitle text-slate-300 text-lg max-w-xl mb-6">
-            Organize, discover, and share event photos & videos with AI-powered tagging, facial recognition, and real-time collaboration.
+          {/* Smaller welcome line */}
+          <p className="text-slate-400 text-base md:text-lg mb-6">
+            {user ? `Welcome back, ${user.fullName.split(' ')[0]}!` : 'Sign in to get started'}
           </p>
+
           <div className="flex flex-wrap gap-3">
             {user ? (
               <>
-                {/* Upload Media — hidden for viewers */}
                 {canUpload && (
                   <Link href="/upload" className="btn-primary">
                     <Camera className="w-4 h-4" /> Upload Media
@@ -106,24 +99,20 @@ export default function HomePage() {
                 <Link href="/my-photos" className="btn-secondary">
                   Find My Photos
                 </Link>
-                {/* Admin: re-open club setup */}
                 {isAdmin && (
                   <button
                     onClick={() => setShowClubSetup(true)}
-                    className="btn-secondary text-xs opacity-70 hover:opacity-100"
+                    className="btn-secondary text-xs flex items-center gap-1.5 opacity-60 hover:opacity-100"
                   >
-                    {clubName ? '✏ Edit Club Name' : '⚙ Set Club Name'}
+                    <Pencil className="w-3 h-3" />
+                    {clubName ? 'Edit Club Name' : 'Set Club Name'}
                   </button>
                 )}
               </>
             ) : (
               <>
-                <Link href="/register" className="btn-primary">
-                  Get Started
-                </Link>
-                <Link href="/gallery" className="btn-secondary">
-                  Browse Gallery
-                </Link>
+                <Link href="/register" className="btn-primary">Get Started</Link>
+                <Link href="/gallery" className="btn-secondary">Browse Gallery</Link>
               </>
             )}
           </div>

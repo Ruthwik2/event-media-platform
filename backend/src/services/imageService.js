@@ -66,88 +66,92 @@ const addWatermark = async (input, watermarkInfo = {}) => {
       day: '2-digit', month: 'short', year: 'numeric',
     });
 
-    const line1 = eventName ? `${clubName}  •  ${eventName}` : clubName;
+    const line1 = eventName ? `${clubName}  \u2022  ${eventName}` : clubName;
     const line2Parts = [username ? `@${username}` : null, downloadDate, role || null].filter(Boolean);
-    const line2 = line2Parts.join('  ·  ');
+    const line2 = line2Parts.join('  \u00b7  ');
 
-    const fontSize1 = Math.min(44, Math.max(18, Math.floor(width / 36)));
-    const fontSize2 = Math.round(fontSize1 * 0.72);
-    const monoW1 = fontSize1 * 0.58;
-    const monoW2 = fontSize2 * 0.58;
+    const fontSize1 = Math.min(52, Math.max(20, Math.floor(width / 32)));
+    const fontSize2 = Math.round(fontSize1 * 0.70);
 
-    const innerW = Math.max(line1.length * monoW1, line2.length * monoW2);
-    const padX   = fontSize1 * 1.0;
-    const padY   = fontSize1 * 0.75;
-    const gap    = fontSize1 * 0.55;
-    const sepGap = fontSize1 * 0.22;
+    const w1 = line1.length * fontSize1 * 0.55;
+    const w2 = line2.length * fontSize2 * 0.55;
+    const innerW = Math.max(w1, w2, fontSize1 * 8);
 
-    const iconBoxSize = fontSize1 * 1.15;
-    const iconPad     = fontSize1 * 0.5;
+    const padX   = fontSize1 * 0.9;
+    const padY   = fontSize1 * 0.7;
+    const sepGap = fontSize1 * 0.2;
 
-    const badgeW = iconPad + iconBoxSize + iconPad * 0.5 + innerW + padX;
-    const badgeH = fontSize1 + fontSize2 + padY * 2 + gap + sepGap * 2 + 1;
-    const marginR = Math.round(width  * 0.018);
-    const marginB = Math.round(height * 0.018);
+    const iconSize = fontSize1 * 1.1;
+    const iconGap  = fontSize1 * 0.45;
 
-    // BOTTOM-RIGHT positioning
-    const bx = Math.round(width - badgeW - marginR);
+    const badgeW = iconGap + iconSize + iconGap * 0.5 + innerW + padX;
+    const badgeH = padY + fontSize1 + sepGap + 1 + sepGap + fontSize2 + padY;
+
+    const marginR = Math.round(width  * 0.02);
+    const marginB = Math.round(height * 0.02);
+
+    const bx = Math.round(width  - badgeW - marginR);
     const by = Math.round(height - badgeH - marginB);
-    const rx = Math.round(fontSize1 * 0.3);
+    const rx = Math.round(fontSize1 * 0.25);
 
-    const textX = bx + iconPad + iconBoxSize + iconPad * 0.55;
-    const y1    = by + padY + fontSize1;
-    const sepY  = y1 + sepGap + 1;
-    const y2    = sepY + sepGap + fontSize2;
+    const ibx  = bx + iconGap;
+    const iby  = by + (badgeH - iconSize) / 2;
+    const iR   = Math.round(iconSize * 0.18);
+    const icx  = ibx + iconSize * 0.30;
+    const icy  = iby + iconSize * 0.50;
+    const icR  = iconSize * 0.20;
+    const tCX  = ibx + iconSize * 0.72;
+    const tCY  = iby + iconSize * 0.50;
+    const tH   = iconSize * 0.30;
+    const tW   = iconSize * 0.24;
 
-    const ibs = iconBoxSize;
-    const ibx = bx + iconPad;
-    const iby = by + (badgeH - ibs) / 2;
-    const iRad = ibs * 0.18;
-    const iCR  = ibs * 0.22;
-    const icx  = ibx + ibs * 0.28;
-    const icy  = iby + ibs * 0.5;
-    const tCX  = ibx + ibs * 0.70;
-    const tCY  = iby + ibs * 0.5;
-    const tH   = ibs * 0.32;
-    const tW   = ibs * 0.26;
-    const t1x  = tCX - tW / 2, t1y = tCY + tH / 2;
-    const t2x  = tCX + tW / 2, t2y = tCY;
-    const t3x  = tCX - tW / 2, t3y = tCY - tH / 2;
+    const tx   = bx + iconGap + iconSize + iconGap * 0.6;
+    const y1   = by + padY + fontSize1;
+    const sepY = y1 + sepGap;
+    const y2   = sepY + 1 + sepGap + fontSize2;
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.95"/>
-          <stop offset="100%" stop-color="#f1f5f9" stop-opacity="0.97"/>
+        <linearGradient id="badgeBg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.96"/>
+          <stop offset="100%" stop-color="#e8edf2" stop-opacity="0.97"/>
         </linearGradient>
-        <linearGradient id="iconBg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%"   stop-color="#1d1d1d"/>
-          <stop offset="100%" stop-color="#3a3a3a"/>
+        <linearGradient id="iconGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"   stop-color="#111111"/>
+          <stop offset="100%" stop-color="#333333"/>
         </linearGradient>
+        <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+          <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.25"/>
+        </filter>
       </defs>
       <rect x="${bx}" y="${by}" width="${badgeW}" height="${badgeH}"
-            rx="${rx}" ry="${rx}" fill="url(#bg)" opacity="0.95"/>
-      <rect x="${ibx}" y="${iby}" width="${ibs}" height="${ibs}"
-            rx="${iRad}" ry="${iRad}" fill="url(#iconBg)"/>
-      <circle cx="${icx}" cy="${icy}" r="${iCR}"
-              fill="none" stroke="white" stroke-width="${ibs * 0.07}"/>
-      <circle cx="${icx}" cy="${icy}" r="${iCR * 0.35}" fill="white"/>
-      <polygon points="${t1x},${t1y} ${t2x},${t2y} ${t3x},${t3y}" fill="white"/>
-      <line x1="${ibx + ibs + iconPad * 0.3}" y1="${iby + ibs * 0.15}"
-            x2="${ibx + ibs + iconPad * 0.3}" y2="${iby + ibs * 0.85}"
-            stroke="rgba(0,0,0,0.12)" stroke-width="1"/>
-      <text x="${textX}" y="${y1}"
-            text-anchor="start"
-            font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
-            font-size="${fontSize1}px" font-weight="700" letter-spacing="0.3"
-            fill="#1a1a1a">${line1}</text>
-      <line x1="${textX}" y1="${sepY}" x2="${textX + innerW}" y2="${sepY}"
-            stroke="rgba(0,0,0,0.18)" stroke-width="0.8"/>
-      <text x="${textX + innerW / 2}" y="${y2}"
+            rx="${rx}" ry="${rx}" fill="url(#badgeBg)" filter="url(#shadow)"/>
+      <rect x="${ibx}" y="${iby}" width="${iconSize}" height="${iconSize}"
+            rx="${iR}" ry="${iR}" fill="url(#iconGrad)"/>
+      <circle cx="${icx}" cy="${icy}" r="${icR}"
+              fill="none" stroke="white" stroke-width="${iconSize * 0.08}"/>
+      <circle cx="${icx}" cy="${icy}" r="${icR * 0.38}" fill="white"/>
+      <polygon points="${tCX - tW/2},${tCY + tH/2} ${tCX + tW/2},${tCY} ${tCX - tW/2},${tCY - tH/2}"
+               fill="white"/>
+      <line x1="${ibx + iconSize + iconGap * 0.3}" y1="${iby + iconSize * 0.12}"
+            x2="${ibx + iconSize + iconGap * 0.3}" y2="${iby + iconSize * 0.88}"
+            stroke="#cccccc" stroke-width="1"/>
+      <text x="${tx}" y="${y1}"
+            font-family="monospace"
+            font-size="${fontSize1}px"
+            font-weight="bold"
+            fill="#111111"
+            xml:space="preserve">${line1}</text>
+      <line x1="${tx}" y1="${sepY}"
+            x2="${bx + badgeW - padX * 0.5}" y2="${sepY}"
+            stroke="#bbbbbb" stroke-width="1"/>
+      <text x="${tx + innerW / 2}" y="${y2}"
+            font-family="monospace"
+            font-size="${fontSize2}px"
+            font-weight="normal"
+            fill="#444444"
             text-anchor="middle"
-            font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
-            font-size="${fontSize2}px" font-weight="400" letter-spacing="0.5"
-            fill="#555555">${line2}</text>
+            xml:space="preserve">${line2}</text>
     </svg>`;
 
     const outputBuffer = await sharp(input)
