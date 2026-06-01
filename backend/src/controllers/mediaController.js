@@ -537,7 +537,15 @@ const downloadMedia = async (req, res) => {
     const media = await prisma.media.findUnique({
       where: { id: req.params.id },
       include: {
-        album: { include: { event: true } },
+        album: {
+          include: {
+            event: {
+              include: {
+                creator: { select: { fullName: true } },
+              },
+            },
+          },
+        },
         uploader: { select: { username: true } },
       },
     });
@@ -555,27 +563,63 @@ const downloadMedia = async (req, res) => {
       .replace(/[\\/\r\n]/g, '_')
       .replace(/"/g, "'");
 
-    // Generate watermark text
-    const watermarkText = `${media.album.event.name} | ${media.album.event.category} | ${req.user.role}`;
+    // ── Watermark info ────────────────────────────────────────────────────────
+    // clubName  → event creator's full name (best proxy for the club organiser)
+    // eventName → the event this media belongs to
+    // userRole  → role of the person downloading
+    const watermarkInfo = {
+      clubName:  media.album?.event?.creator?.fullName || 'EventMedia',
+      eventName: media.album?.event?.name || '',
+      userRole:  req.user.role,
+      username:  req.user.username || req.user.fullName || '',
+    };
 
+    // ── Helper: collect a stream into a Buffer ────────────────────────────────
+    const streamToBuffer = (stream) =>
+      new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('end',  () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+      });
+
+    // ── PHOTO: apply watermark regardless of storage location ─────────────────
     if (media.mediaType === 'PHOTO') {
-      const isLocalFile = media.url.includes('/uploads/');
+      let imageBuffer = null;
 
-      if (isLocalFile) {
-        const localPath = path.join(__dirname, '../../', media.url.replace(process.env.BACKEND_URL || '', ''));
-
+      // 1) Try local file first
+      if (media.url.includes('/uploads/')) {
+        const localPath = path.join(
+          __dirname, '../../',
+          media.url.replace(process.env.BACKEND_URL || '', '')
+        );
         if (fs.existsSync(localPath)) {
-          const watermarkedBuffer = await addWatermark(localPath, watermarkText);
-          res.setHeader('Content-Type', 'image/jpeg');
-          res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
-          return res.send(watermarkedBuffer);
+          imageBuffer = fs.readFileSync(localPath);
         }
+      }
+
+      // 2) Fall back to S3 stream → buffer
+      if (!imageBuffer) {
+        const s3Object = await getS3ObjectStream({ url: media.url });
+        if (s3Object && s3Object.body) {
+          imageBuffer = await streamToBuffer(s3Object.body);
+        }
+      }
+
+      if (imageBuffer) {
+        const watermarkedBuffer = await addWatermark(imageBuffer, watermarkInfo);
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+        return res.send(watermarkedBuffer);
       }
     }
 
-    const isLocalFile = media.url.includes('/uploads/');
-    if (isLocalFile) {
-      const localPath = path.join(__dirname, '../../', media.url.replace(process.env.BACKEND_URL || '', ''));
+    // ── VIDEO / other: serve as-is (no watermark for non-photos) ─────────────
+    if (media.url.includes('/uploads/')) {
+      const localPath = path.join(
+        __dirname, '../../',
+        media.url.replace(process.env.BACKEND_URL || '', '')
+      );
       if (fs.existsSync(localPath)) {
         return res.download(localPath, safeFilename);
       }
