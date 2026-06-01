@@ -86,6 +86,7 @@ model Album {
   media         Media[]
   collaborators AlbumCollaborator[]
   qrCode        String?
+  shareToken    String?   @unique   // Guest-access token for private albums
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

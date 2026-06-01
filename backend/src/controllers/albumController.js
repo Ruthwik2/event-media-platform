@@ -433,15 +433,201 @@ message: `Request ${status.toLowerCase()}`,
 res.status(500).json({ success: false, message: error.message });
 }
 };
+// ── Share Token Functions ─────────────────────────────────────────────────────
+/**
+ * POST /albums/:id/share-token
+ * Creator or ADMIN generates a guest-access token for a PRIVATE album.
+ * Anyone with the resulting URL can view the album without logging in.
+ * Only meaningful for PRIVATE albums; public albums don't need tokens.
+ */
+const generateShareToken = async (req, res) => {
+  try {
+    const { crypto } = await import('crypto');
+    const album = await prisma.album.findUnique({
+      where: { id: req.params.id },
+      include: { event: { select: { creatorId: true, visibility: true } } },
+    });
+    if (!album) {
+      return res.status(404).json({ success: false, message: 'Album not found' });
+    }
+    // Only creator or admin may generate tokens
+    if (album.event.creatorId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    if (album.visibility !== 'PRIVATE') {
+      return res.status(400).json({
+        success: false,
+        message: 'Share tokens are only for private albums. Public albums are accessible by everyone.',
+      });
+    }
+    // Generate a cryptographically random token (32 bytes → 64 hex chars)
+    const token = crypto.randomBytes(32).toString('hex');
+    await prisma.album.update({
+      where: { id: album.id },
+      data: { shareToken: token },
+    });
+    const shareUrl = `${process.env.FRONTEND_URL}/albums/share/${token}`;
+    res.json({ success: true, data: { shareToken: token, shareUrl } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * DELETE /albums/:id/share-token
+ * Revokes the guest share token — all existing share links immediately stop working.
+ */
+const revokeShareToken = async (req, res) => {
+  try {
+    const album = await prisma.album.findUnique({
+      where: { id: req.params.id },
+      include: { event: { select: { creatorId: true } } },
+    });
+    if (!album) {
+      return res.status(404).json({ success: false, message: 'Album not found' });
+    }
+    if (album.event.creatorId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    await prisma.album.update({
+      where: { id: album.id },
+      data: { shareToken: null },
+    });
+    res.json({ success: true, message: 'Share link revoked. Existing QR codes no longer work.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /albums/by-token/:token  (no auth required — public endpoint)
+ * Returns album + media when a valid shareToken is presented.
+ * This is how event guests access a private album via QR scan.
+ * 
+ * Security notes:
+ *  - Only works for PRIVATE albums with shareToken set
+ *  - Token must be an exact match (32-byte random hex — ~2^256 space)
+ *  - Does NOT expose the album's internal ID in the response URL, only the token
+ *  - Revoke at any time via DELETE /albums/:id/share-token
+ */
+const getAlbumByShareToken = async (req, res) => {
+  try {
+    const { token } = req.params;
+    // Basic token sanity check — must be 64 hex chars
+    if (!/^[a-f0-9]{64}$/.test(token)) {
+      return res.status(404).json({ success: false, message: 'Invalid share link' });
+    }
+    const album = await prisma.album.findUnique({
+      where: { shareToken: token },
+      include: {
+        event: {
+          select: { id: true, name: true, category: true, visibility: true, creatorId: true },
+        },
+        collaborators: {
+          include: {
+            user: { select: { id: true, username: true, fullName: true, avatar: true } },
+          },
+        },
+        _count: { select: { media: true } },
+      },
+    });
+    if (!album) {
+      return res.status(404).json({ success: false, message: 'Share link not found or has been revoked' });
+    }
+    // Tokens are only valid for PRIVATE albums
+    if (album.visibility !== 'PRIVATE') {
+      return res.status(400).json({
+        success: false,
+        message: 'This album is public — no token needed',
+        redirectId: album.id,
+      });
+    }
+    // Fetch media for this album
+    const media = await prisma.media.findMany({
+      where: { albumId: album.id },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        url: true,
+        thumbnailUrl: true,
+        mediaType: true,
+        caption: true,
+        width: true,
+        height: true,
+        createdAt: true,
+        uploader: { select: { id: true, username: true, fullName: true, avatar: true } },
+      },
+    });
+    // Strip out the shareToken and internal IDs from the response
+    const { shareToken: _token, ...albumData } = album;
+    res.json({ success: true, data: { album: albumData, media }, guestAccess: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /albums/:id/qr  (updated)
+ * Returns QR code. For private albums with a shareToken, the QR encodes
+ * the guest-access URL. Otherwise it encodes the direct album URL.
+ */
+const getAlbumQREnhanced = async (req, res) => {
+  try {
+    const album = await prisma.album.findUnique({
+      where: { id: req.params.id },
+      include: {
+        event: { select: { creatorId: true, visibility: true } },
+        collaborators: { select: { userId: true } },
+      },
+    });
+    if (!album) {
+      return res.status(404).json({ success: false, message: 'Album not found' });
+    }
+    if (!canAccessAlbum(req.user, album)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+    // Decide which URL to encode in the QR:
+    //  - Private album WITH shareToken → guest-access URL (scannable by anyone)
+    //  - Private album WITHOUT shareToken → direct URL (login required to view)
+    //  - Public album → direct URL
+    let qrUrl;
+    if (album.visibility === 'PRIVATE' && album.shareToken) {
+      qrUrl = `${process.env.FRONTEND_URL}/albums/share/${album.shareToken}`;
+    } else {
+      qrUrl = `${process.env.FRONTEND_URL}/albums/${album.id}`;
+    }
+    const qrCode = await QRCode.toDataURL(qrUrl, {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 400,
+    });
+    res.json({
+      success: true,
+      data: {
+        qrCode,
+        url: qrUrl,
+        visibility: album.visibility,
+        hasShareToken: !!album.shareToken,
+        guestAccessEnabled: album.visibility === 'PRIVATE' && !!album.shareToken,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
-createAlbum,
-getAlbums,
-getAlbum,
-updateAlbum,
-deleteAlbum,
-getAlbumQR,
-addCollaborator,
-requestAlbumAccess,
-getAlbumAccessRequests,
-approveRejectAlbumRequest,
+  createAlbum,
+  getAlbums,
+  getAlbum,
+  updateAlbum,
+  deleteAlbum,
+  getAlbumQR: getAlbumQREnhanced,   // replaces the old getAlbumQR
+  addCollaborator,
+  requestAlbumAccess,
+  getAlbumAccessRequests,
+  approveRejectAlbumRequest,
+  generateShareToken,
+  revokeShareToken,
+  getAlbumByShareToken,
 };
