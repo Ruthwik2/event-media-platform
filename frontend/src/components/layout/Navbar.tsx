@@ -7,7 +7,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import {
 Bell, Search, User, LogOut, Upload, Home, Calendar,
 Image, Heart, Settings, Menu, X, Camera, ChevronDown,
-Users, ShieldCheck,
+Users, ShieldCheck, Lock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -189,6 +189,18 @@ className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-slat
 </Link>
 </>
 )}
+{user.role === 'PHOTOGRAPHER' && (
+<>
+<div className="border-t border-slate-700 my-1" />
+<Link
+href="/my-access-requests"
+onClick={() => setProfileOpen(false)}
+className="flex items-center gap-2 px-3 py-2 text-sm text-primary-400 hover:bg-slate-800 transition-colors"
+>
+<Lock className="w-4 h-4" /> My Access Requests
+</Link>
+</>
+)}
 <div className="border-t border-slate-700 my-1" />
 <button
 onClick={() => {
@@ -281,6 +293,15 @@ onClick={() => setMobileOpen(false)}
 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-blue-400 hover:bg-slate-800"
 >
 <ShieldCheck className="w-4 h-4" /> Access Requests
+</Link>
+)}
+{user?.role === 'PHOTOGRAPHER' && (
+<Link
+href="/my-access-requests"
+onClick={() => setMobileOpen(false)}
+className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-primary-400 hover:bg-slate-800"
+>
+<Lock className="w-4 h-4" /> My Access Requests
 </Link>
 )}
 </div>

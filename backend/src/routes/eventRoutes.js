@@ -12,6 +12,7 @@ getCategories,
 requestAccess,
 getEventAccessRequests,
 approveRejectEventRequest,
+getMyAccessRequests,
 } = require('../controllers/eventController');
 // ── Static routes FIRST ───────────────────────────────────────────────────────
 router.get('/categories', getCategories);
@@ -26,6 +27,13 @@ router.patch(
 authenticate,
 authorize('ADMIN'),
 approveRejectEventRequest
+);
+// Photographer: view their own requests (EVENT + ALBUM)
+router.get(
+'/my-access-requests',
+authenticate,
+authorize('PHOTOGRAPHER'),
+getMyAccessRequests
 );
 // ── Collection & item routes ──────────────────────────────────────────────────
 router.get('/', optionalAuth, getEvents);

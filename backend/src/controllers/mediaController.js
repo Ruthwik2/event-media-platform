@@ -197,18 +197,61 @@ const getMedia = async (req, res) => {
     }
     if (mediaType) where.mediaType = mediaType;
 
-    // Media-level visibility filter
-    if (!req.user || req.user.role === 'VIEWER') {
-      // Viewers and unauthenticated: public media only
-      where.visibility = 'PUBLIC';
-    } else if (req.user.role === 'PHOTOGRAPHER') {
-      // Photographers: public media OR media they uploaded
-      where.OR = [
-        { visibility: 'PUBLIC' },
-        { visibility: 'PRIVATE', uploaderId: req.user.id },
-      ];
+    // Media-level + album-level visibility filter.
+    // When browsing the general feed (no albumId), we must also exclude media that
+    // lives inside a private album the user cannot access.
+    if (!albumId) {
+      if (!req.user || req.user.role === 'VIEWER') {
+        // Viewers / unauthenticated: only public media in public albums
+        where.visibility = 'PUBLIC';
+        where.album = { visibility: 'PUBLIC' };
+      } else if (req.user.role === 'PHOTOGRAPHER') {
+        // Photographers:
+        //  - public media in public albums
+        //  - public media in private albums they own or collaborate on
+        //  - their own private media (any album they can access)
+        where.OR = [
+          { visibility: 'PUBLIC', album: { visibility: 'PUBLIC' } },
+          {
+            visibility: 'PUBLIC',
+            album: {
+              visibility: 'PRIVATE',
+              event: { creatorId: req.user.id },
+            },
+          },
+          {
+            visibility: 'PUBLIC',
+            album: {
+              visibility: 'PRIVATE',
+              collaborators: { some: { userId: req.user.id } },
+            },
+          },
+          {
+            visibility: 'PRIVATE',
+            uploaderId: req.user.id,
+            album: {
+              OR: [
+                { visibility: 'PUBLIC' },
+                { visibility: 'PRIVATE', event: { creatorId: req.user.id } },
+                { visibility: 'PRIVATE', collaborators: { some: { userId: req.user.id } } },
+              ],
+            },
+          },
+        ];
+      }
+      // ADMIN and CLUB_MEMBER: see all media (no filter)
+    } else {
+      // albumId already gated above; apply only media-level visibility here
+      if (!req.user || req.user.role === 'VIEWER') {
+        where.visibility = 'PUBLIC';
+      } else if (req.user.role === 'PHOTOGRAPHER') {
+        where.OR = [
+          { visibility: 'PUBLIC' },
+          { visibility: 'PRIVATE', uploaderId: req.user.id },
+        ];
+      }
+      // ADMIN and CLUB_MEMBER: see all media in this album
     }
-    // ADMIN and CLUB_MEMBER: see all media (no visibility filter)
 
     if (search) {
       const searchOR = [

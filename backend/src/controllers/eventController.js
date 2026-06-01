@@ -60,17 +60,9 @@ req.user.role === 'CLUB_MEMBER'
 ) {
 where.visibility = 'PUBLIC';
 } else if (req.user.role === 'PHOTOGRAPHER') {
-if (visibility === 'PRIVATE') {
-where.visibility = 'PRIVATE';
-where.creatorId = req.user.id;
-} else if (visibility === 'PUBLIC') {
-where.visibility = 'PUBLIC';
-} else {
-where.OR = [
-{ visibility: 'PUBLIC' },
-{ visibility: 'PRIVATE', creatorId: req.user.id },
-];
-}
+// Photographers can see ALL events (public + private) so they can request access.
+// Access control is enforced per-event when they click into it.
+if (visibility) where.visibility = visibility;
 } else if (req.user.role === 'ADMIN') {
 if (visibility) where.visibility = visibility;
 }
@@ -378,6 +370,50 @@ message: `Request ${status.toLowerCase()}`,
 res.status(500).json({ success: false, message: error.message });
 }
 };
+/**
+* GET /events/my-access-requests  (PHOTOGRAPHER only)
+* Returns ALL access requests (both EVENT and ALBUM types) for the logged-in photographer.
+*/
+const getMyAccessRequests = async (req, res) => {
+try {
+const { status } = req.query;
+const whereStatus = status && status !== 'ALL' ? { status } : {};
+const requests = await prisma.accessRequest.findMany({
+where: { userId: req.user.id, ...whereStatus },
+orderBy: { createdAt: 'desc' },
+});
+// Enrich with target name
+const enriched = await Promise.all(
+requests.map(async (r) => {
+try {
+if (r.type === 'EVENT') {
+const event = await prisma.event.findUnique({
+where: { id: r.targetId },
+select: { id: true, name: true, category: true, visibility: true },
+});
+return { ...r, target: event };
+} else {
+const album = await prisma.album.findUnique({
+where: { id: r.targetId },
+select: {
+id: true,
+name: true,
+visibility: true,
+event: { select: { id: true, name: true } },
+},
+});
+return { ...r, target: album };
+}
+} catch {
+return { ...r, target: null };
+}
+})
+);
+res.json({ success: true, data: enriched });
+} catch (error) {
+res.status(500).json({ success: false, message: error.message });
+}
+};
 module.exports = {
 createEvent,
 getEvents,
@@ -388,4 +424,5 @@ getCategories,
 requestAccess,
 getEventAccessRequests,
 approveRejectEventRequest,
+getMyAccessRequests,
 };

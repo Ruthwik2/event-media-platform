@@ -88,11 +88,8 @@ where.visibility = 'PUBLIC';
 } else if (req.user.role === 'CLUB_MEMBER') {
 // no visibility filter — sees all
 } else if (req.user.role === 'PHOTOGRAPHER') {
-where.OR = [
-{ visibility: 'PUBLIC' },
-{ visibility: 'PRIVATE', event: { creatorId: req.user.id } },
-{ visibility: 'PRIVATE', collaborators: { some: { userId: req.user.id } } },
-];
+// Photographers can see ALL albums so they can discover private ones and request access.
+// Access control is enforced per-album when they click into it.
 }
 const [albums, total] = await Promise.all([
 prisma.album.findMany({
