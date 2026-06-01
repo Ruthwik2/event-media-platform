@@ -4,16 +4,20 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: eventmedia-db
+
     environment:
-      POSTGRES_USER: username
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: eventmedia
+
     ports:
       - "5433:5432"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U username"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,52 +26,52 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+
     container_name: eventmedia-backend
+
     dns:
       - 8.8.8.8
       - 8.8.4.4
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
-      NODE_ENV: development
-      PORT: 5000
-      FRONTEND_URL: http://localhost:3000
-      BACKEND_URL: http://localhost:5001
-      # ── Storage mode ──────────────────────────────────────────────
-      # USE_S3=false  → files saved to ./uploads/ inside the container (no AWS needed)
-      # USE_S3=true   → files uploaded to S3 (fill in AWS credentials below)
-      USE_S3: ${USE_S3}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-      AWS_REGION: ${AWS_REGION}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
-      REKOGNITION_COLLECTION_ID: ${REKOGNITION_COLLECTION_ID}
+
+    env_file:
+      - ./backend/.env
+
     ports:
       - "5001:5000"
+
     volumes:
       - ./backend:/app
       - /app/node_modules
       - backend_uploads:/app/uploads
+
     depends_on:
       postgres:
         condition: service_healthy
-    #command: sh -c "npx prisma migrate deploy && npm run dev"
+
     command: sh -c "npx prisma migrate deploy && node prisma/seed.js && npm run dev"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+
     container_name: eventmedia-frontend
+
+    env_file:
+      - ./frontend/.env
+
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:5001/api
       NEXT_PUBLIC_SOCKET_URL: http://localhost:5001
+
     ports:
       - "3000:3000"
+
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
+
     depends_on:
       - backend
 
