@@ -106,7 +106,13 @@ const getS3ObjectStream = async ({ url, bucket, key }) => {
 
     const command = new GetObjectCommand({ Bucket: resolvedBucket, Key: resolvedKey });
     const response = await s3Client.send(command);
-    return response.Body || null;
+    if (!response || !response.Body) return null;
+
+    return {
+      body: response.Body,
+      contentType: response.ContentType,
+      contentLength: response.ContentLength,
+    };
   } catch (error) {
     return null;
   }

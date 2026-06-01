@@ -1,7 +1,7 @@
 const prisma = require('../config/database');
 const path = require('path');
 const fs = require('fs');
-const { uploadToS3, deleteFromS3, getSignedDownloadUrl } = require('../services/s3Service');
+const { uploadToS3, deleteFromS3, getS3ObjectStream } = require('../services/s3Service');
 const { detectLabels, searchFacesByImage } = require('../services/rekognitionService');
 const { generateThumbnail, getImageMetadata, addWatermark } = require('../services/imageService');
 const { notifyLike, notifyComment, notifyTag } = require('../services/notificationService');
@@ -498,6 +498,10 @@ const downloadMedia = async (req, res) => {
       data: { userId: req.user.id, mediaId: media.id },
     });
 
+    const safeFilename = (media.originalName || 'download')
+      .replace(/[\\/\r\n]/g, '_')
+      .replace(/"/g, "'");
+
     // Generate watermark text
     const watermarkText = `${media.album.event.name} | ${media.album.event.category} | ${req.user.role}`;
 
@@ -510,15 +514,32 @@ const downloadMedia = async (req, res) => {
         if (fs.existsSync(localPath)) {
           const watermarkedBuffer = await addWatermark(localPath, watermarkText);
           res.setHeader('Content-Type', 'image/jpeg');
-          res.setHeader('Content-Disposition', `attachment; filename="${media.originalName}"`);
+          res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
           return res.send(watermarkedBuffer);
         }
       }
     }
 
-    // Fallback: redirect to signed URL or direct URL
-    const downloadUrl = await getSignedDownloadUrl(media.url);
-    res.json({ success: true, data: { downloadUrl, filename: media.originalName } });
+    const isLocalFile = media.url.includes('/uploads/');
+    if (isLocalFile) {
+      const localPath = path.join(__dirname, '../../', media.url.replace(process.env.BACKEND_URL || '', ''));
+      if (fs.existsSync(localPath)) {
+        return res.download(localPath, safeFilename);
+      }
+    }
+
+    const s3Object = await getS3ObjectStream({ url: media.url });
+    if (s3Object && s3Object.body) {
+      res.setHeader('Content-Type', s3Object.contentType || media.mimeType || 'application/octet-stream');
+      if (s3Object.contentLength) {
+        res.setHeader('Content-Length', s3Object.contentLength.toString());
+      }
+      res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+      s3Object.body.on('error', () => res.status(500).end());
+      return s3Object.body.pipe(res);
+    }
+
+    return res.status(404).json({ success: false, message: 'File not available' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

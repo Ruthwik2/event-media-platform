@@ -14,6 +14,29 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
+const getFilenameFromDisposition = (disposition?: string, fallback?: string) => {
+  if (!disposition) return fallback || 'download';
+  const match = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"|filename=([^;]+)/i.exec(disposition);
+  const raw = match?.[1] || match?.[2] || match?.[3];
+  if (!raw) return fallback || 'download';
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+};
+
+const triggerDownload = (blob: Blob, filename: string) => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
+
 export default function MediaDetailPage() {
   const { id } = useParams();
   const { user } = useAuthStore();
@@ -93,13 +116,15 @@ export default function MediaDetailPage() {
   const handleDownload = async () => {
     if (!user) { toast.error('Please login to download'); return; }
     try {
-      const res = await api.get(`/media/${id}/download`);
-      if (res.data.data?.downloadUrl) {
-        window.open(res.data.data.downloadUrl, '_blank');
-      }
+      const res = await api.get(`/media/${id}/download`, { responseType: 'blob' });
+      const filename = getFilenameFromDisposition(
+        res.headers['content-disposition'],
+        media?.originalName || 'download'
+      );
+      triggerDownload(res.data, filename);
       toast.success('Download started');
     } catch (error) {
-      if (media) window.open(media.url, '_blank');
+      toast.error('Download failed');
     }
   };
 
