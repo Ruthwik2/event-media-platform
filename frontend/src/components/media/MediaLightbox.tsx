@@ -1,0 +1,311 @@
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { Media, Comment } from '@/types';
+import { useAuthStore } from '@/store/authStore';
+import api from '@/lib/axios';
+import {
+  X, Heart, MessageCircle, Download, Bookmark, Share2,
+  ChevronLeft, ChevronRight, Send, Play, Trash2, MoreHorizontal,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { formatDistanceToNow } from 'date-fns';
+import toast from 'react-hot-toast';
+
+interface Props {
+  media: Media;
+  allMedia: Media[];
+  onClose: () => void;
+  onNavigate: (media: Media) => void;
+  // BUG FIX #2: callback so parent pages can remove the item from their local state
+  // without needing a full page refresh.
+  onDelete?: (id: string) => void;
+}
+
+export default function MediaLightbox({ media, allMedia, onClose, onNavigate, onDelete }: Props) {
+  const { user } = useAuthStore();
+  const [liked, setLiked] = useState(media.isLiked || false);
+  const [likeCount, setLikeCount] = useState(media._count?.likes || 0);
+  const [favourited, setFavourited] = useState(media.isFavourited || false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [showComments, setShowComments] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
+  const currentIndex = allMedia.findIndex((m) => m.id === media.id);
+
+  // FIX: declare these with useCallback BEFORE the useEffect that depends on them
+  const navigatePrev = useCallback(() => {
+    if (currentIndex > 0) onNavigate(allMedia[currentIndex - 1]);
+  }, [currentIndex, allMedia, onNavigate]);
+
+  const navigateNext = useCallback(() => {
+    if (currentIndex < allMedia.length - 1) onNavigate(allMedia[currentIndex + 1]);
+  }, [currentIndex, allMedia, onNavigate]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') navigatePrev();
+      if (e.key === 'ArrowRight') navigateNext();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [currentIndex, onClose, navigatePrev, navigateNext]);
+
+  useEffect(() => {
+    fetchComments();
+    setLiked(media.isLiked || false);
+    setLikeCount(media._count?.likes || 0);
+    setFavourited(media.isFavourited || false);
+  }, [media.id]);
+
+  const fetchComments = async () => {
+    try {
+      const res = await api.get(`/media/${media.id}/comments`);
+      setComments(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!user) { toast.error('Please login'); return; }
+    try {
+      const res = await api.post(`/media/${media.id}/like`);
+      setLiked(res.data.liked);
+      setLikeCount(res.data.count);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleFavourite = async () => {
+    if (!user) { toast.error('Please login'); return; }
+    try {
+      const res = await api.post(`/media/${media.id}/favourite`);
+      setFavourited(res.data.favourited);
+      toast.success(res.data.favourited ? 'Added to favourites' : 'Removed from favourites');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !user) return;
+    try {
+      const res = await api.post(`/media/${media.id}/comment`, { content: newComment });
+      setComments([res.data.data, ...comments]);
+      setNewComment('');
+    } catch (error) {
+      toast.error('Failed to post comment');
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!user) { toast.error('Please login to download'); return; }
+    try {
+      const res = await api.get(`/media/${media.id}/download`);
+      if (res.data.data?.downloadUrl) {
+        window.open(res.data.data.downloadUrl, '_blank');
+      }
+      toast.success('Download started (watermarked)');
+    } catch (error) {
+      window.open(media.url, '_blank');
+    }
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/gallery?media=${media.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard!');
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this media?')) return;
+    try {
+      await api.delete(`/media/${media.id}`);
+      toast.success('Media deleted');
+      // BUG FIX #2: notify parent to remove this item from its list so it
+      // disappears immediately without needing a manual page refresh.
+      onDelete?.(media.id);
+      onClose();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete');
+    }
+  };
+
+  const canDelete = (user?.id === media.uploader?.id || user?.role === 'ADMIN') && user?.role !== 'CLUB_MEMBER';
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/95 flex" onClick={onClose}>
+      <div className="flex w-full h-full" onClick={(e) => e.stopPropagation()}>
+        {/* Main Image */}
+        <div className="flex-1 relative flex items-center justify-center p-4">
+          <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full hover:bg-black/70">
+            <X className="w-5 h-5" />
+          </button>
+
+          {currentIndex > 0 && (
+            <button onClick={navigatePrev} className="absolute left-4 p-2 bg-black/50 rounded-full hover:bg-black/70">
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+          {currentIndex < allMedia.length - 1 && (
+            <button onClick={navigateNext} className="absolute right-4 p-2 bg-black/50 rounded-full hover:bg-black/70">
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          )}
+
+          {media.mediaType === 'VIDEO' ? (
+            <video src={media.url} controls className="max-w-full max-h-full rounded-lg" />
+          ) : (
+            <img
+              src={media.url}
+              alt={media.originalName}
+              className="max-w-full max-h-full object-contain rounded-lg"
+            />
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <motion.div
+          initial={{ x: 300 }}
+          animate={{ x: 0 }}
+          className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col h-full overflow-hidden"
+        >
+          <div className="p-4 border-b border-slate-800">
+            <div className="flex items-center gap-3">
+              {media.uploader?.avatar ? (
+                <img src={media.uploader.avatar} alt="" className="w-8 h-8 rounded-full" />
+              ) : (
+                <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-xs font-bold">
+                  {media.uploader?.fullName?.[0] || '?'}
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium">{media.uploader?.fullName}</p>
+                <p className="text-xs text-slate-500">
+                  {formatDistanceToNow(new Date(media.createdAt), { addSuffix: true })}
+                </p>
+              </div>
+            </div>
+            {media.caption && <p className="text-sm text-slate-300 mt-3">{media.caption}</p>}
+            {media.tags && media.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {media.tags.map((tag) => (
+                  <span key={tag} className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="p-3 border-b border-slate-800 flex items-center gap-1">
+            <button
+              onClick={handleLike}
+              className={`p-2 rounded-lg transition-colors ${liked ? 'text-red-400 bg-red-900/20' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+            </button>
+            <span className="text-xs text-slate-400 mr-2">{likeCount}</span>
+
+            <button
+              onClick={() => setShowComments(!showComments)}
+              className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </button>
+            <span className="text-xs text-slate-400 mr-2">{comments.length}</span>
+
+            <button
+              onClick={handleFavourite}
+              className={`p-2 rounded-lg transition-colors ${favourited ? 'text-yellow-400 bg-yellow-900/20' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              <Bookmark className={`w-5 h-5 ${favourited ? 'fill-current' : ''}`} />
+            </button>
+
+            <button onClick={handleShare} className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors">
+              <Share2 className="w-5 h-5" />
+            </button>
+
+            <button onClick={handleDownload} className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors ml-auto">
+              <Download className="w-5 h-5" />
+            </button>
+
+            {canDelete && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
+                >
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 top-10 card border border-slate-700 py-1 w-36 z-10">
+                    <button
+                      onClick={handleDelete}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-slate-800 w-full"
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Comments */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            {comments.map((comment) => (
+              <div key={comment.id} className="text-sm">
+                <div className="flex items-start gap-2">
+                  <div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
+                    {comment.user?.fullName?.[0]}
+                  </div>
+                  <div>
+                    <span className="font-medium text-xs">{comment.user?.username}</span>
+                    <p className="text-slate-300 text-xs mt-0.5">{comment.content}</p>
+                    <p className="text-[10px] text-slate-600 mt-1">
+                      {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {comments.length === 0 && (
+              <p className="text-center text-slate-600 text-xs py-4">No comments yet</p>
+            )}
+          </div>
+
+          {user && (
+            <form onSubmit={handleComment} className="p-3 border-t border-slate-800">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="input text-sm flex-1"
+                />
+                <button
+                  type="submit"
+                  disabled={!newComment.trim()}
+                  className="p-2 text-primary-400 hover:bg-slate-800 rounded-lg disabled:opacity-50"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          )}
+        </motion.div>
+      </div>
+    </div>
+  );
+}

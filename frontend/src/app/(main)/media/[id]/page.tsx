@@ -1,0 +1,323 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import api from '@/lib/axios';
+import { useAuthStore } from '@/store/authStore';
+import { Media, Comment } from '@/types';
+import {
+  ArrowLeft, Heart, MessageCircle, Download, Bookmark,
+  Share2, Tag, MoreHorizontal, Trash2, Flag,
+} from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+
+export default function MediaDetailPage() {
+  const { id } = useParams();
+  const { user } = useAuthStore();
+  const router = useRouter();
+  const [media, setMedia] = useState<Media | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [favourited, setFavourited] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [showMenu, setShowMenu] = useState(false);
+
+  useEffect(() => {
+    fetchMedia();
+    fetchComments();
+  }, [id]);
+
+  const fetchMedia = async () => {
+    try {
+      const res = await api.get(`/media/${id}`);
+      setMedia(res.data.data);
+      setLiked(res.data.data.isLiked || false);
+      setLikeCount(res.data.data._count?.likes || 0);
+      setFavourited(res.data.data.isFavourited || false);
+    } catch (error) {
+      toast.error('Media not found');
+      router.push('/gallery');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchComments = async () => {
+    try {
+      const res = await api.get(`/media/${id}/comments`);
+      setComments(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!user) { toast.error('Please login'); return; }
+    try {
+      const res = await api.post(`/media/${id}/like`);
+      setLiked(res.data.liked);
+      setLikeCount(res.data.count);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleFavourite = async () => {
+    if (!user) { toast.error('Please login'); return; }
+    try {
+      const res = await api.post(`/media/${id}/favourite`);
+      setFavourited(res.data.favourited);
+      toast.success(res.data.favourited ? 'Added to favourites' : 'Removed from favourites');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !user) return;
+    try {
+      const res = await api.post(`/media/${id}/comment`, { content: newComment });
+      setComments([res.data.data, ...comments]);
+      setNewComment('');
+    } catch (error) {
+      toast.error('Failed to post comment');
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!user) { toast.error('Please login to download'); return; }
+    try {
+      const res = await api.get(`/media/${id}/download`);
+      if (res.data.data?.downloadUrl) {
+        window.open(res.data.data.downloadUrl, '_blank');
+      }
+      toast.success('Download started');
+    } catch (error) {
+      if (media) window.open(media.url, '_blank');
+    }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard!');
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this media?')) return;
+    try {
+      await api.delete(`/media/${id}`);
+      toast.success('Media deleted');
+      router.push('/gallery');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="aspect-video bg-slate-800 rounded-xl animate-pulse" />
+        <div className="h-8 w-1/3 bg-slate-800 rounded animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!media) return null;
+
+  const canDelete = (user?.id === media.uploader?.id || user?.role === 'ADMIN') && user?.role !== 'CLUB_MEMBER';
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      <Link href="/gallery" className="flex items-center gap-2 text-slate-400 hover:text-slate-200">
+        <ArrowLeft className="w-4 h-4" /> Back to Gallery
+      </Link>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Media Display */}
+        <div className="lg:col-span-2">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="card overflow-hidden"
+          >
+            {media.mediaType === 'VIDEO' ? (
+              <video src={media.url} controls className="w-full" />
+            ) : (
+              <img src={media.url} alt={media.originalName} className="w-full" />
+            )}
+          </motion.div>
+
+          {/* Actions */}
+          <div className="card p-4 mt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleLike}
+                  className={`p-2 rounded-lg transition-colors ${
+                    liked ? 'text-red-400 bg-red-900/20' : 'text-slate-400 hover:bg-slate-800'
+                  }`}
+                >
+                  <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+                </button>
+                <span className="text-sm text-slate-400">{likeCount}</span>
+
+                <button
+                  onClick={() => document.getElementById('comment-input')?.focus()}
+                  className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 ml-2"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </button>
+                <span className="text-sm text-slate-400">{comments.length}</span>
+
+                <button
+                  onClick={handleFavourite}
+                  className={`p-2 rounded-lg transition-colors ml-2 ${
+                    favourited ? 'text-yellow-400 bg-yellow-900/20' : 'text-slate-400 hover:bg-slate-800'
+                  }`}
+                >
+                  <Bookmark className={`w-5 h-5 ${favourited ? 'fill-current' : ''}`} />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button onClick={handleShare} className="p-2 rounded-lg text-slate-400 hover:bg-slate-800">
+                  <Share2 className="w-5 h-5" />
+                </button>
+                <button onClick={handleDownload} className="p-2 rounded-lg text-slate-400 hover:bg-slate-800">
+                  <Download className="w-5 h-5" />
+                </button>
+                {canDelete && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowMenu(!showMenu)}
+                      className="p-2 rounded-lg text-slate-400 hover:bg-slate-800"
+                    >
+                      <MoreHorizontal className="w-5 h-5" />
+                    </button>
+                    {showMenu && (
+                      <div className="absolute right-0 top-10 card border border-slate-700 py-1 w-36 z-10">
+                        <button
+                          onClick={handleDelete}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-slate-800 w-full"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-4">
+          {/* Info */}
+          <div className="card p-4">
+            <div className="flex items-center gap-3 mb-4">
+              {media.uploader?.avatar ? (
+                <img src={media.uploader.avatar} alt="" className="w-10 h-10 rounded-full" />
+              ) : (
+                <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center font-bold">
+                  {media.uploader?.fullName?.[0] || '?'}
+                </div>
+              )}
+              <div>
+                <p className="font-medium">{media.uploader?.fullName}</p>
+                <p className="text-xs text-slate-500">@{media.uploader?.username}</p>
+              </div>
+            </div>
+
+            {media.caption && (
+              <p className="text-sm text-slate-300 mb-3">{media.caption}</p>
+            )}
+
+            {media.tags && media.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-3">
+                {media.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/search?tags=${tag}`}
+                    className="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded hover:bg-slate-700"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <div className="text-xs text-slate-500 space-y-1">
+              <p>Uploaded {formatDistanceToNow(new Date(media.createdAt), { addSuffix: true })}</p>
+              <p>{format(new Date(media.createdAt), 'PPP')}</p>
+              {media.album && (
+                <p>
+                  Album:{' '}
+                  <Link href={`/albums/${media.albumId}`} className="text-primary-400 hover:underline">
+                    {media.album.name}
+                  </Link>
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div className="card p-4">
+            <h3 className="font-medium mb-3">Comments ({comments.length})</h3>
+
+            {user && (
+              <form onSubmit={handleComment} className="mb-4">
+                <div className="flex gap-2">
+                  <input
+                    id="comment-input"
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="input text-sm flex-1"
+                  />
+                  <button type="submit" disabled={!newComment.trim()} className="btn-primary text-sm">
+                    Post
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {comments.map((comment) => (
+                <div key={comment.id} className="text-sm">
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
+                      {comment.user?.fullName?.[0]}
+                    </div>
+                    <div>
+                      <span className="font-medium text-xs">{comment.user?.username}</span>
+                      <p className="text-slate-300 text-xs">{comment.content}</p>
+                      <p className="text-[10px] text-slate-600 mt-1">
+                        {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {comments.length === 0 && (
+                <p className="text-center text-slate-600 text-xs py-4">No comments yet</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

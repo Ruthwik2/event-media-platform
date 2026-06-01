@@ -1,0 +1,218 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PHOTOGRAPHER
+  CLUB_MEMBER
+  VIEWER
+}
+
+enum MediaType {
+  PHOTO
+  VIDEO
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  username          String    @unique
+  password          String
+  fullName          String
+  avatar            String?
+  bio               String?
+  role              Role      @default(VIEWER)
+  isEmailVerified   Boolean   @default(false)
+  referenceSelfie   String?
+  faceId            String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  events            Event[]   @relation("EventCreator")
+  mediaUploads      Media[]   @relation("MediaUploader")
+  likes             Like[]
+  comments          Comment[]
+  notifications     Notification[] @relation("NotificationRecipient")
+  sentNotifications Notification[] @relation("NotificationSender")
+  favourites        Favourite[]
+  taggedIn          MediaTag[]  @relation("TaggedUser")
+  taggedBy          MediaTag[]  @relation("TaggerUser")
+  albumCollabs      AlbumCollaborator[]
+  downloads         Download[]
+
+  @@map("users")
+}
+
+model Event {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  category    String
+  coverImage  String?
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  visibility  Visibility @default(PUBLIC)
+  creatorId   String
+  creator     User      @relation("EventCreator", fields: [creatorId], references: [id])
+  albums      Album[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("events")
+}
+
+model Album {
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  coverImage    String?
+  visibility    Visibility @default(PUBLIC)
+  eventId       String
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  media         Media[]
+  collaborators AlbumCollaborator[]
+  qrCode        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([name, eventId])
+  @@map("albums")
+}
+
+model AlbumCollaborator {
+  id        String @id @default(uuid())
+  albumId   String
+  userId    String
+  album     Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([albumId, userId])
+  @@map("album_collaborators")
+}
+
+model Media {
+  id            String      @id @default(uuid())
+  filename      String
+  originalName  String
+  mimeType      String
+  size          Int
+  url           String
+  thumbnailUrl  String?
+  mediaType     MediaType
+  width         Int?
+  height        Int?
+  duration      Float?
+  visibility    Visibility  @default(PUBLIC)
+  caption       String?
+  aiCaption     String?
+  tags          String[]
+  faceIds       String[]
+  albumId       String
+  album         Album       @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  uploaderId    String
+  uploader      User        @relation("MediaUploader", fields: [uploaderId], references: [id])
+  likes         Like[]
+  comments      Comment[]
+  favourites    Favourite[]
+  taggedUsers   MediaTag[]
+  downloads     Download[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("media")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  mediaId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, mediaId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  content   String
+  userId    String
+  mediaId   String
+  parentId  String?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media     Media     @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("comments")
+}
+
+model Favourite {
+  id        String   @id @default(uuid())
+  userId    String
+  mediaId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, mediaId])
+  @@map("favourites")
+}
+
+model MediaTag {
+  id          String   @id @default(uuid())
+  mediaId     String
+  taggedUserId String
+  taggerUserId String
+  media       Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  taggedUser  User     @relation("TaggedUser", fields: [taggedUserId], references: [id], onDelete: Cascade)
+  taggerUser  User     @relation("TaggerUser", fields: [taggerUserId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([mediaId, taggedUserId])
+  @@map("media_tags")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  type        String
+  message     String
+  isRead      Boolean  @default(false)
+  recipientId String
+  senderId    String?
+  mediaId     String?
+  eventId     String?
+  recipient   User     @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender      User?    @relation("NotificationSender", fields: [senderId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model Download {
+  id        String   @id @default(uuid())
+  userId    String
+  mediaId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("downloads")
+}

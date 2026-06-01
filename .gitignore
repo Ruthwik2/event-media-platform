@@ -1,0 +1,23 @@
+# dependencies
+node_modules
+
+# env files
+backend/.env
+frontend/.env
+.env
+
+# build files
+.next
+frontend/.next
+dist
+build
+
+# uploads
+uploads
+
+# logs
+logs
+*.log
+
+# macOS
+.DS_Store
