@@ -1,232 +1,316 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import api from '@/lib/axios';
 import { useAuthStore } from '@/store/authStore';
-import { AccessRequest } from '@/types';
-import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { Event, Album } from '@/types';
 import {
-ShieldCheck, Clock, CheckCircle, XCircle, Calendar, Image as ImageIcon,
+Calendar, MapPin, User, Plus, Image, ArrowLeft, Trash2,
+Lock, Globe, ShieldAlert, Clock, XCircle,
 } from 'lucide-react';
-type FilterType = 'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL';
-export default function AccessRequestsPage() {
+import { format } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import CreateAlbumModal from '@/components/albums/CreateAlbumModal';
+export default function EventDetailPage() {
+const { id } = useParams();
 const { user } = useAuthStore();
 const router = useRouter();
-const [requests, setRequests] = useState<AccessRequest[]>([]);
+const [event, setEvent] = useState<Event | null>(null);
+const [albums, setAlbums] = useState<Album[]>([]);
 const [loading, setLoading] = useState(true);
-const [filter, setFilter] = useState<FilterType>('PENDING');
-const [processing, setProcessing] = useState<string | null>(null);
+const [showCreateAlbum, setShowCreateAlbum] = useState(false);
+const [deletingAlbumId, setDeletingAlbumId] = useState<string | null>(null);
+// Access-control states
+const [accessDenied, setAccessDenied] = useState(false);
+const [requestStatus, setRequestStatus] = useState<string | null>(null);
+const [requesting, setRequesting] = useState(false);
 useEffect(() => {
-if (user && user.role !== 'ADMIN') {
-router.push('/');
-return;
-}
-if (user) fetchRequests();
+fetchEvent();
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [user, filter]);
-const fetchRequests = async () => {
-setLoading(true);
+}, [id]);
+const fetchEvent = async () => {
 try {
-const [eventRes, albumRes] = await Promise.allSettled([
-api.get(`/events/access-requests?status=${filter}`),
-api.get(`/albums/access-requests?status=${filter}`),
-]);
-const eventData = eventRes.status === 'fulfilled' ? (eventRes.value.data.data || []) : [];
-const albumData = albumRes.status === 'fulfilled' ? (albumRes.value.data.data || []) : [];
-if (eventRes.status === 'rejected' && albumRes.status === 'rejected') {
-toast.error('Failed to load access requests');
-} else if (eventRes.status === 'rejected') {
-toast.error('Failed to load event access requests');
-} else if (albumRes.status === 'rejected') {
-toast.error('Failed to load album access requests');
+const res = await api.get(`/events/${id}`);
+setEvent(res.data.data);
+setAlbums(res.data.data.albums || []);
+} catch (error: any) {
+if (error.response?.status === 403) {
+setAccessDenied(true);
+setRequestStatus(error.response?.data?.requestStatus ?? null);
+} else if (error.response?.status === 404) {
+toast.error('Event not found');
+router.push('/events');
+} else {
+toast.error(error.response?.data?.message || 'Failed to load event');
+router.push('/events');
 }
-const combined: AccessRequest[] = [
-...eventData,
-...albumData,
-].sort(
-(a, b) =>
-new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-);
-setRequests(combined);
-} catch {
-toast.error('Failed to load access requests');
 } finally {
 setLoading(false);
 }
 };
-const handleDecision = async (
-request: AccessRequest,
-status: 'APPROVED' | 'REJECTED'
-) => {
-setProcessing(request.id);
+const handleRequestAccess = async () => {
+setRequesting(true);
 try {
-const endpoint =
-request.type === 'EVENT'
-? `/events/access-requests/${request.id}`
-: `/albums/access-requests/${request.id}`;
-await api.patch(endpoint, { status });
-toast.success(`Request ${status.toLowerCase()}`);
-// Remove from list if filter is PENDING (or refresh for other filters)
-if (filter === 'PENDING') {
-setRequests((prev) => prev.filter((r) => r.id !== request.id));
-} else {
-fetchRequests();
-}
-} catch (error: any) {
-toast.error(error.response?.data?.message || 'Failed to process request');
+await api.post(`/events/${id}/request-access`);
+toast.success('Access request sent to Admin!');
+setRequestStatus('PENDING');
+} catch (err: any) {
+toast.error(err.response?.data?.message || 'Failed to send request');
 } finally {
-setProcessing(null);
+setRequesting(false);
 }
 };
-const StatusBadge = ({ status }: { status: string }) => {
-if (status === 'PENDING')
-return (
-<span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yellow-900/40 text-yellow-400 border border-yellow-700/50">
-<Clock className="w-3 h-3" /> Pending
-</span>
-);
-if (status === 'APPROVED')
-return (
-<span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-900/40 text-green-400 border border-green-800/50">
-<CheckCircle className="w-3 h-3" /> Approved
-</span>
-);
-return (
-<span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-900/40 text-red-400 border border-red-800/50">
-<XCircle className="w-3 h-3" /> Rejected
-</span>
-);
+const handleDeleteEvent = async () => {
+if (!confirm('Are you sure you want to delete this event?')) return;
+try {
+await api.delete(`/events/${id}`);
+toast.success('Event deleted');
+router.push('/events');
+} catch (error: any) {
+toast.error(error.response?.data?.message || 'Failed to delete');
+}
 };
+const handleDeleteAlbum = async (albumId: string, albumName: string) => {
+if (!confirm(`Delete album "${albumName}"? This cannot be undone.`)) return;
+setDeletingAlbumId(albumId);
+try {
+await api.delete(`/albums/${albumId}`);
+toast.success('Album deleted');
+setAlbums((prev) => prev.filter((a) => a.id !== albumId));
+} catch (error: any) {
+toast.error(error.response?.data?.message || 'Failed to delete album');
+} finally {
+setDeletingAlbumId(null);
+}
+};
+// ── Loading skeleton ──────────────────────────────────────────────────────
+if (loading) {
 return (
-<div className="max-w-4xl mx-auto space-y-6">
-{/* Header */}
-<div>
-<h1 className="text-2xl font-bold flex items-center gap-2">
-<ShieldCheck className="w-6 h-6 text-primary-400" />
-Access Requests
-</h1>
-<p className="text-slate-400 text-sm mt-1">
-Manage photographer access requests for private events and albums
+<div className="space-y-4">
+<div className="h-64 bg-slate-800 rounded-xl animate-pulse" />
+<div className="h-8 w-1/3 bg-slate-800 rounded animate-pulse" />
+</div>
+);
+}
+// ── Access Denied UI ──────────────────────────────────────────────────────
+if (accessDenied) {
+return (
+<div className="flex flex-col items-center justify-center py-20 text-center card mt-10">
+<ShieldAlert className="w-16 h-16 text-slate-500 mb-4" />
+<h1 className="text-3xl font-bold mb-2">Access Restricted</h1>
+<p className="text-slate-400 max-w-md mb-6">
+This event is private. You do not have permission to view its contents.
 </p>
+{user?.role === 'PHOTOGRAPHER' && (
+<>
+{requestStatus === 'PENDING' && (
+<div className="flex items-center gap-2 px-4 py-2 bg-yellow-900/30 border border-yellow-700/50 rounded-lg text-yellow-400 mb-4">
+<Clock className="w-4 h-4" />
+<span className="text-sm">Access request pending admin review</span>
 </div>
-{/* Filter Tabs */}
-<div className="flex gap-1 border-b border-slate-700">
-{(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as FilterType[]).map((f) => (
-<button
-key={f}
-onClick={() => setFilter(f)}
-className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-filter === f
-? 'border-primary-500 text-primary-400'
-: 'border-transparent text-slate-400 hover:text-slate-200'
-}`}
->
-{f.charAt(0) + f.slice(1).toLowerCase()}
-</button>
-))}
-</div>
-{/* Content */}
-{loading ? (
-<div className="space-y-3">
-{[1, 2, 3].map((i) => (
-<div key={i} className="h-24 bg-slate-800 rounded-xl animate-pulse" />
-))}
-</div>
-) : requests.length === 0 ? (
-<div className="text-center py-16 card">
-<ShieldCheck className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-<h3 className="text-lg font-medium mb-2">No requests</h3>
-<p className="text-slate-400">
-No {filter === 'ALL' ? '' : filter.toLowerCase()} access requests
-</p>
-</div>
-) : (
-<div className="space-y-3">
-{requests.map((request, i) => (
-<motion.div
-key={request.id}
-initial={{ opacity: 0, y: 10 }}
-animate={{ opacity: 1, y: 0 }}
-transition={{ delay: i * 0.03 }}
-className="card p-4"
->
-<div className="flex items-start justify-between gap-4">
-{/* Left: user + details */}
-<div className="flex items-start gap-3 min-w-0">
-<div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
-{(request as any).user?.fullName?.[0] ?? '?'}
-</div>
-<div className="min-w-0">
-<div className="flex items-center gap-2 flex-wrap">
-<span className="font-medium">
-{(request as any).user?.fullName}
-</span>
-<span className="text-xs text-slate-400">
-@{(request as any).user?.username}
-</span>
-<StatusBadge status={request.status} />
-<span
-className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
-request.type === 'EVENT'
-? 'bg-blue-900/40 text-blue-400 border-blue-800/50'
-: 'bg-purple-900/40 text-purple-400 border-purple-800/50'
-}`}
->
-{request.type === 'EVENT' ? (
-<Calendar className="w-3 h-3" />
-) : (
-<ImageIcon className="w-3 h-3" />
 )}
-{request.type}
-</span>
-</div>
-<p className="text-sm text-slate-400 mt-1">
-Requested access to:{' '}
-<span className="text-slate-200 font-medium">
-{(request as any).target?.name ?? 'Unknown'}
-</span>
-{request.type === 'ALBUM' &&
-(request as any).target?.event && (
-<span className="text-slate-500">
-{' '}
-({(request as any).target.event.name})
-</span>
-)}
-</p>
-<p className="text-xs text-slate-500 mt-1">
-{formatDistanceToNow(new Date(request.createdAt), {
-addSuffix: true,
-})}
-</p>
-</div>
-</div>
-{/* Right: action buttons (only for PENDING) */}
-{request.status === 'PENDING' && (
-<div className="flex gap-2 flex-shrink-0">
-<button
-onClick={() => handleDecision(request, 'APPROVED')}
-disabled={processing === request.id}
-className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
->
-<CheckCircle className="w-4 h-4" />
-Approve
-</button>
-<button
-onClick={() => handleDecision(request, 'REJECTED')}
-disabled={processing === request.id}
-className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
->
+{requestStatus === 'REJECTED' && (
+<div className="flex flex-col items-center gap-3 mb-4">
+<div className="flex items-center gap-2 px-4 py-2 bg-red-900/30 border border-red-700/50 rounded-lg text-red-400">
 <XCircle className="w-4 h-4" />
-Reject
+<span className="text-sm">Your previous request was rejected</span>
+</div>
+<button
+onClick={handleRequestAccess}
+disabled={requesting}
+className="btn-primary text-sm"
+>
+{requesting ? 'Sending…' : 'Request Access Again'}
 </button>
 </div>
 )}
+{!requestStatus && (
+<button
+onClick={handleRequestAccess}
+disabled={requesting}
+className="btn-primary"
+>
+{requesting ? 'Sending…' : 'Request Access from Admin'}
+</button>
+)}
+</>
+)}
+<button onClick={() => router.push('/events')} className="btn-secondary mt-4">
+Back to Events
+</button>
 </div>
+);
+}
+if (!event) return null;
+const isOwner =
+user?.id === (event.creator as any)?.id || user?.role === 'ADMIN';
+const canCreateAlbum = user && ['ADMIN', 'PHOTOGRAPHER'].includes(user.role);
+const canDeleteAlbum = (album: Album) =>
+user?.role === 'ADMIN' || user?.id === (event.creator as any)?.id;
+const visibleAlbums = albums.filter((album) => {
+if (album.visibility === 'PUBLIC') return true;
+if (!user || user?.role === 'VIEWER') return false;
+return true;
+});
+return (
+<div className="space-y-6">
+<Link
+href="/events"
+className="flex items-center gap-2 text-slate-400 hover:text-slate-200"
+>
+<ArrowLeft className="w-4 h-4" /> Back to Events
+</Link>
+<div className="card overflow-hidden">
+{event.coverImage && (
+<div className="h-48 md:h-64 relative">
+<img
+src={event.coverImage}
+alt={event.name}
+className="w-full h-full object-cover"
+/>
+<div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+</div>
+)}
+<div className="p-6">
+<div className="flex items-start justify-between">
+<div>
+<div className="flex items-center gap-2 mb-2">
+<span
+className={
+event.visibility === 'PUBLIC' ? 'badge-public' : 'badge-private'
+}
+>
+{event.visibility}
+</span>
+<span className="badge bg-primary-900/50 text-primary-400 border border-primary-800">
+{event.category}
+</span>
+</div>
+<h1 className="text-2xl md:text-3xl font-bold">{event.name}</h1>
+{event.description && (
+<p className="text-slate-400 mt-2 max-w-2xl">{event.description}</p>
+)}
+<div className="flex flex-wrap gap-4 mt-4 text-sm text-slate-400">
+<span className="flex items-center gap-1">
+<Calendar className="w-4 h-4" />
+{format(new Date(event.startDate), 'MMM dd, yyyy')}
+</span>
+{event.location && (
+<span className="flex items-center gap-1">
+<MapPin className="w-4 h-4" />
+{event.location}
+</span>
+)}
+<span className="flex items-center gap-1">
+<User className="w-4 h-4" />
+{(event.creator as any)?.fullName}
+</span>
+</div>
+</div>
+{isOwner && (
+<button onClick={handleDeleteEvent} className="btn-danger text-sm">
+<Trash2 className="w-4 h-4" />
+</button>
+)}
+</div>
+</div>
+</div>
+<div className="flex items-center justify-between">
+<h2 className="text-xl font-bold">Albums ({visibleAlbums.length})</h2>
+{canCreateAlbum && (
+<button
+onClick={() => setShowCreateAlbum(true)}
+className="btn-primary text-sm"
+>
+<Plus className="w-4 h-4" /> Create Album
+</button>
+)}
+</div>
+{visibleAlbums.length > 0 ? (
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<AnimatePresence>
+{visibleAlbums.map((album, i) => (
+<motion.div
+key={album.id}
+initial={{ opacity: 0, y: 20 }}
+animate={{ opacity: 1, y: 0 }}
+exit={{ opacity: 0, scale: 0.95 }}
+transition={{ delay: i * 0.05 }}
+className="relative group"
+>
+<Link href={`/events/albums/${album.id}`}>
+<div className="card p-4 hover:border-primary-700 transition-colors cursor-pointer">
+<div className="flex items-center gap-3">
+<div className="w-12 h-12 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0">
+<Image className="w-6 h-6 text-slate-500" />
+</div>
+<div className="flex-1 min-w-0">
+<div className="flex items-center gap-2">
+<h3 className="font-medium truncate">{album.name}</h3>
+{album.visibility === 'PRIVATE' ? (
+<span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-red-900/40 text-red-400 border border-red-800/50 flex-shrink-0">
+<Lock className="w-2.5 h-2.5" /> Private
+</span>
+) : (
+<span className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-green-900/40 text-green-400 border border-green-800/50 flex-shrink-0">
+<Globe className="w-2.5 h-2.5" /> Public
+</span>
+)}
+</div>
+<p className="text-sm text-slate-400">
+{(album as any)._count?.media || 0} items
+</p>
+</div>
+</div>
+{album.description && (
+<p className="text-sm text-slate-500 mt-2 line-clamp-2">
+{album.description}
+</p>
+)}
+</div>
+</Link>
+{canDeleteAlbum(album) && (
+<button
+onClick={(e) => {
+e.preventDefault();
+handleDeleteAlbum(album.id, album.name);
+}}
+disabled={deletingAlbumId === album.id}
+className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 z-10"
+title="Delete album"
+>
+<Trash2 className="w-3.5 h-3.5 text-white" />
+</button>
+)}
 </motion.div>
 ))}
+</AnimatePresence>
 </div>
+) : (
+<div className="text-center py-12 card">
+<Image className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+<p className="text-slate-400">No albums yet</p>
+{canCreateAlbum && (
+<button
+onClick={() => setShowCreateAlbum(true)}
+className="btn-primary text-sm mt-3"
+>
+Create First Album
+</button>
+)}
+</div>
+)}
+{showCreateAlbum && (
+<CreateAlbumModal
+eventId={id as string}
+onClose={() => setShowCreateAlbum(false)}
+onCreated={() => {
+setShowCreateAlbum(false);
+fetchEvent();
+}}
+/>
 )}
 </div>
 );
