@@ -18,6 +18,25 @@ const { notifyLike, notifyComment, notifyTag } = require('../services/notificati
  *  VIEWER / unauthenticated – public albums only
  */
 function canAccessAlbum(user, album) {
+  // ── Step 1: check parent event visibility ──────────────────────────────────
+  // If the event is PRIVATE, only admins, club members, and photographers who
+  // created the event or collaborate on one of its albums may enter.
+  const eventIsPrivate = album.event && album.event.visibility === 'PRIVATE';
+  if (eventIsPrivate) {
+    if (!user) return false;
+    if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
+    if (user.role === 'PHOTOGRAPHER') {
+      const isEventCreator = album.event.creatorId === user.id;
+      const collaborators = album.collaborators || [];
+      const isCollaborator = collaborators.some(
+        c => (c.userId || (c.user && c.user.id)) === user.id
+      );
+      return isEventCreator || isCollaborator;
+    }
+    return false; // VIEWER — blocked by private event
+  }
+
+  // ── Step 2: event is public (or event info unavailable) — check album level
   if (album.visibility === 'PUBLIC') return true;
   // album is PRIVATE from here
   if (!user) return false;
@@ -183,7 +202,7 @@ const getMedia = async (req, res) => {
       const album = await prisma.album.findUnique({
         where: { id: albumId },
         include: {
-          event: { select: { creatorId: true } },
+          event: { select: { creatorId: true, visibility: true } },
           collaborators: { select: { userId: true } },
         },
       });
@@ -197,51 +216,42 @@ const getMedia = async (req, res) => {
     }
     if (mediaType) where.mediaType = mediaType;
 
-    // Media-level + album-level visibility filter.
-    // When browsing the general feed (no albumId), we must also exclude media that
-    // lives inside a private album the user cannot access.
+    // Media-level + album-level + event-level visibility filter.
+    // When browsing the general feed (no albumId) we must block:
+    //   1. media whose own visibility is PRIVATE (for viewers/unauthed)
+    //   2. media inside a PRIVATE album (for viewers/unauthed)
+    //   3. media inside an album whose parent EVENT is PRIVATE (for viewers/unauthed)
     if (!albumId) {
       if (!req.user || req.user.role === 'VIEWER') {
-        // Viewers / unauthenticated: only public media in public albums
+        // Only public media inside public albums of public events
         where.visibility = 'PUBLIC';
-        where.album = { visibility: 'PUBLIC' };
+        where.album = { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } };
       } else if (req.user.role === 'PHOTOGRAPHER') {
-        // Photographers:
-        //  - public media in public albums
-        //  - public media in private albums they own or collaborate on
-        //  - their own private media (any album they can access)
+        // Photographers see:
+        //   - public media in public albums of public events
+        //   - any media in albums/events they own or collaborate on
+        //   - their own uploaded media (regardless of visibility)
         where.OR = [
-          { visibility: 'PUBLIC', album: { visibility: 'PUBLIC' } },
+          // Public feed: public album in a public event
           {
             visibility: 'PUBLIC',
-            album: {
-              visibility: 'PRIVATE',
-              event: { creatorId: req.user.id },
-            },
+            album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } },
           },
+          // Private event they created → all media visible
           {
-            visibility: 'PUBLIC',
-            album: {
-              visibility: 'PRIVATE',
-              collaborators: { some: { userId: req.user.id } },
-            },
+            album: { event: { creatorId: req.user.id } },
           },
+          // Private album they collaborate on → all media visible
           {
-            visibility: 'PRIVATE',
-            uploaderId: req.user.id,
-            album: {
-              OR: [
-                { visibility: 'PUBLIC' },
-                { visibility: 'PRIVATE', event: { creatorId: req.user.id } },
-                { visibility: 'PRIVATE', collaborators: { some: { userId: req.user.id } } },
-              ],
-            },
+            album: { collaborators: { some: { userId: req.user.id } } },
           },
+          // Their own uploads (any album/event)
+          { uploaderId: req.user.id },
         ];
       }
       // ADMIN and CLUB_MEMBER: see all media (no filter)
     } else {
-      // albumId already gated above; apply only media-level visibility here
+      // albumId already gated by canAccessAlbum above; only media-level filter needed
       if (!req.user || req.user.role === 'VIEWER') {
         where.visibility = 'PUBLIC';
       } else if (req.user.role === 'PHOTOGRAPHER') {
@@ -705,14 +715,16 @@ const searchMedia = async (req, res) => {
 
     const where = {};
     if (!req.user || req.user.role === 'VIEWER') {
-      // Viewers/unauthenticated: public media in public albums only
+      // Viewers/unauthenticated: public media in public albums of public events only
       where.visibility = 'PUBLIC';
-      where.album = { visibility: 'PUBLIC' };
+      where.album = { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } };
     } else if (req.user.role === 'PHOTOGRAPHER') {
-      // Photographers: public media OR their own private uploads; only in accessible albums
+      // Photographers: same as getMedia general feed
       where.OR = [
-        { visibility: 'PUBLIC', album: { OR: [{ visibility: 'PUBLIC' }, { visibility: 'PRIVATE', event: { creatorId: req.user.id } }, { visibility: 'PRIVATE', collaborators: { some: { userId: req.user.id } } }] } },
-        { visibility: 'PRIVATE', uploaderId: req.user.id },
+        { visibility: 'PUBLIC', album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } } },
+        { album: { event: { creatorId: req.user.id } } },
+        { album: { collaborators: { some: { userId: req.user.id } } } },
+        { uploaderId: req.user.id },
       ];
     }
     // ADMIN and CLUB_MEMBER: no visibility filter — see everything

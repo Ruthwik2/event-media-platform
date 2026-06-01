@@ -3,18 +3,35 @@ const QRCode = require('qrcode');
 const { uploadToS3 } = require('../services/s3Service');
 // ── Permission helpers ────────────────────────────────────────────────────────
 function canAccessAlbum(user, album) {
-if (album.visibility === 'PUBLIC') return true;
-if (!user) return false;
-if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
-if (user.role === 'PHOTOGRAPHER') {
-const isEventCreator = album.event && album.event.creatorId === user.id;
-const collaborators = album.collaborators || [];
-const isCollaborator = collaborators.some(
-(c) => (c.userId || (c.user && c.user.id)) === user.id
-);
-return isEventCreator || isCollaborator;
-}
-return false;
+  // ── Step 1: check parent event visibility ──────────────────────────────────
+  const eventIsPrivate = album.event && album.event.visibility === 'PRIVATE';
+  if (eventIsPrivate) {
+    if (!user) return false;
+    if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
+    if (user.role === 'PHOTOGRAPHER') {
+      const isEventCreator = album.event.creatorId === user.id;
+      const collaborators = album.collaborators || [];
+      const isCollaborator = collaborators.some(
+        (c) => (c.userId || (c.user && c.user.id)) === user.id
+      );
+      return isEventCreator || isCollaborator;
+    }
+    return false; // VIEWER — blocked by private event
+  }
+
+  // ── Step 2: event is public — check album-level visibility ─────────────────
+  if (album.visibility === 'PUBLIC') return true;
+  if (!user) return false;
+  if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
+  if (user.role === 'PHOTOGRAPHER') {
+    const isEventCreator = album.event && album.event.creatorId === user.id;
+    const collaborators = album.collaborators || [];
+    const isCollaborator = collaborators.some(
+      (c) => (c.userId || (c.user && c.user.id)) === user.id
+    );
+    return isEventCreator || isCollaborator;
+  }
+  return false;
 }
 function canAccessMedia(user, media) {
 const album = media.album || null;
