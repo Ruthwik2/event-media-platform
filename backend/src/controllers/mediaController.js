@@ -514,6 +514,17 @@ const tagUser = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Media not found' });
     }
 
+    const taggedUser = await prisma.user.findUnique({
+      where: { id: taggedUserId },
+      select: { allowTagging: true },
+    });
+    if (!taggedUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    if (!taggedUser.allowTagging) {
+      return res.status(403).json({ success: false, message: 'This user does not allow tagging' });
+    }
+
     await prisma.mediaTag.upsert({
       where: { mediaId_taggedUserId: { mediaId: req.params.id, taggedUserId } },
       update: {},

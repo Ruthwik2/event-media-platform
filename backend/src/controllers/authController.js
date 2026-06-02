@@ -72,6 +72,7 @@ const register = async (req, res) => {
       select: {
         id: true, email: true, username: true,
         fullName: true, role: true, avatar: true, createdAt: true,
+        showEmail: true, allowTagging: true, publicProfile: true,
       },
     });
 
@@ -122,6 +123,7 @@ const getProfile = async (req, res) => {
       select: {
         id: true, email: true, username: true, fullName: true,
         role: true, avatar: true, bio: true, referenceSelfie: true,
+        showEmail: true, allowTagging: true, publicProfile: true,
         createdAt: true,
         _count: {
           select: {
@@ -140,11 +142,14 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { fullName, bio, username } = req.body;
+    const { fullName, bio, username, showEmail, allowTagging, publicProfile } = req.body;
 
     const updateData = {};
     if (fullName) updateData.fullName = fullName;
     if (bio !== undefined) updateData.bio = bio;
+    if (showEmail !== undefined) updateData.showEmail = showEmail === true || showEmail === 'true';
+    if (allowTagging !== undefined) updateData.allowTagging = allowTagging === true || allowTagging === 'true';
+    if (publicProfile !== undefined) updateData.publicProfile = publicProfile === true || publicProfile === 'true';
     if (username) {
       const existing = await prisma.user.findFirst({
         where: { username, NOT: { id: req.user.id } },
@@ -166,6 +171,7 @@ const updateProfile = async (req, res) => {
       select: {
         id: true, email: true, username: true,
         fullName: true, role: true, avatar: true, bio: true,
+        showEmail: true, allowTagging: true, publicProfile: true,
       },
     });
 
@@ -286,12 +292,20 @@ const getAllUsers = async (req, res) => {
     const { search, role, page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const where = {};
+    const where = req.user.role === 'ADMIN'
+      ? {}
+      : { OR: [{ publicProfile: true }, { id: req.user.id }] };
     if (search) {
-      where.OR = [
+      const searchOR = [
         { username: { contains: search, mode: 'insensitive' } },
         { fullName: { contains: search, mode: 'insensitive' } },
       ];
+      if (where.OR) {
+        where.AND = [{ OR: where.OR }, { OR: searchOR }];
+        delete where.OR;
+      } else {
+        where.OR = searchOR;
+      }
     }
     if (role) where.role = role;
 
@@ -301,6 +315,7 @@ const getAllUsers = async (req, res) => {
         select: {
           id: true, username: true, fullName: true,
           avatar: true, role: true, bio: true, email: true, createdAt: true,
+          showEmail: true, allowTagging: true, publicProfile: true,
         },
         skip,
         take: parseInt(limit),
@@ -311,7 +326,12 @@ const getAllUsers = async (req, res) => {
 
     res.json({
       success: true,
-      data: users,
+      data: users.map((user) => ({
+        ...user,
+        email: req.user.role === 'ADMIN' || user.id === req.user.id || user.showEmail
+          ? user.email
+          : null,
+      })),
       pagination: {
         total,
         page: parseInt(page),

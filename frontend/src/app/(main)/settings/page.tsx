@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 
 export default function SettingsPage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, updateUser } = useAuthStore();
   const [notifications, setNotifications] = useState({
     likes: true,
     comments: true,
@@ -15,9 +15,9 @@ export default function SettingsPage() {
     uploads: true,
   });
   const [privacy, setPrivacy] = useState({
-    showEmail: false,
-    allowTagging: true,
-    publicProfile: true,
+    showEmail: user?.showEmail ?? false,
+    allowTagging: user?.allowTagging ?? true,
+    publicProfile: user?.publicProfile ?? true,
   });
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -59,6 +59,28 @@ export default function SettingsPage() {
     localStorage.setItem('galleryLayout', galleryLayout);
     window.dispatchEvent(new CustomEvent('galleryLayoutChange', { detail: galleryLayout }));
   }, [galleryLayout]);
+
+  useEffect(() => {
+    if (!user) return;
+    setPrivacy({
+      showEmail: user.showEmail ?? false,
+      allowTagging: user.allowTagging ?? true,
+      publicProfile: user.publicProfile ?? true,
+    });
+  }, [user]);
+
+  const handlePrivacyToggle = async (key: keyof typeof privacy) => {
+    const nextPrivacy = { ...privacy, [key]: !privacy[key] };
+    setPrivacy(nextPrivacy);
+    try {
+      const res = await api.put('/auth/profile', { [key]: nextPrivacy[key] });
+      updateUser(res.data.data);
+      toast.success('Privacy setting updated');
+    } catch (error: any) {
+      setPrivacy(privacy);
+      toast.error(error.response?.data?.message || 'Failed to update privacy setting');
+    }
+  };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +196,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-slate-500">{desc}</p>
               </div>
               <button
-                onClick={() => setPrivacy({ ...privacy, [key]: !privacy[key as keyof typeof privacy] })}
+                onClick={() => handlePrivacyToggle(key as keyof typeof privacy)}
                 className={`w-11 h-6 rounded-full transition-colors relative ${privacy[key as keyof typeof privacy] ? 'bg-primary-600' : 'bg-slate-700'
                   }`}
               >

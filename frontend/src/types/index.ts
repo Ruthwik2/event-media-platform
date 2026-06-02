@@ -5,7 +5,7 @@ export type AccessRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type AccessRequestType = 'EVENT' | 'ALBUM';
 export interface User {
 id: string;
-email: string;
+email?: string | null;
 username: string;
 fullName: string;
 role: Role;
@@ -13,6 +13,9 @@ avatar?: string;
 bio?: string;
 referenceSelfie?: string;
 faceId?: string;
+showEmail?: boolean;
+allowTagging?: boolean;
+publicProfile?: boolean;
 createdAt: string;
 _count?: { mediaUploads: number; events: number };
 }
