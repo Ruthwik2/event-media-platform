@@ -33,7 +33,14 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         notifications: state.notifications.map((n) =>
           !ids || ids.includes(n.id) ? { ...n, isRead: true } : n
         ),
-        unreadCount: 0,
+        unreadCount: ids
+          ? Math.max(
+              0,
+              state.unreadCount -
+                state.notifications.filter((n) => ids.includes(n.id) && !n.isRead)
+                  .length
+            )
+          : 0,
       }));
     } catch (error) {
       console.error('Failed to mark notifications:', error);

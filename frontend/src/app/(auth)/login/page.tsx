@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isEditable, setIsEditable] = useState(false);
   const { login, isLoading } = useAuthStore();
   const router = useRouter();
 
@@ -42,7 +43,7 @@ export default function LoginPage() {
         </div>
 
         <div className="card p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div>
               <label className="label">Email</label>
               <div className="relative">
@@ -51,8 +52,11 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setIsEditable(true)}
                   className="input pl-10"
                   placeholder="you@example.com"
+                  autoComplete="off"
+                  readOnly={!isEditable}
                   required
                 />
               </div>
@@ -66,8 +70,11 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setIsEditable(true)}
                   className="input pl-10 pr-10"
                   placeholder="••••••••"
+                  autoComplete="new-password"
+                  readOnly={!isEditable}
                   required
                 />
                 <button

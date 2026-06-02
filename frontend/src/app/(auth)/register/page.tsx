@@ -16,6 +16,7 @@ export default function RegisterPage() {
     role: 'VIEWER',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [isEditable, setIsEditable] = useState(false);
   const { register, isLoading } = useAuthStore();
   const router = useRouter();
 
@@ -51,7 +52,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="card p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div>
               <label className="label">Full Name</label>
               <div className="relative">
@@ -61,8 +62,11 @@ export default function RegisterPage() {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
+                  onFocus={() => setIsEditable(true)}
                   className="input pl-10"
                   placeholder="John Doe"
+                  autoComplete="off"
+                  readOnly={!isEditable}
                   required
                 />
               </div>
@@ -77,8 +81,11 @@ export default function RegisterPage() {
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
+                  onFocus={() => setIsEditable(true)}
                   className="input pl-10"
                   placeholder="johndoe"
+                  autoComplete="off"
+                  readOnly={!isEditable}
                   required
                 />
               </div>
@@ -93,8 +100,11 @@ export default function RegisterPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  onFocus={() => setIsEditable(true)}
                   className="input pl-10"
                   placeholder="you@example.com"
+                  autoComplete="off"
+                  readOnly={!isEditable}
                   required
                 />
               </div>
@@ -109,8 +119,11 @@ export default function RegisterPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
+                  onFocus={() => setIsEditable(true)}
                   className="input pl-10 pr-10"
                   placeholder="••••••••"
+                  autoComplete="new-password"
+                  readOnly={!isEditable}
                   required
                   minLength={6}
                 />

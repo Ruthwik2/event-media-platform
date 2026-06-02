@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useAuthStore } from '@/store/authStore';
+import { getNotificationHref } from '@/lib/notificationRoutes';
 import {
 Bell, Heart, MessageCircle, Tag, Check,
 ShieldAlert, ShieldCheck, ShieldX,
@@ -35,16 +36,10 @@ return <Bell className="w-4 h-4 text-slate-400" />;
 }
 };
 const handleNotificationClick = (notification: any) => {
-// Navigate to relevant page based on type
-if (notification.type === 'ACCESS_REQUEST' && user?.role === 'ADMIN') {
-router.push('/admin/access-requests');
-} else if (
-(notification.type === 'ACCESS_APPROVED' ||
-notification.type === 'ACCESS_REJECTED') &&
-notification.eventId
-) {
-router.push(`/events/${notification.eventId}`);
-}
+const href = getNotificationHref(notification, user);
+if (!href) return;
+markAsRead([notification.id]);
+router.push(href);
 };
 return (
 <div className="max-w-2xl mx-auto space-y-6">
@@ -59,7 +54,9 @@ return (
 </div>
 <div className="space-y-2">
 {notifications.length > 0 ? (
-notifications.map((notification, i) => (
+notifications.map((notification, i) => {
+const href = getNotificationHref(notification, user);
+return (
 <motion.div
 key={notification.id}
 initial={{ opacity: 0, x: -10 }}
@@ -68,15 +65,7 @@ transition={{ delay: i * 0.03 }}
 onClick={() => handleNotificationClick(notification)}
 className={`card p-4 flex items-start gap-3 transition-colors ${
 !notification.isRead ? 'border-primary-800 bg-primary-900/10' : ''
-} ${
-[
-'ACCESS_REQUEST',
-'ACCESS_APPROVED',
-'ACCESS_REJECTED',
-].includes(notification.type)
-? 'cursor-pointer hover:bg-slate-800/50'
-: ''
-}`}
+} ${href ? 'cursor-pointer hover:bg-slate-800/50' : ''}`}
 >
 <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
 {getIcon(notification.type)}
@@ -88,10 +77,9 @@ className={`card p-4 flex items-start gap-3 transition-colors ${
 addSuffix: true,
 })}
 </p>
-{notification.type === 'ACCESS_REQUEST' &&
-user?.role === 'ADMIN' && (
+{href && (
 <p className="text-xs text-primary-400 mt-1">
-Click to review →
+Click to open →
 </p>
 )}
 </div>
@@ -99,7 +87,8 @@ Click to review →
 <div className="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0 mt-2" />
 )}
 </motion.div>
-))
+);
+})
 ) : (
 <div className="text-center py-16 card">
 <Bell className="w-16 h-16 text-slate-600 mx-auto mb-4" />
