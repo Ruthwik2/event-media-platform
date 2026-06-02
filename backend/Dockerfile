@@ -2,7 +2,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies for native modules
+# Install dependencies for native modules (canvas, sharp)
 RUN apk add --no-cache \
     python3 \
     make \
@@ -15,12 +15,15 @@ RUN apk add --no-cache \
     openssl-dev
 
 COPY package*.json ./
-RUN npm install
+RUN npm install --production=false
 
 COPY . .
 
+# Generate Prisma client
 RUN npx prisma generate
 
-EXPOSE 5000
+# Railway injects $PORT at runtime — EXPOSE is just documentation
+EXPOSE 8080
 
-CMD ["npm", "run", "dev"]
+# Run DB migrations then start the server (NO nodemon in production)
+CMD ["sh", "-c", "npx prisma migrate deploy && node src/app.js"]
