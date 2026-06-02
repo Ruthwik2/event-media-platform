@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   title: 'EventMedia - Club & Event Media Platform',
   description: 'Centralized platform for managing club and event photos & videos',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export const viewport: Viewport = {
