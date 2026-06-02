@@ -10,6 +10,12 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 
+// Create upload directories
+const dirs = ['uploads', 'uploads/avatars', 'uploads/thumbnails', 'uploads/selfies', 'logs'];
+dirs.forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
+
 const { initializeSocket } = require('./config/socket');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const logger = require('./config/logger');
@@ -28,11 +34,7 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 initializeSocket(server);
 
-// Create upload directories
-const dirs = ['uploads', 'uploads/avatars', 'uploads/thumbnails', 'uploads/selfies', 'logs'];
-dirs.forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-});
+
 
 // Security middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
