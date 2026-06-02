@@ -37,11 +37,11 @@ dirs.forEach(dir => {
 // Security middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL?.replace(/\/$/, '') || 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 }));
-app.options('*', cors());
+app.options(/.*/, cors());
 
 // Rate limiting
 app.use('/api/', rateLimit({
