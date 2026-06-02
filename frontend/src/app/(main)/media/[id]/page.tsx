@@ -5,10 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { useAuthStore } from '@/store/authStore';
-import { Media, Comment } from '@/types';
+import { Media, Comment, User } from '@/types';
 import {
   ArrowLeft, Heart, MessageCircle, Download, Bookmark,
-  Share2, Tag, MoreHorizontal, Trash2, Flag,
+  Share2, Tag, MoreHorizontal, Trash2, Search, X,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -49,11 +49,26 @@ export default function MediaDetailPage() {
   const [favourited, setFavourited] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [showMenu, setShowMenu] = useState(false);
+  const [showTagModal, setShowTagModal] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [taggableUsers, setTaggableUsers] = useState<Partial<User>[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [taggingUserId, setTaggingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMedia();
     fetchComments();
   }, [id]);
+
+  useEffect(() => {
+    if (!showTagModal || !user) return;
+
+    const timeout = setTimeout(() => {
+      fetchTaggableUsers();
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [showTagModal, userSearch, user]);
 
   const fetchMedia = async () => {
     try {
@@ -135,6 +150,44 @@ export default function MediaDetailPage() {
       toast.success('Link copied to clipboard!');
     } catch {
       toast.error('Failed to copy link');
+    }
+  };
+
+  const fetchTaggableUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const params = new URLSearchParams({ limit: '10' });
+      if (userSearch.trim()) params.append('search', userSearch.trim());
+      const res = await api.get(`/auth/users?${params.toString()}`);
+      const users = (res.data.data || []).filter((candidate: Partial<User>) => candidate.id !== user?.id);
+      setTaggableUsers(users);
+    } catch (error) {
+      toast.error('Failed to load users');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleOpenTagModal = () => {
+    if (!user) {
+      toast.error('Please login to tag users');
+      return;
+    }
+    setShowTagModal(true);
+  };
+
+  const handleTagUser = async (taggedUserId?: string) => {
+    if (!taggedUserId) return;
+    setTaggingUserId(taggedUserId);
+    try {
+      await api.post(`/media/${id}/tag`, { taggedUserId });
+      toast.success('User tagged');
+      setShowTagModal(false);
+      setUserSearch('');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to tag user');
+    } finally {
+      setTaggingUserId(null);
     }
   };
 
@@ -221,6 +274,13 @@ export default function MediaDetailPage() {
                 </button>
                 <button onClick={handleDownload} className="p-2 rounded-lg text-slate-400 hover:bg-slate-800">
                   <Download className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleOpenTagModal}
+                  className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
+                >
+                  <Tag className="w-4 h-4" />
+                  Tag User
                 </button>
                 {canDelete && (
                   <div className="relative">
@@ -343,6 +403,71 @@ export default function MediaDetailPage() {
           </div>
         </div>
       </div>
+
+      {showTagModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="card w-full max-w-md p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold">Tag User</h2>
+                <p className="text-sm text-slate-400">Search for a user to tag in this media</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTagModal(false)}
+                className="p-2 rounded-lg text-slate-400 hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="relative mb-4">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="text"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="input pl-10"
+                placeholder="Search name or username"
+                autoFocus
+              />
+            </div>
+
+            <div className="max-h-72 overflow-y-auto space-y-2">
+              {loadingUsers ? (
+                <div className="py-8 text-center text-sm text-slate-400">Loading users...</div>
+              ) : taggableUsers.length > 0 ? (
+                taggableUsers.map((candidate) => (
+                  <button
+                    key={candidate.id}
+                    type="button"
+                    onClick={() => handleTagUser(candidate.id)}
+                    disabled={taggingUserId === candidate.id}
+                    className="w-full flex items-center gap-3 rounded-lg border border-slate-800 p-3 text-left hover:bg-slate-800 disabled:opacity-60"
+                  >
+                    {candidate.avatar ? (
+                      <img src={candidate.avatar} alt="" className="w-9 h-9 rounded-full" />
+                    ) : (
+                      <div className="w-9 h-9 bg-primary-600 rounded-full flex items-center justify-center text-sm font-bold">
+                        {candidate.fullName?.[0] || candidate.username?.[0] || '?'}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{candidate.fullName || candidate.username}</p>
+                      <p className="text-xs text-slate-500 truncate">@{candidate.username}</p>
+                    </div>
+                    <span className="text-xs text-primary-400">
+                      {taggingUserId === candidate.id ? 'Tagging...' : 'Tag'}
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="py-8 text-center text-sm text-slate-500">No users found</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
