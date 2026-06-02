@@ -69,7 +69,9 @@ export default function HomePage() {
       >
         <div className="relative z-10">
           {/* Club name — the biggest thing on the page */}
-          {clubName ? (
+          {loading ? (
+            <div className="h-14 md:h-20 w-72 bg-slate-700/30 rounded-xl animate-pulse mb-3" />
+          ) : clubName ? (
             <motion.h1
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
