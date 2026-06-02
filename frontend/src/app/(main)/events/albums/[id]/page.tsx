@@ -308,7 +308,7 @@ export default function AlbumDetailPage() {
       {/* Share Modal — QR + link + guest access controls */}
       {showShare && album && (
         <ShareAlbumModal
-          album={album}
+          album={album as any}
           canManage={!!canManage}
           onClose={() => setShowShare(false)}
         />
