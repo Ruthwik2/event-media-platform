@@ -85,7 +85,7 @@ type="text"
 placeholder="Search media, events..."
 value={searchQuery}
 onChange={(e) => setSearchQuery(e.target.value)}
-className="bg-slate-800/50 border border-slate-700 text-sm text-slate-100
+className="input bg-slate-800/50 border border-slate-700 text-sm text-slate-100
 rounded-full pl-9 pr-4 py-1.5 w-48 focus:w-64 transition-all
 focus:outline-none focus:ring-1 focus:ring-primary-500 placeholder-slate-500"
 />

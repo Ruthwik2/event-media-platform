@@ -130,7 +130,7 @@
   }
 
   html[data-theme='light'] .glass {
-    @apply bg-slate-50/70 border-slate-200/60;
+    @apply bg-white/80 border-slate-200/80;
   }
 
   html[data-theme='light'] .bg-slate-900 {
@@ -163,12 +163,54 @@
     @apply text-slate-700;
   }
 
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary-400 to-blue-500 bg-clip-text text-transparent;
+  /* â”€â”€ NEW: light-mode overrides for colours not previously covered â”€â”€ */
+
+  /* White / very-light text â†’ dark in light mode */
+  html[data-theme='light'] .text-white {
+    @apply text-slate-900;
+  }
+  html[data-theme='light'] .text-slate-100 {
+    @apply text-slate-900;
+  }
+  html[data-theme='light'] .text-slate-200 {
+    @apply text-slate-800;
+  }
+
+  /* Hover text */
+  html[data-theme='light'] .hover\:text-slate-100:hover {
+    @apply text-slate-900;
+  }
+
+  /* Hover backgrounds */
+  html[data-theme='light'] .hover\:bg-slate-800:hover,
+  html[data-theme='light'] .hover\:bg-slate-700:hover {
+    @apply bg-slate-100;
+  }
+
+  /* Semi-transparent dark backgrounds (search bar, etc.) */
+  html[data-theme='light'] .bg-slate-800\/50 {
+    @apply bg-white;
+  }
+
+  /* Active nav pill */
+  html[data-theme='light'] .bg-primary-900\/50 {
+    background-color: rgb(239 246 255);   /* blue-50 */
+    color: rgb(37 99 235);                /* blue-600 */
+  }
+
+  /* Dark borders with opacity */
+  html[data-theme='light'] .border-slate-800\/50,
+  html[data-theme='light'] .border-slate-700\/50 {
+    @apply border-slate-200;
+  }
+
+  /* â”€â”€ Hero surface: define dark defaults here so page.tsx stays clean â”€â”€ */
+  .hero-surface {
+    @apply bg-gradient-to-br from-primary-900/50 via-slate-900 to-blue-900/50 border border-slate-800;
   }
 
   html[data-theme='light'] .hero-surface {
-    @apply bg-gradient-to-br from-slate-50 via-white to-slate-100 border-slate-200;
+    @apply bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-slate-200;
   }
 
   html[data-theme='light'] .hero-title {
@@ -177,6 +219,10 @@
 
   html[data-theme='light'] .hero-subtitle {
     @apply text-slate-600;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-400 to-blue-500 bg-clip-text text-transparent;
   }
 }
 

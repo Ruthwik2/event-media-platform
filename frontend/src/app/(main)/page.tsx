@@ -65,7 +65,7 @@ export default function HomePage() {
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="hero-surface relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-900/50 via-slate-900 to-blue-900/50 border border-slate-800 p-8 md:p-12"
+        className="hero-surface relative overflow-hidden rounded-2xl p-8 md:p-12"
       >
         <div className="relative z-10">
           {/* Club name — the biggest thing on the page */}
@@ -73,18 +73,18 @@ export default function HomePage() {
             <motion.h1
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight"
+              className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight"
             >
               {clubName}
             </motion.h1>
           ) : (
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight">
+            <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight">
               Event Media
             </h1>
           )}
 
           {/* Smaller welcome line */}
-          <p className="text-slate-400 text-base md:text-lg mb-6">
+          <p className="hero-subtitle text-slate-400 text-base md:text-lg mb-6">
             {user ? `Welcome back, ${user.fullName.split(' ')[0]}!` : 'Sign in to get started'}
           </p>
 
