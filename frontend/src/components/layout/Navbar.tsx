@@ -65,10 +65,10 @@ EventMedia
 key={href}
 href={href}
 className={clsx(
-'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
 pathname === href
-? 'bg-primary-900/50 text-primary-400'
-: 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+? 'bg-primary-500/15 text-primary-400 ring-1 ring-primary-500/30'
+: 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
 )}
 >
 <Icon className="w-4 h-4" />
@@ -107,7 +107,7 @@ className="btn-primary text-sm py-1.5 hidden sm:flex"
 {/* Notifications */}
 <Link
 href="/notifications"
-className="relative p-2 hover:bg-slate-800 rounded-lg transition-colors"
+className="relative p-2 hover:bg-white/5 rounded-lg transition-all duration-200"
 >
 <Bell className="w-5 h-5 text-slate-400" />
 {unreadCount > 0 && (
@@ -120,7 +120,7 @@ className="relative p-2 hover:bg-slate-800 rounded-lg transition-colors"
 <div className="relative">
 <button
 onClick={() => setProfileOpen(!profileOpen)}
-className="flex items-center gap-2 p-1 hover:bg-slate-800 rounded-lg transition-colors"
+className="flex items-center gap-2 p-1 hover:bg-white/5 rounded-lg transition-all duration-200"
 >
 {user.avatar ? (
 <img
@@ -159,14 +159,14 @@ className="absolute right-0 top-10 w-52 card shadow-xl border border-slate-700 p
 <Link
 href="/profile"
 onClick={() => setProfileOpen(false)}
-className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 transition-colors"
+className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 transition-all duration-200"
 >
 <User className="w-4 h-4" /> Profile
 </Link>
 <Link
 href="/settings"
 onClick={() => setProfileOpen(false)}
-className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 transition-colors"
+className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 transition-all duration-200"
 >
 <Settings className="w-4 h-4" /> Settings
 </Link>
@@ -176,14 +176,14 @@ className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-sla
 <Link
 href="/users"
 onClick={() => setProfileOpen(false)}
-className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-slate-800 transition-colors"
+className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-white/5 transition-all duration-200"
 >
 <Users className="w-4 h-4" /> Manage Users
 </Link>
 <Link
 href="/admin/access-requests"
 onClick={() => setProfileOpen(false)}
-className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-slate-800 transition-colors"
+className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-white/5 transition-all duration-200"
 >
 <ShieldCheck className="w-4 h-4" /> Access Requests
 </Link>
@@ -195,7 +195,7 @@ className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:bg-slat
 <Link
 href="/my-access-requests"
 onClick={() => setProfileOpen(false)}
-className="flex items-center gap-2 px-3 py-2 text-sm text-primary-400 hover:bg-slate-800 transition-colors"
+className="flex items-center gap-2 px-3 py-2 text-sm text-primary-400 hover:bg-white/5 transition-all duration-200"
 >
 <Lock className="w-4 h-4" /> My Access Requests
 </Link>
@@ -207,7 +207,7 @@ onClick={() => {
 setProfileOpen(false);
 handleLogout();
 }}
-className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-slate-800 transition-colors w-full"
+className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-white/5 transition-all duration-200 w-full"
 >
 <LogOut className="w-4 h-4" /> Sign Out
 </button>
@@ -233,7 +233,7 @@ Sign Up
 {/* Mobile Menu Toggle */}
 <button
 onClick={() => setMobileOpen(!mobileOpen)}
-className="md:hidden p-2 hover:bg-slate-800 rounded-lg"
+className="md:hidden p-2 hover:bg-white/5 rounded-lg"
 >
 {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
 </button>
@@ -269,8 +269,8 @@ onClick={() => setMobileOpen(false)}
 className={clsx(
 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
 pathname === href
-? 'bg-primary-900/50 text-primary-400'
-: 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+? 'bg-primary-500/15 text-primary-400 ring-1 ring-primary-500/30'
+: 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
 )}
 >
 <Icon className="w-4 h-4" />
@@ -281,7 +281,7 @@ pathname === href
 <Link
 href="/upload"
 onClick={() => setMobileOpen(false)}
-className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-primary-400 hover:bg-slate-800"
+className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-primary-400 hover:bg-white/5"
 >
 <Upload className="w-4 h-4" /> Upload
 </Link>
@@ -290,7 +290,7 @@ className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-primary-400
 <Link
 href="/admin/access-requests"
 onClick={() => setMobileOpen(false)}
-className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-blue-400 hover:bg-slate-800"
+className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-blue-400 hover:bg-white/5"
 >
 <ShieldCheck className="w-4 h-4" /> Access Requests
 </Link>
@@ -299,7 +299,7 @@ className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-blue-400 ho
 <Link
 href="/my-access-requests"
 onClick={() => setMobileOpen(false)}
-className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-primary-400 hover:bg-slate-800"
+className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-primary-400 hover:bg-white/5"
 >
 <Lock className="w-4 h-4" /> My Access Requests
 </Link>
