@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import {
 Bell, Search, User, LogOut, Upload, Home, Calendar,
-Image, Heart, Settings, Menu, X, Camera, ChevronDown,
+Image, Settings, Menu, X, Camera, ChevronDown, Bookmark,
 Users, ShieldCheck, Lock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,7 +40,7 @@ const navLinks = [
 { href: '/gallery', label: 'Gallery', icon: Image },
 ...(user
 ? [
-{ href: '/favourites', label: 'Favourites', icon: Heart },
+{ href: '/favourites', label: 'Favourites', icon: Bookmark },
 { href: '/my-photos', label: 'My Photos', icon: Camera },
 ]
 : []),
