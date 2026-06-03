@@ -1,10 +1,15 @@
 'use client';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSocket } from '@/hooks/useSocket';
+import PageLoader from '@/components/PageLoader';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SocketProvider>
+      {/* Suspense required because PageLoader uses useSearchParams (App Router) */}
+      <Suspense fallback={null}>
+        <PageLoader />
+      </Suspense>
       {children}
     </SocketProvider>
   );
