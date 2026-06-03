@@ -1,10 +1,10 @@
 'use client';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import api from '@/lib/axios';
+import { QRCodeCanvas } from 'qrcode.react';
 import {
   X, Download, Copy, Check, Globe, Lock, AlertTriangle,
-  Link2, RefreshCw, Trash2, ShieldCheck, ShieldOff, Users,
-  Info,
+  Link2, RefreshCw, Trash2, ShieldCheck, ShieldOff, Users, Info,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -15,7 +15,6 @@ interface EventShare {
 }
 
 interface QRData {
-  qrCode: string;
   url: string;
   visibility: 'PUBLIC' | 'PRIVATE';
   hasShareToken: boolean;
@@ -24,15 +23,16 @@ interface QRData {
 
 interface Props {
   event: EventShare;
-  canManage: boolean; // true for creator / ADMIN
+  canManage: boolean;
   onClose: () => void;
 }
 
 export default function ShareEventModal({ event, canManage, onClose }: Props) {
   const [qrData, setQrData] = useState<QRData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]       = useState(false);
   const [tokenLoading, setTokenLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied]         = useState(false);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   const loadQR = useCallback(async () => {
     setLoading(true);
@@ -40,13 +40,12 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
       const res = await api.get(`/events/${event.id}/qr`);
       setQrData(res.data.data);
     } catch {
-      toast.error('Failed to load QR code');
+      toast.error('Failed to load share info');
     } finally {
       setLoading(false);
     }
   }, [event.id]);
 
-  // Load on first open
   useEffect(() => { loadQR(); }, [loadQR]);
 
   const handleCopy = async () => {
@@ -58,9 +57,12 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
   };
 
   const handleDownload = () => {
-    if (!qrData) return;
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current.querySelector('canvas');
+    if (!canvas) return;
+    const url = canvas.toDataURL('image/png');
     const a = document.createElement('a');
-    a.href = qrData.qrCode;
+    a.href = url;
     a.download = `qr-${event.name.replace(/\s+/g, '-').toLowerCase()}.png`;
     a.click();
   };
@@ -98,6 +100,8 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
   };
 
   const isPrivate = event.visibility === 'PRIVATE';
+  // QR is "active" (scannable without login) if it's a public event or guest access is on
+  const qrActive = qrData && (!isPrivate || qrData.guestAccessEnabled);
 
   return (
     <div
@@ -128,7 +132,7 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Visibility explanation */}
+          {/* Visibility banner */}
           {isPrivate ? (
             <div className="rounded-xl border border-amber-700/40 bg-amber-900/20 p-4 space-y-2">
               <div className="flex items-center gap-2">
@@ -138,8 +142,7 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
               {qrData?.guestAccessEnabled ? (
                 <p className="text-xs text-amber-200/70 leading-relaxed">
                   <strong className="text-amber-300">Guest access is ON.</strong> Anyone who scans
-                  this QR or opens the link can view the event — no login required. Revoke to
-                  re-lock it.
+                  this QR or opens the link can view the event — no login required. Revoke to re-lock it.
                 </p>
               ) : (
                 <p className="text-xs text-amber-200/70 leading-relaxed">
@@ -167,12 +170,15 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
                 <RefreshCw className="w-8 h-8 text-slate-600 animate-spin" />
               </div>
             ) : qrData ? (
-              <div className="relative">
-                <div className={`p-3 rounded-2xl ${qrData.guestAccessEnabled || !isPrivate ? 'bg-white' : 'bg-white/80 grayscale'}`}>
-                  <img
-                    src={qrData.qrCode}
-                    alt="Event QR Code"
-                    className="w-44 h-44 block"
+              <div className="relative" ref={canvasRef}>
+                <div className={`p-3 rounded-2xl ${qrActive ? 'bg-white' : 'bg-white/80 grayscale'}`}>
+                  <QRCodeCanvas
+                    value={qrData.url}
+                    size={176}
+                    level="M"
+                    marginSize={2}
+                    bgColor="#ffffff"
+                    fgColor="#000000"
                   />
                 </div>
                 {isPrivate && !qrData.guestAccessEnabled && (
@@ -188,7 +194,7 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
 
             {qrData && (
               <div className="flex items-center gap-1.5 mt-3">
-                {qrData.guestAccessEnabled || !isPrivate ? (
+                {qrActive ? (
                   <>
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                     <span className="text-xs text-emerald-400">
@@ -225,11 +231,11 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
             </div>
           )}
 
-          {/* Action buttons */}
+          {/* Actions */}
           <div className="flex gap-2">
             <button
               onClick={handleDownload}
-              disabled={!qrData}
+              disabled={!qrData || loading}
               className="flex-1 btn-secondary text-xs flex items-center justify-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5" /> Download QR

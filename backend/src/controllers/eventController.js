@@ -470,22 +470,24 @@ const renameEvent = async (req, res) => {
 
 /**
  * GET /events/:id/qr  (optionalAuth)
- * Returns QR code. For private events with a shareToken, encodes guest-access URL.
+ * Returns the share URL and security metadata. QR image is generated client-side.
+ * shareToken is fetched in a separate query so a pending DB migration won't crash
+ * the whole endpoint.
  */
 const getEventQR = async (req, res) => {
   try {
+    // Step 1 — fetch core fields (always safe, no optional columns)
     const event = await prisma.event.findUnique({
       where: { id: req.params.id },
-      select: { id: true, name: true, visibility: true, shareToken: true, creatorId: true },
+      select: { id: true, name: true, visibility: true, creatorId: true },
     });
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
-    // Access check: use same logic as getEvent
+
+    // Step 2 — access check
     if (event.visibility === 'PRIVATE') {
       if (!req.user || req.user.role === 'VIEWER') {
-        // Allow if shareToken provided via query (guest trying to see QR)
-        // Otherwise block
         return res.status(403).json({ success: false, message: 'Access denied' });
       }
       if (req.user.role === 'PHOTOGRAPHER' && event.creatorId !== req.user.id) {
@@ -497,25 +499,34 @@ const getEventQR = async (req, res) => {
         }
       }
     }
-    let qrUrl;
-    if (event.visibility === 'PRIVATE' && event.shareToken) {
-      qrUrl = `${process.env.FRONTEND_URL}/events/share/${event.shareToken}`;
-    } else {
-      qrUrl = `${process.env.FRONTEND_URL}/events/${event.id}`;
+
+    // Step 3 — try to read shareToken in a separate query.
+    // If the migration adding this column hasn't been applied yet the query
+    // throws; we catch it silently and fall back to no share token.
+    let shareToken = null;
+    try {
+      const row = await prisma.event.findUnique({
+        where: { id: req.params.id },
+        select: { shareToken: true },
+      });
+      shareToken = row?.shareToken ?? null;
+    } catch {
+      // column not yet in DB — treat as null
     }
-    const qrCode = await QRCode.toDataURL(qrUrl, {
-      errorCorrectionLevel: 'M',
-      margin: 2,
-      width: 400,
-    });
+
+    // Step 4 — build URL (QR image rendered client-side, not here)
+    const baseUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+    const qrUrl = (event.visibility === 'PRIVATE' && shareToken)
+      ? `${baseUrl}/events/share/${shareToken}`
+      : `${baseUrl}/events/${event.id}`;
+
     res.json({
       success: true,
       data: {
-        qrCode,
         url: qrUrl,
         visibility: event.visibility,
-        hasShareToken: !!event.shareToken,
-        guestAccessEnabled: event.visibility === 'PRIVATE' && !!event.shareToken,
+        hasShareToken: !!shareToken,
+        guestAccessEnabled: event.visibility === 'PRIVATE' && !!shareToken,
       },
     });
   } catch (error) {
