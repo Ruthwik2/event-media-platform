@@ -697,48 +697,69 @@ const findMyPhotos = async (req, res) => {
       select: { faceId: true, referenceSelfie: true },
     });
 
-    // Always include media the user personally uploaded
+    // ── Role-based visibility filter ─────────────────────────────────────────
+    // Applied to face-match and tagged results so VIEWERs / PHOTOGRAPHERs
+    // cannot see private media they have no business accessing.
+    // Own uploads are always shown — no visibility gate needed there.
+    let visibilityFilter = null;
+    if (req.user.role === 'VIEWER') {
+      visibilityFilter = {
+        visibility: 'PUBLIC',
+        album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } },
+      };
+    } else if (req.user.role === 'PHOTOGRAPHER') {
+      visibilityFilter = {
+        OR: [
+          { visibility: 'PUBLIC', album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } } },
+          { album: { event: { creatorId: req.user.id } } },
+          { album: { collaborators: { some: { userId: req.user.id } } } },
+          { uploaderId: req.user.id },
+        ],
+      };
+    }
+    // ADMIN and CLUB_MEMBER: visibilityFilter stays null — see everything
+
+    const mediaInclude = {
+      uploader: { select: { id: true, username: true, fullName: true, avatar: true } },
+      album: { include: { event: { select: { id: true, name: true } } } },
+      _count: { select: { likes: true } },
+    };
+
+    // ── 1. Media the user personally uploaded ────────────────────────────────
+    // Bug was: `faceIds: { has: user?.faceId || '' }` hid ALL uploads for users
+    // with no faceId (empty-string has = no match). Own uploads always visible.
     const uploadedMedia = await prisma.media.findMany({
-      where: { uploaderId: req.user.id, mediaType: 'PHOTO', faceIds: { has: user?.faceId || '' }, },
-      include: {
-        uploader: { select: { id: true, username: true, fullName: true, avatar: true } },
-        album: { include: { event: { select: { id: true, name: true } } } },
-        _count: { select: { likes: true } },
-      },
+      where: { uploaderId: req.user.id },
+      include: mediaInclude,
       orderBy: { createdAt: 'desc' },
     });
 
-    // Face-recognition results — query by stored faceId regardless of current
-    // USE_S3 env value; faceIds were populated at upload time when S3 was active.
+    // ── 2. Face-recognition matches ──────────────────────────────────────────
+    // Bug was: no visibility filter — any role could see photos of themselves
+    // inside private albums/events they have no access to.
     let faceMedia = [];
     if (user?.faceId) {
+      const faceWhere = {
+        faceIds: { has: user.faceId },
+        uploaderId: { not: req.user.id }, // own uploads already in uploadedMedia
+        ...(visibilityFilter || {}),
+      };
       faceMedia = await prisma.media.findMany({
-        where: {
-          faceIds: { has: user.faceId },
-          // Exclude photos the user uploaded (already in uploadedMedia)
-          // uploaderId: { not: req.user.id },
-        },
-        include: {
-          uploader: { select: { id: true, username: true, fullName: true, avatar: true } },
-          album: { include: { event: { select: { id: true, name: true } } } },
-          _count: { select: { likes: true } },
-        },
+        where: faceWhere,
+        include: mediaInclude,
         orderBy: { createdAt: 'desc' },
       });
     }
 
-    // Tagged media (manual tags by other users)
+    // ── 3. Manually tagged media ─────────────────────────────────────────────
+    // Bug was: no visibility filter — private tagged photos leaked to any role.
+    const taggedWhere = visibilityFilter
+      ? { taggedUserId: req.user.id, media: visibilityFilter }
+      : { taggedUserId: req.user.id };
+
     const taggedMedia = await prisma.mediaTag.findMany({
-      where: { taggedUserId: req.user.id },
-      include: {
-        media: {
-          include: {
-            uploader: { select: { id: true, username: true, fullName: true, avatar: true } },
-            album: { include: { event: { select: { id: true, name: true } } } },
-            _count: { select: { likes: true } },
-          },
-        },
-      },
+      where: taggedWhere,
+      include: { media: { include: mediaInclude } },
     });
 
     const taggedMediaItems = taggedMedia.map(t => t.media);
@@ -749,10 +770,7 @@ const findMyPhotos = async (req, res) => {
       index === self.findIndex(m => m.id === item.id)
     );
 
-    // faceRecognitionEnabled = true when the user has a stored faceId,
-    // meaning at least one selfie was successfully indexed by Rekognition.
     const faceRecognitionEnabled = !!user?.faceId;
-    // hasSelfie = true when a selfie was uploaded but face indexing may have failed
     const hasSelfie = !!user?.referenceSelfie;
 
     res.json({
