@@ -1,6 +1,7 @@
 const prisma = require('../config/database');
 const QRCode = require('qrcode');
 const { uploadToS3, deleteFromS3 } = require('../services/s3Service');
+const { randomBytes } = require('crypto');
 
 // ── Permission helper ─────────────────────────────────────────────────────────
 function canAccessEvent(user, event) {
@@ -540,7 +541,6 @@ const getEventQR = async (req, res) => {
  */
 const generateEventShareToken = async (req, res) => {
   try {
-    const { crypto } = await import('crypto');
     const event = await prisma.event.findUnique({ where: { id: req.params.id } });
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
@@ -554,7 +554,7 @@ const generateEventShareToken = async (req, res) => {
         message: 'Share tokens are only for private events. Public events are accessible by everyone.',
       });
     }
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = randomBytes(32).toString('hex');
     await prisma.event.update({ where: { id: event.id }, data: { shareToken: token } });
     const shareUrl = `${process.env.FRONTEND_URL}/events/share/${token}`;
     res.json({ success: true, data: { shareToken: token, shareUrl } });

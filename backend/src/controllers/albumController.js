@@ -1,6 +1,7 @@
 const prisma = require('../config/database');
 const QRCode = require('qrcode');
 const { uploadToS3 } = require('../services/s3Service');
+const { randomBytes } = require('crypto');
 // ── Permission helpers ────────────────────────────────────────────────────────
 function canAccessAlbum(user, album) {
   // ── Step 1: check parent event visibility ──────────────────────────────────
@@ -442,7 +443,6 @@ res.status(500).json({ success: false, message: error.message });
  */
 const generateShareToken = async (req, res) => {
   try {
-    const { crypto } = await import('crypto');
     const album = await prisma.album.findUnique({
       where: { id: req.params.id },
       include: { event: { select: { creatorId: true, visibility: true } } },
@@ -461,7 +461,7 @@ const generateShareToken = async (req, res) => {
       });
     }
     // Generate a cryptographically random token (32 bytes → 64 hex chars)
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = randomBytes(32).toString('hex');
     await prisma.album.update({
       where: { id: album.id },
       data: { shareToken: token },
