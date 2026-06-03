@@ -3,8 +3,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import api from '@/lib/axios';
 import { QRCodeCanvas } from 'qrcode.react';
 import {
-  X, Download, Copy, Check, Globe, Lock, AlertTriangle,
-  Link2, RefreshCw, Trash2, ShieldCheck, ShieldOff, Users, Info,
+  X, Download, Copy, Check, Globe, Lock,
+  Link2, RefreshCw, Trash2, ShieldCheck, Users, Info,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -69,7 +69,7 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
 
   const handleGenerateToken = async () => {
     if (!confirm(
-      'Enable guest access?\n\nAnyone who scans the QR or uses this link can view the event — no login required.\n\nYou can revoke this at any time.'
+      'Enable guest access?\n\nShare this link or QR to give access to this private event.\n\nYou can revoke this at any time.'
     )) return;
     setTokenLoading(true);
     try {
@@ -100,8 +100,6 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
   };
 
   const isPrivate = event.visibility === 'PRIVATE';
-  // QR is "active" (scannable without login) if it's a public event or guest access is on
-  const qrActive = qrData && (!isPrivate || qrData.guestAccessEnabled);
 
   return (
     <div
@@ -141,13 +139,13 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
               </div>
               {qrData?.guestAccessEnabled ? (
                 <p className="text-xs text-amber-200/70 leading-relaxed">
-                  <strong className="text-amber-300">Guest access is ON.</strong> Anyone who scans
-                  this QR or opens the link can view the event — no login required. Revoke to re-lock it.
+                  <strong className="text-amber-300">Guest access is ON.</strong> Share the QR or
+                  link below to give others access to this event. Revoke to re-lock it.
                 </p>
               ) : (
                 <p className="text-xs text-amber-200/70 leading-relaxed">
                   Only authorized members (admins, approved photographers) can view this event.
-                  Enable guest access below to let anyone with the link view without logging in.
+                  Enable guest access below to share a direct link.
                 </p>
               )}
             </div>
@@ -157,7 +155,7 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
               <div>
                 <p className="text-sm font-medium text-emerald-300">Public Event</p>
                 <p className="text-xs text-emerald-200/70 mt-0.5 leading-relaxed">
-                  Anyone who scans this QR or opens the link can view the event — no login needed.
+                  Share this QR or link to give others access to this event.
                 </p>
               </div>
             </div>
@@ -171,7 +169,7 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
               </div>
             ) : qrData ? (
               <div className="relative" ref={canvasRef}>
-                <div className={`p-3 rounded-2xl ${qrActive ? 'bg-white' : 'bg-white/80 grayscale'}`}>
+                <div className="p-3 rounded-2xl bg-white">
                   <QRCodeCanvas
                     value={qrData.url}
                     size={176}
@@ -181,34 +179,8 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
                     fgColor="#000000"
                   />
                 </div>
-                {isPrivate && !qrData.guestAccessEnabled && (
-                  <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/50">
-                    <div className="text-center px-3">
-                      <Lock className="w-6 h-6 text-amber-400 mx-auto mb-1" />
-                      <p className="text-xs text-amber-300 font-medium">Login required to scan</p>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : null}
-
-            {qrData && (
-              <div className="flex items-center gap-1.5 mt-3">
-                {qrActive ? (
-                  <>
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-xs text-emerald-400">
-                      {isPrivate ? 'Guest link — anyone can scan' : 'Public — anyone can scan'}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <ShieldOff className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="text-xs text-slate-500">Login required to view after scan</span>
-                  </>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Share link + copy */}
@@ -257,7 +229,7 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
                     <div>
                       <p className="text-xs font-medium text-emerald-300">Guest access is active</p>
                       <p className="text-xs text-emerald-200/60 mt-0.5">
-                        Anyone with the QR or link can view this private event without an account.
+                        Share the QR or link to give others access to this private event.
                       </p>
                     </div>
                   </div>
@@ -286,8 +258,8 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
                   <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
                     <Info className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-slate-400 leading-relaxed">
-                      Enable guest access to let event attendees view this event by scanning the QR
-                      — no account required. You can revoke it at any time.
+                      Enable guest access to generate a direct share link for this private event.
+                      You can revoke it at any time.
                     </p>
                   </div>
                   <button
