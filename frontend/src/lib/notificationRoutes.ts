@@ -20,5 +20,18 @@ export const getNotificationHref = (
     return `/events/${notification.eventId}`;
   }
 
+  // Membership request: admin clicks → goes to access requests to approve
+  if (notification.type === 'MEMBERSHIP_REQUEST' && user?.role === 'ADMIN') {
+    return '/admin/access-requests';
+  }
+
+  // Membership approved/rejected: member clicks → goes to their profile
+  if (
+    notification.type === 'MEMBERSHIP_APPROVED' ||
+    notification.type === 'MEMBERSHIP_REJECTED'
+  ) {
+    return '/profile';
+  }
+
   return null;
 };

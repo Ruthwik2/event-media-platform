@@ -73,7 +73,9 @@ export default function ProfilePage() {
               <p className="font-medium">{user.fullName}</p>
               <p className="text-sm text-slate-400">@{user.username}</p>
               <span className="badge bg-primary-900/50 text-primary-400 text-xs mt-1">
-                {user.role}
+                {user.role === 'CLUB_MEMBER' && !user.isApproved
+                  ? 'Pending Approval'
+                  : user.role}
               </span>
             </div>
           </div>
@@ -125,7 +127,11 @@ export default function ProfilePage() {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Role</span>
-            <span>{user.role}</span>
+            <span>
+              {user.role === 'CLUB_MEMBER' && !user.isApproved
+                ? 'Club Member (Pending Approval)'
+                : user.role}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Joined</span>

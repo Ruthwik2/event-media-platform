@@ -68,14 +68,16 @@ export default function UsersPage() {
     return null;
   }
 
-  const getRoleBadgeColor = (role: string) => {
+  const getRoleBadgeColor = (role: string, isApproved?: boolean) => {
     switch (role) {
       case 'ADMIN':
         return 'bg-red-900/50 text-red-400 border-red-800';
       case 'PHOTOGRAPHER':
         return 'bg-blue-900/50 text-blue-400 border-blue-800';
       case 'CLUB_MEMBER':
-        return 'bg-purple-900/50 text-purple-400 border-purple-800';
+        return isApproved === false
+          ? 'bg-yellow-900/50 text-yellow-400 border-yellow-800'
+          : 'bg-purple-900/50 text-purple-400 border-purple-800';
       default:
         return 'bg-slate-900/50 text-slate-400 border-slate-800';
     }
@@ -180,8 +182,10 @@ export default function UsersPage() {
                       <td className="px-4 py-3 text-sm">{u.fullName}</td>
                       <td className="px-4 py-3 text-sm text-slate-400">{u.email}</td>
                       <td className="px-4 py-3">
-                        <span className={`badge border ${getRoleBadgeColor(u.role)} text-xs`}>
-                          {u.role === 'CLUB_MEMBER' ? 'Club Member' : u.role}
+                        <span className={`badge border ${getRoleBadgeColor(u.role, u.isApproved)} text-xs`}>
+                          {u.role === 'CLUB_MEMBER' && u.isApproved === false
+                            ? 'Pending Approval'
+                            : u.role === 'CLUB_MEMBER' ? 'Club Member' : u.role}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-400">

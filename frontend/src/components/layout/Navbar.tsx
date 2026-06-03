@@ -198,7 +198,9 @@ export default function Navbar() {
                             <p className="font-semibold text-sm text-slate-100">{user.fullName}</p>
                             <p className="text-xs text-slate-500 mt-0.5">@{user.username}</p>
                             <span className="mt-2 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary-500/10 text-primary-400 border border-primary-500/20">
-                              {user.role}
+                              {user.role === 'CLUB_MEMBER' && !user.isApproved
+                                ? 'Pending Approval'
+                                : user.role}
                             </span>
                           </div>
 

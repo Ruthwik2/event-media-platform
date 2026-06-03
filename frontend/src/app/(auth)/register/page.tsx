@@ -16,6 +16,9 @@ export default function RegisterPage() {
     role: 'VIEWER',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMismatch, setPasswordMismatch] = useState(false);
   const [isEditable, setIsEditable] = useState(false);
   const { register, isLoading } = useAuthStore();
   const router = useRouter();
@@ -26,6 +29,12 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.password !== confirmPassword) {
+      setPasswordMismatch(true);
+      toast.error('Passwords do not match');
+      return;
+    }
+    setPasswordMismatch(false);
     try {
       const result = await register(formData);
       toast.success('Account created successfully!');
@@ -140,6 +149,36 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            <div>
+              <label className="label">Confirm Password</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setPasswordMismatch(false);
+                  }}
+                  onFocus={() => setIsEditable(true)}
+                  className={`input pl-10 pr-10 ${passwordMismatch ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {passwordMismatch && (
+                <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
+              )}
             </div>
 
             <div>

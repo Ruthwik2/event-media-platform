@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { getNotificationHref } from '@/lib/notificationRoutes';
 import {
 Bell, Heart, MessageCircle, Tag, Check,
-ShieldAlert, ShieldCheck, ShieldX,
+ShieldAlert, ShieldCheck, ShieldX, Users,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
@@ -30,6 +30,12 @@ return <ShieldAlert className="w-4 h-4 text-yellow-400" />;
 case 'ACCESS_APPROVED':
 return <ShieldCheck className="w-4 h-4 text-green-400" />;
 case 'ACCESS_REJECTED':
+return <ShieldX className="w-4 h-4 text-red-400" />;
+case 'MEMBERSHIP_REQUEST':
+return <Users className="w-4 h-4 text-yellow-400" />;
+case 'MEMBERSHIP_APPROVED':
+return <ShieldCheck className="w-4 h-4 text-green-400" />;
+case 'MEMBERSHIP_REJECTED':
 return <ShieldX className="w-4 h-4 text-red-400" />;
 default:
 return <Bell className="w-4 h-4 text-slate-400" />;
