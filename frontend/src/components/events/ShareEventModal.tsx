@@ -176,7 +176,7 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
                     value={qrData.url}
                     size={176}
                     level="M"
-                    marginSize={2}
+                    includeMargin={true}
                     bgColor="#ffffff"
                     fgColor="#000000"
                   />
