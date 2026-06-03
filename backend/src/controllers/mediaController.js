@@ -269,6 +269,10 @@ const getMedia = async (req, res) => {
         { caption: { contains: search, mode: 'insensitive' } },
         { aiCaption: { contains: search, mode: 'insensitive' } },
         { tags: { has: search.toLowerCase() } },
+        { album: { name: { contains: search, mode: 'insensitive' } } },
+        { album: { event: { name: { contains: search, mode: 'insensitive' } } } },
+        { uploader: { username: { contains: search, mode: 'insensitive' } } },
+        { uploader: { fullName: { contains: search, mode: 'insensitive' } } },
       ];
       // If a visibility OR clause already exists (e.g. for PHOTOGRAPHER), combine
       // the two OR arrays with AND so neither overwrites the other.
@@ -765,17 +769,20 @@ const findMyPhotos = async (req, res) => {
 
 const searchMedia = async (req, res) => {
   try {
-    const { q, tags, eventName, uploadDate, username, page = 1, limit = 20 } = req.query;
+    const { q, tags, eventName, albumName, uploadDate, username, page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = {};
+
+    // ── 1. Visibility gate ───────────────────────────────────────────────────
+    // Track photographer OR separately so we can AND it with search conditions
+    // without overwriting it (previously where.OR = conditions wiped this).
+    let visibilityOR = null;
     if (!req.user || req.user.role === 'VIEWER') {
-      // Viewers/unauthenticated: public media in public albums of public events only
       where.visibility = 'PUBLIC';
-      where.album = { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } };
+      // Album visibility guard set here; merged carefully with eventName/albumName below
     } else if (req.user.role === 'PHOTOGRAPHER') {
-      // Photographers: same as getMedia general feed
-      where.OR = [
+      visibilityOR = [
         { visibility: 'PUBLIC', album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } } },
         { album: { event: { creatorId: req.user.id } } },
         { album: { collaborators: { some: { userId: req.user.id } } } },
@@ -784,23 +791,29 @@ const searchMedia = async (req, res) => {
     }
     // ADMIN and CLUB_MEMBER: no visibility filter — see everything
 
-    const conditions = [];
-
-    if (q) {
-      conditions.push(
-        { originalName: { contains: q, mode: 'insensitive' } },
-        { caption: { contains: q, mode: 'insensitive' } },
-        { tags: { has: q.toLowerCase() } },
-        // BUG FIX #3: include the event name in the general-query OR conditions so that
-        // typing an event name in the main search bar (e.g. "Annual") actually returns
-        // photos that belong to a matching event.
-        { album: { event: { name: { contains: q, mode: 'insensitive' } } } }
-      );
+    // ── 2. Album filter — merge visibility guard + eventName + albumName ─────
+    // Bug was: `where.album = { event: ... }` overwrote the visibility guard
+    // `{ visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } }` for VIEWERs.
+    let albumFilter = null;
+    if (!req.user || req.user.role === 'VIEWER') {
+      albumFilter = { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } };
     }
+    if (eventName) {
+      albumFilter = albumFilter
+        ? { ...albumFilter, event: { ...(albumFilter.event || {}), name: { contains: eventName, mode: 'insensitive' } } }
+        : { event: { name: { contains: eventName, mode: 'insensitive' } } };
+    }
+    if (albumName) {
+      albumFilter = albumFilter
+        ? { ...albumFilter, name: { contains: albumName, mode: 'insensitive' } }
+        : { name: { contains: albumName, mode: 'insensitive' } };
+    }
+    if (albumFilter) where.album = albumFilter;
 
+    // ── 3. Scalar filters ────────────────────────────────────────────────────
     if (tags) {
-      const tagArray = tags.split(',').map(t => t.trim().toLowerCase());
-      where.tags = { hasSome: tagArray };
+      const tagArray = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+      if (tagArray.length > 0) where.tags = { hasSome: tagArray };
     }
 
     if (uploadDate) {
@@ -810,16 +823,40 @@ const searchMedia = async (req, res) => {
       where.createdAt = { gte: date, lt: nextDay };
     }
 
-    if (eventName) {
-      where.album = { event: { name: { contains: eventName, mode: 'insensitive' } } };
-    }
-
     if (username) {
-      where.uploader = { username: { contains: username, mode: 'insensitive' } };
+      // Bug was: only matched username, missed fullName
+      where.uploader = {
+        OR: [
+          { username: { contains: username, mode: 'insensitive' } },
+          { fullName: { contains: username, mode: 'insensitive' } },
+        ],
+      };
     }
 
-    if (conditions.length > 0) {
-      where.OR = conditions;
+    // ── 4. Free-text query conditions (q) ────────────────────────────────────
+    // Bug was: aiCaption missing, album name missing, fullName missing
+    const searchConditions = [];
+    if (q) {
+      searchConditions.push(
+        { originalName: { contains: q, mode: 'insensitive' } },
+        { caption: { contains: q, mode: 'insensitive' } },
+        { aiCaption: { contains: q, mode: 'insensitive' } },
+        { tags: { has: q.toLowerCase() } },
+        { album: { name: { contains: q, mode: 'insensitive' } } },
+        { album: { event: { name: { contains: q, mode: 'insensitive' } } } },
+        { uploader: { username: { contains: q, mode: 'insensitive' } } },
+        { uploader: { fullName: { contains: q, mode: 'insensitive' } } },
+      );
+    }
+
+    // ── 5. Combine visibility OR + search OR with AND (not overwrite) ─────────
+    // Bug was: `where.OR = conditions` silently wiped the PHOTOGRAPHER visibility OR.
+    if (visibilityOR && searchConditions.length > 0) {
+      where.AND = [{ OR: visibilityOR }, { OR: searchConditions }];
+    } else if (visibilityOR) {
+      where.OR = visibilityOR;
+    } else if (searchConditions.length > 0) {
+      where.OR = searchConditions;
     }
 
     const [results, total] = await Promise.all([
@@ -829,6 +866,11 @@ const searchMedia = async (req, res) => {
           uploader: { select: { id: true, username: true, fullName: true, avatar: true } },
           album: { include: { event: { select: { id: true, name: true } } } },
           _count: { select: { likes: true, comments: true } },
+          // Bug was: isLiked / isFavourited never populated — heart state always wrong
+          ...(req.user && {
+            likes: { where: { userId: req.user.id }, select: { id: true } },
+            favourites: { where: { userId: req.user.id }, select: { id: true } },
+          }),
         },
         skip,
         take: parseInt(limit),
@@ -837,10 +879,23 @@ const searchMedia = async (req, res) => {
       prisma.media.count({ where }),
     ]);
 
+    const enriched = results.map(item => ({
+      ...item,
+      isLiked: req.user ? item.likes?.length > 0 : false,
+      isFavourited: req.user ? item.favourites?.length > 0 : false,
+      likes: undefined,
+      favourites: undefined,
+    }));
+
     res.json({
       success: true,
-      data: results,
-      pagination: { total, page: parseInt(page), limit: parseInt(limit) },
+      data: enriched,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit)),
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

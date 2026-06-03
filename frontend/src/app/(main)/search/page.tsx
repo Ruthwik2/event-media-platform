@@ -17,6 +17,7 @@ export default function SearchPage() {
   const [filters, setFilters] = useState({
     tags: '',
     eventName: '',
+    albumName: '',
     uploadDate: '',
     username: '',
   });
@@ -38,6 +39,7 @@ export default function SearchPage() {
       if (sq) params.append('q', sq);
       if (filters.tags) params.append('tags', filters.tags);
       if (filters.eventName) params.append('eventName', filters.eventName);
+      if (filters.albumName) params.append('albumName', filters.albumName);
       if (filters.uploadDate) params.append('uploadDate', filters.uploadDate);
       if (filters.username) params.append('username', filters.username);
 
@@ -76,7 +78,7 @@ export default function SearchPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
           <div>
             <label className="label">Tags</label>
             <input
@@ -94,6 +96,16 @@ export default function SearchPage() {
               placeholder="Cultural Fest..."
               value={filters.eventName}
               onChange={(e) => setFilters({ ...filters, eventName: e.target.value })}
+              className="input"
+            />
+          </div>
+          <div>
+            <label className="label">Album Name</label>
+            <input
+              type="text"
+              placeholder="Day 1 Photos..."
+              value={filters.albumName}
+              onChange={(e) => setFilters({ ...filters, albumName: e.target.value })}
               className="input"
             />
           </div>
