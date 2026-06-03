@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import api from '@/lib/axios';
 import {
   X, Download, Copy, Check, Globe, Lock, AlertTriangle,
-  Link2, RefreshCw, Trash2, ShieldCheck, ShieldOff, Users,
+  Link2, RefreshCw, Trash2, ShieldCheck, Users,
   Info,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -175,40 +175,23 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
               </div>
             ) : qrData ? (
               <div className="relative">
-                <div className={`p-3 rounded-2xl ${qrData.guestAccessEnabled || !isPrivate ? 'bg-white' : 'bg-white/80 grayscale'}`}>
+                <div className="p-3 rounded-2xl bg-white">
                   <img
                     src={qrData.qrCode}
                     alt="Album QR Code"
                     className="w-44 h-44 block"
                   />
                 </div>
-                {isPrivate && !qrData.guestAccessEnabled && (
-                  <div className="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/50">
-                    <div className="text-center px-3">
-                      <Lock className="w-6 h-6 text-amber-400 mx-auto mb-1" />
-                      <p className="text-xs text-amber-300 font-medium">Login required to scan</p>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : null}
 
             {/* Access-type indicator under QR */}
-            {qrData && (
+            {qrData && (qrData.guestAccessEnabled || !isPrivate) && (
               <div className="flex items-center gap-1.5 mt-3">
-                {qrData.guestAccessEnabled || !isPrivate ? (
-                  <>
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-xs text-emerald-400">
-                      {isPrivate ? 'Guest link — anyone can scan' : 'Public — anyone can scan'}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <ShieldOff className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="text-xs text-slate-500">Login required to view after scan</span>
-                  </>
-                )}
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-xs text-emerald-400">
+                  {isPrivate ? 'Guest link — anyone can scan' : 'Public — anyone can scan'}
+                </span>
               </div>
             )}
           </div>

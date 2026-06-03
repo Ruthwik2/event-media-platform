@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import api from '@/lib/axios';
 import { QRCodeCanvas } from 'qrcode.react';
 import {
-  X, Download, Copy, Check, Globe, Lock,
+  X, Download, Copy, Check, Globe, Lock, AlertTriangle,
   Link2, RefreshCw, Trash2, ShieldCheck, Users, Info,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
