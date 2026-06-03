@@ -7,18 +7,29 @@ import { Eye, EyeOff, Camera, Mail, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isEditable, setIsEditable] = useState(false);
   const { login, isLoading } = useAuthStore();
   const router = useRouter();
 
+  const validateEmail = (val: string) => {
+    if (!val.trim()) return 'Email is required';
+    if (!EMAIL_RE.test(val.trim())) return 'Please enter a valid email address';
+    return '';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const err = validateEmail(email);
+    if (err) { setEmailError(err); return; }
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       toast.success('Welcome back!');
       router.push('/');
     } catch (error: any) {
@@ -49,17 +60,26 @@ export default function LoginPage() {
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
-                  type="email"
+                  type="text"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError(validateEmail(e.target.value));
+                  }}
+                  onBlur={() => setEmailError(validateEmail(email))}
                   onFocus={() => setIsEditable(true)}
-                  className="input pl-10"
+                  className={`input pl-10 ${emailError ? 'border-red-500 focus:border-red-500' : ''}`}
                   placeholder="you@example.com"
                   autoComplete="off"
                   readOnly={!isEditable}
-                  required
                 />
               </div>
+              {emailError && (
+                <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                  <span className="inline-block w-1 h-1 rounded-full bg-red-400 flex-shrink-0" />
+                  {emailError}
+                </p>
+              )}
             </div>
 
             <div>

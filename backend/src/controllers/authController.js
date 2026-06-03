@@ -94,12 +94,12 @@ const login = async (req, res) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(404).json({ success: false, message: 'No account found with that email address' });
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(400).json({ success: false, message: 'Incorrect password. Please try again' });
     }
 
     const { accessToken } = generateTokens(user.id);
