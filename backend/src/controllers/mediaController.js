@@ -725,50 +725,21 @@ const findMyPhotos = async (req, res) => {
       _count: { select: { likes: true } },
     };
 
-    // ── 1. Media the user personally uploaded ────────────────────────────────
-    // Bug was: `faceIds: { has: user?.faceId || '' }` hid ALL uploads for users
-    // with no faceId (empty-string has = no match). Own uploads always visible.
-    const uploadedMedia = await prisma.media.findMany({
-      where: { uploaderId: req.user.id },
-      include: mediaInclude,
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // ── 2. Face-recognition matches ──────────────────────────────────────────
-    // Bug was: no visibility filter — any role could see photos of themselves
-    // inside private albums/events they have no access to.
-    let faceMedia = [];
+    // ── Face-recognition matches ONLY ────────────────────────────────────────
+    // My Photos shows only photos where the user's face was detected via
+    // AWS Rekognition — not their own uploads or manually tagged photos.
+    let uniqueMedia = [];
     if (user?.faceId) {
       const faceWhere = {
         faceIds: { has: user.faceId },
-        uploaderId: { not: req.user.id }, // own uploads already in uploadedMedia
         ...(visibilityFilter || {}),
       };
-      faceMedia = await prisma.media.findMany({
+      uniqueMedia = await prisma.media.findMany({
         where: faceWhere,
         include: mediaInclude,
         orderBy: { createdAt: 'desc' },
       });
     }
-
-    // ── 3. Manually tagged media ─────────────────────────────────────────────
-    // Bug was: no visibility filter — private tagged photos leaked to any role.
-    const taggedWhere = visibilityFilter
-      ? { taggedUserId: req.user.id, media: visibilityFilter }
-      : { taggedUserId: req.user.id };
-
-    const taggedMedia = await prisma.mediaTag.findMany({
-      where: taggedWhere,
-      include: { media: { include: mediaInclude } },
-    });
-
-    const taggedMediaItems = taggedMedia.map(t => t.media);
-    const allMedia = [...uploadedMedia, ...faceMedia, ...taggedMediaItems];
-
-    // Deduplicate by id
-    const uniqueMedia = allMedia.filter((item, index, self) =>
-      index === self.findIndex(m => m.id === item.id)
-    );
 
     const faceRecognitionEnabled = !!user?.faceId;
     const hasSelfie = !!user?.referenceSelfie;
