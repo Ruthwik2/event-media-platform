@@ -29,12 +29,17 @@ export default function LoginPage() {
     const err = validateEmail(email);
     if (err) { setEmailError(err); return; }
     try {
-      await login(email.trim(), password);
+      const result = await login(email.trim(), password);
       toast.success('Welcome back!');
-      // Use hard navigation so the browser sends the newly-set cookie with
-      // the request — router.push() is client-side and the middleware can
-      // read the cookie before it is flushed, causing a redirect loop.
-      window.location.href = '/';
+      // Unapproved club members go to the pending approval page
+      if (result?.user?.role === 'CLUB_MEMBER' && !result?.user?.isApproved) {
+        window.location.href = '/pending-approval';
+      } else {
+        // Use hard navigation so the browser sends the newly-set cookie with
+        // the request — router.push() is client-side and the middleware can
+        // read the cookie before it is flushed, causing a redirect loop.
+        window.location.href = '/';
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Login failed');
     }

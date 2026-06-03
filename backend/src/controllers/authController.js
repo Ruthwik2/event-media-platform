@@ -160,6 +160,7 @@ const getProfile = async (req, res) => {
       select: {
         id: true, email: true, username: true, fullName: true,
         role: true, avatar: true, bio: true, referenceSelfie: true,
+        isApproved: true,
         showEmail: true, allowTagging: true, publicProfile: true,
         createdAt: true,
         _count: {
@@ -571,10 +572,13 @@ const approveRejectMembership = async (req, res) => {
       where: { id: rid },
       data: { status },
     });
-    // Update the user's isApproved flag
+    // Update the user's isApproved flag; if rejected, demote to VIEWER
     await prisma.user.update({
       where: { id: request.userId },
-      data: { isApproved: status === 'APPROVED' },
+      data: {
+        isApproved: status === 'APPROVED',
+        ...(status === 'REJECTED' ? { role: 'VIEWER' } : {}),
+      },
     });
     // Notify the club member
     try {

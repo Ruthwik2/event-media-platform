@@ -27,9 +27,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await register(formData);
+      const result = await register(formData);
       toast.success('Account created successfully!');
-      router.push('/');
+      // Club members must wait for admin approval before accessing the app
+      if (result?.user?.role === 'CLUB_MEMBER' && !result?.user?.isApproved) {
+        router.push('/pending-approval');
+      } else {
+        router.push('/');
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Registration failed');
     }

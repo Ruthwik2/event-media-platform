@@ -7,8 +7,8 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ user: User; accessToken: string } | undefined>;
+  register: (data: RegisterData) => Promise<{ user: User; accessToken: string } | undefined>;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
   fetchProfile: () => Promise<void>;
@@ -44,6 +44,7 @@ export const useAuthStore = create<AuthState>()(
           }
           
           set({ user, token: accessToken, isLoading: false });
+          return { user, accessToken };
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -65,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
           }
           
           set({ user, token: accessToken, isLoading: false });
+          return { user, accessToken };
         } catch (error) {
           set({ isLoading: false });
           throw error;
