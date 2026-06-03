@@ -4,11 +4,17 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/axios';
 import { Event, Media } from '@/types';
-import { Calendar, Image, Users, TrendingUp, ArrowRight, Camera, Pencil } from 'lucide-react';
+import { Calendar, Image, Users, TrendingUp, ArrowRight, Camera, Pencil, Sparkles, Compass } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MediaCard from '@/components/media/MediaCard';
 import EventCard from '@/components/events/EventCard';
 import ClubSetupModal from '@/components/admin/ClubSetupModal';
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.4, delay, ease: [0.25, 0.1, 0.25, 1] },
+});
 
 export default function HomePage() {
   const { user } = useAuthStore();
@@ -63,48 +69,58 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="hero-surface relative overflow-hidden rounded-2xl p-8 md:p-12"
+        {...fadeUp(0)}
+        className="hero-surface p-8 md:p-12"
       >
+        {/* Decorative grid lines */}
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+        {/* Glow orb */}
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-blue-600/8 rounded-full blur-3xl pointer-events-none" />
+
         <div className="relative z-10">
-          {/* Club name — the biggest thing on the page */}
           {loading ? (
-            <div className="h-14 md:h-20 w-72 bg-slate-700/30 rounded-xl animate-pulse mb-3" />
+            <div className="h-14 md:h-20 w-72 skeleton mb-3" />
           ) : clubName ? (
             <motion.h1
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight"
+              {...fadeUp(0.05)}
+              className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight leading-none"
             >
               {clubName}
             </motion.h1>
           ) : (
-            <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight">
+            <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight leading-none">
               Event Media
             </h1>
           )}
 
-          {/* Smaller welcome line */}
-          <p className="hero-subtitle text-slate-400 text-base md:text-lg mb-6">
-            {user ? `Welcome back, ${user.fullName.split(' ')[0]}!` : 'Sign in to get started'}
+          <p className="hero-subtitle text-slate-500 text-base md:text-lg mb-8 max-w-md">
+            {user
+              ? `Welcome back, ${user.fullName.split(' ')[0]}! Your club's media hub is ready.`
+              : 'A centralized platform for club & event photos and videos.'}
           </p>
 
           <div className="flex flex-wrap gap-3">
             {user ? (
               <>
-                {canUpload && (
-                  <Link href="/upload" className="btn-primary">
-                    <Camera className="w-4 h-4" /> Upload Media
-                  </Link>
-                )}
+                <Link href="/events" className="btn-primary">
+                  <Compass className="w-4 h-4" />
+                  Explore Events
+                </Link>
                 <Link href="/my-photos" className="btn-secondary">
+                  <Sparkles className="w-4 h-4" />
                   Find My Photos
                 </Link>
                 {isAdmin && (
                   <button
                     onClick={() => setShowClubSetup(true)}
-                    className="btn-secondary text-xs flex items-center gap-1.5 opacity-60 hover:opacity-100"
+                    className="btn-secondary text-xs opacity-50 hover:opacity-100"
                   >
                     <Pencil className="w-3 h-3" />
                     {clubName ? 'Edit Club Name' : 'Set Club Name'}
@@ -119,83 +135,115 @@ export default function HomePage() {
             )}
           </div>
         </div>
-        <div className="absolute top-0 right-0 w-1/2 h-full opacity-10">
-          <div className="w-full h-full bg-gradient-to-l from-primary-500 to-transparent" />
-        </div>
       </motion.section>
 
       {/* Stats */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <motion.section {...fadeUp(0.05)} className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Photos & Videos', value: stats.media, icon: Image, color: 'text-blue-400' },
-          { label: 'Events', value: stats.events, icon: Calendar, color: 'text-green-400' },
-          { label: 'Albums', value: stats.albums, icon: TrendingUp, color: 'text-purple-400' },
-          { label: 'Users', value: stats.users, icon: Users, color: 'text-orange-400' },
-        ].map(({ label, value, icon: Icon, color }) => (
+          { label: 'Photos & Videos', value: stats.media, icon: Image, color: 'text-sky-400', bg: 'bg-sky-500/8', glow: 'rgba(14,165,233,0.15)' },
+          { label: 'Events', value: stats.events, icon: Calendar, color: 'text-emerald-400', bg: 'bg-emerald-500/8', glow: 'rgba(16,185,129,0.15)' },
+          { label: 'Albums', value: stats.albums, icon: TrendingUp, color: 'text-violet-400', bg: 'bg-violet-500/8', glow: 'rgba(139,92,246,0.15)' },
+          { label: 'Members', value: stats.users, icon: Users, color: 'text-amber-400', bg: 'bg-amber-500/8', glow: 'rgba(245,158,11,0.15)' },
+        ].map(({ label, value, icon: Icon, color, bg }, i) => (
           <motion.div
             key={label}
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="card p-4 text-center"
+            transition={{ delay: 0.08 + i * 0.05, duration: 0.3 }}
+            className="card p-5 flex flex-col gap-3"
           >
-            <Icon className={`w-6 h-6 ${color} mx-auto mb-2`} />
-            <p className="text-2xl font-bold">{value}</p>
-            <p className="text-xs text-slate-400">{label}</p>
+            <div className={`w-9 h-9 ${bg} rounded-xl flex items-center justify-center`}>
+              <Icon className={`w-4.5 h-4.5 ${color}`} style={{width:'18px',height:'18px'}} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold tracking-tight">{loading ? '—' : value.toLocaleString()}</p>
+              <p className="text-xs text-slate-600 mt-0.5 font-medium">{label}</p>
+            </div>
           </motion.div>
         ))}
-      </section>
+      </motion.section>
 
       {/* Recent Media */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Recent Uploads</h2>
-          <Link href="/gallery" className="text-primary-400 hover:text-primary-300 text-sm flex items-center gap-1">
-            View All <ArrowRight className="w-4 h-4" />
+      <motion.section {...fadeUp(0.1)}>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">Recent Uploads</h2>
+            <p className="text-xs text-slate-600 mt-0.5">Latest photos and videos</p>
+          </div>
+          <Link href="/gallery" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary-400 transition-colors duration-150 group">
+            View All
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
+
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-square bg-slate-800 rounded-xl animate-pulse" />
+              <div key={i} className="aspect-square skeleton" />
             ))}
           </div>
         ) : recentMedia.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {recentMedia.map((media) => (
-              <Link href={`/media/${media.id}`} key={media.id}>
-                <MediaCard media={media} />
-              </Link>
+            {recentMedia.map((media, i) => (
+              <motion.div
+                key={media.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.04 }}
+              >
+                <Link href={`/media/${media.id}`}>
+                  <MediaCard media={media} />
+                </Link>
+              </motion.div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 card">
-            <Image className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400">No media uploaded yet</p>
+          <div className="text-center py-16 card">
+            <div className="w-14 h-14 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Image className="w-7 h-7 text-slate-600" />
+            </div>
+            <p className="text-slate-500 font-medium">No media uploaded yet</p>
+            <p className="text-slate-700 text-sm mt-1">Start by uploading your first photo</p>
           </div>
         )}
-      </section>
+      </motion.section>
 
       {/* Events */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Recent Events</h2>
-          <Link href="/events" className="text-primary-400 hover:text-primary-300 text-sm flex items-center gap-1">
-            View All <ArrowRight className="w-4 h-4" />
+      <motion.section {...fadeUp(0.15)}>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">Recent Events</h2>
+            <p className="text-xs text-slate-600 mt-0.5">Browse upcoming and past events</p>
+          </div>
+          <Link href="/events" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary-400 transition-colors duration-150 group">
+            View All
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
+
         {events.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+            {events.map((event, i) => (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+              >
+                <EventCard event={event} />
+              </motion.div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 card">
-            <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400">No events created yet</p>
+          <div className="text-center py-16 card">
+            <div className="w-14 h-14 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-7 h-7 text-slate-600" />
+            </div>
+            <p className="text-slate-500 font-medium">No events yet</p>
+            <p className="text-slate-700 text-sm mt-1">Events will appear here once created</p>
           </div>
         )}
-      </section>
+      </motion.section>
     </div>
   );
 }
