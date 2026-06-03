@@ -222,7 +222,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
               transition={{ duration: 0.5 }}
               className="absolute inset-0 flex items-center justify-center pointer-events-none"
             >
-              <Heart className="w-24 h-24 text-white fill-white drop-shadow-2xl" />
+              <Heart className="w-24 h-24 text-rose-500 fill-rose-500 drop-shadow-2xl" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -249,7 +249,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
             >
               <Heart
                 className={`w-6 h-6 transition-all duration-200 ${
-                  liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-300 hover:text-slate-100'
+                  liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-300 hover:text-slate-100'
                 }`}
               />
             </button>
