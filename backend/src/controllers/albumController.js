@@ -616,13 +616,57 @@ const getAlbumQREnhanced = async (req, res) => {
   }
 };
 
+/**
+ * PATCH /albums/:id/rename  (creator or ADMIN)
+ * Renames the album — validates uniqueness within the event.
+ */
+const renameAlbum = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Name is required' });
+    }
+    const trimmed = name.trim();
+    const album = await prisma.album.findUnique({
+      where: { id: req.params.id },
+      include: { event: true },
+    });
+    if (!album) {
+      return res.status(404).json({ success: false, message: 'Album not found' });
+    }
+    if (album.event.creatorId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    if (trimmed !== album.name) {
+      const conflict = await prisma.album.findUnique({
+        where: { name_eventId: { name: trimmed, eventId: album.eventId } },
+      });
+      if (conflict) {
+        return res.status(409).json({ success: false, message: 'An album with that name already exists in this event' });
+      }
+    }
+    const updated = await prisma.album.update({
+      where: { id: req.params.id },
+      data: { name: trimmed },
+      include: {
+        event: { select: { id: true, name: true } },
+        _count: { select: { media: true } },
+      },
+    });
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createAlbum,
   getAlbums,
   getAlbum,
   updateAlbum,
+  renameAlbum,
   deleteAlbum,
-  getAlbumQR: getAlbumQREnhanced,   // replaces the old getAlbumQR
+  getAlbumQR: getAlbumQREnhanced,
   addCollaborator,
   requestAlbumAccess,
   getAlbumAccessRequests,

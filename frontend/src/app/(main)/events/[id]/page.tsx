@@ -8,11 +8,13 @@ import { Event, Album } from '@/types';
 import {
   Calendar, User, Plus, ImageIcon, ArrowLeft, Trash2,
   Lock, Globe, ShieldAlert, Clock, XCircle, FolderOpen, Images,
+  Pencil, Check, X as XIcon, QrCode,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import CreateAlbumModal from '@/components/albums/CreateAlbumModal';
+import ShareEventModal from '@/components/events/ShareEventModal';
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -22,11 +24,17 @@ export default function EventDetailPage() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [deletingAlbumId, setDeletingAlbumId] = useState<string | null>(null);
   const [confirmDeleteEvent, setConfirmDeleteEvent] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
   const [requesting, setRequesting] = useState(false);
+
+  // ── Rename state ─────────────────────────────────────────────────────────
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameSaving, setRenameSaving] = useState(false);
 
   useEffect(() => {
     fetchEvent();
@@ -89,6 +97,39 @@ export default function EventDetailPage() {
     } finally {
       setDeletingAlbumId(null);
     }
+  };
+
+  // ── Rename handlers ───────────────────────────────────────────────────────
+  const startRename = () => {
+    if (!event) return;
+    setRenameValue(event.name);
+    setIsRenaming(true);
+  };
+
+  const cancelRename = () => {
+    setIsRenaming(false);
+    setRenameValue('');
+  };
+
+  const saveRename = async () => {
+    if (!event || !renameValue.trim()) return;
+    if (renameValue.trim() === event.name) { cancelRename(); return; }
+    setRenameSaving(true);
+    try {
+      const res = await api.patch(`/events/${id}/rename`, { name: renameValue.trim() });
+      setEvent((prev) => prev ? { ...prev, name: res.data.data.name } : prev);
+      toast.success('Event renamed');
+      setIsRenaming(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to rename');
+    } finally {
+      setRenameSaving(false);
+    }
+  };
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') saveRename();
+    if (e.key === 'Escape') cancelRename();
   };
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
@@ -187,7 +228,7 @@ export default function EventDetailPage() {
         {/* Hero body */}
         <div className="px-7 pt-7 pb-5">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="flex-1 min-w-0">
               {/* Badges */}
               <div className="flex flex-wrap gap-2 mb-3">
                 <span
@@ -198,19 +239,62 @@ export default function EventDetailPage() {
                   }`}
                 >
                   {event.visibility === 'PUBLIC' ? (
-                    <Globe className="w-3 h-3" />
+                    <><Globe className="w-3 h-3" /> Public</>
                   ) : (
-                    <Lock className="w-3 h-3" />
+                    <><Lock className="w-3 h-3" /> Private</>
                   )}
-                  {event.visibility}
                 </span>
-                <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-900/60 text-primary-300 border border-primary-800/60">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-slate-800/80 text-slate-300 border-slate-700/60">
                   {event.category}
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-100">
-                {event.name}
-              </h1>
+
+              {/* Inline rename or title */}
+              {isRenaming ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    autoFocus
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onKeyDown={handleRenameKeyDown}
+                    className="flex-1 bg-slate-800 border border-primary-600 rounded-lg px-3 py-2 text-2xl font-extrabold text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
+                    maxLength={120}
+                    disabled={renameSaving}
+                  />
+                  <button
+                    onClick={saveRename}
+                    disabled={renameSaving || !renameValue.trim()}
+                    className="p-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white transition-colors disabled:opacity-50"
+                    title="Save"
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={cancelRename}
+                    disabled={renameSaving}
+                    className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
+                    title="Cancel"
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 group/title">
+                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-100">
+                    {event.name}
+                  </h1>
+                  {isOwner && (
+                    <button
+                      onClick={startRename}
+                      title="Rename event"
+                      className="p-1.5 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-700/60 transition-all opacity-0 group-hover/title:opacity-100"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              )}
+
               {event.description && (
                 <p className="mt-2 text-slate-400 text-sm leading-relaxed max-w-xl">
                   {event.description}
@@ -218,9 +302,19 @@ export default function EventDetailPage() {
               )}
             </div>
 
-            {/* Delete button */}
+            {/* Action buttons */}
             {isOwner && (
-              <div className="flex-shrink-0 mt-1">
+              <div className="flex-shrink-0 mt-1 flex items-center gap-2">
+                {/* Share button */}
+                <button
+                  onClick={() => setShowShare(true)}
+                  title="Share event"
+                  className="p-2 hover:bg-primary-600/20 border border-slate-700/80 hover:border-primary-500/50 text-slate-500 hover:text-primary-400 rounded-xl transition-all"
+                >
+                  <QrCode className="w-4 h-4" />
+                </button>
+
+                {/* Delete button */}
                 {confirmDeleteEvent ? (
                   <div className="flex items-center gap-2 bg-slate-900/90 rounded-xl p-2 border border-red-800/60 shadow-lg">
                     <span className="text-xs text-red-400 px-1 font-medium">Delete event?</span>
@@ -403,6 +497,14 @@ export default function EventDetailPage() {
             setShowCreateAlbum(false);
             fetchEvent();
           }}
+        />
+      )}
+
+      {showShare && event && (
+        <ShareEventModal
+          event={{ id: event.id, name: event.name, visibility: event.visibility as 'PUBLIC' | 'PRIVATE' }}
+          canManage={isOwner}
+          onClose={() => setShowShare(false)}
         />
       )}
     </div>

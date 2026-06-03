@@ -8,15 +8,14 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Album {
+interface EventShare {
   id: string;
   name: string;
   visibility: 'PUBLIC' | 'PRIVATE';
-  event?: { id: string; name: string };
 }
 
 interface QRData {
-  qrCode: string;       // data URL
+  qrCode: string;
   url: string;
   visibility: 'PUBLIC' | 'PRIVATE';
   hasShareToken: boolean;
@@ -24,34 +23,32 @@ interface QRData {
 }
 
 interface Props {
-  album: Album;
+  event: EventShare;
   canManage: boolean; // true for creator / ADMIN
   onClose: () => void;
 }
 
-export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
+export default function ShareEventModal({ event, canManage, onClose }: Props) {
   const [qrData, setQrData] = useState<QRData | null>(null);
   const [loading, setLoading] = useState(false);
   const [tokenLoading, setTokenLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // ── Load QR on mount ──────────────────────────────────────────────────────
   const loadQR = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/albums/${album.id}/qr`);
+      const res = await api.get(`/events/${event.id}/qr`);
       setQrData(res.data.data);
     } catch {
       toast.error('Failed to load QR code');
     } finally {
       setLoading(false);
     }
-  }, [album.id]);
+  }, [event.id]);
 
   // Load on first open
   useEffect(() => { loadQR(); }, [loadQR]);
 
-  // ── Copy link ─────────────────────────────────────────────────────────────
   const handleCopy = async () => {
     if (!qrData) return;
     await navigator.clipboard.writeText(qrData.url);
@@ -60,23 +57,21 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  // ── Download QR ───────────────────────────────────────────────────────────
   const handleDownload = () => {
     if (!qrData) return;
     const a = document.createElement('a');
     a.href = qrData.qrCode;
-    a.download = `qr-${album.name.replace(/\s+/g, '-').toLowerCase()}.png`;
+    a.download = `qr-${event.name.replace(/\s+/g, '-').toLowerCase()}.png`;
     a.click();
   };
 
-  // ── Generate share token ──────────────────────────────────────────────────
   const handleGenerateToken = async () => {
     if (!confirm(
-      'Enable guest access?\n\nAnyone who scans the QR or uses this link can view the album — no login required.\n\nYou can revoke this at any time.'
+      'Enable guest access?\n\nAnyone who scans the QR or uses this link can view the event — no login required.\n\nYou can revoke this at any time.'
     )) return;
     setTokenLoading(true);
     try {
-      await api.post(`/albums/${album.id}/share-token`);
+      await api.post(`/events/${event.id}/share-token`);
       toast.success('Guest access enabled — new QR generated');
       await loadQR();
     } catch (err: any) {
@@ -86,14 +81,13 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
     }
   };
 
-  // ── Revoke share token ────────────────────────────────────────────────────
   const handleRevokeToken = async () => {
     if (!confirm(
-      'Revoke guest access?\n\nAll existing share links and QR codes will immediately stop working. Only authorized members will be able to view this album.'
+      'Revoke guest access?\n\nAll existing share links and QR codes will immediately stop working. Only authorized members will be able to view this event.'
     )) return;
     setTokenLoading(true);
     try {
-      await api.delete(`/albums/${album.id}/share-token`);
+      await api.delete(`/events/${event.id}/share-token`);
       toast.success('Guest access revoked');
       await loadQR();
     } catch (err: any) {
@@ -103,7 +97,7 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
     }
   };
 
-  const isPrivate = album.visibility === 'PRIVATE';
+  const isPrivate = event.visibility === 'PRIVATE';
 
   return (
     <div
@@ -114,7 +108,7 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
         className="card w-full max-w-md overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Header ─────────────────────────────────────────────────────── */}
+        {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-700/60">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-slate-700/50">
@@ -124,8 +118,8 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
               }
             </div>
             <div>
-              <h3 className="font-semibold text-sm">Share Album</h3>
-              <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[200px]">{album.name}</p>
+              <h3 className="font-semibold text-sm">Share Event</h3>
+              <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[200px]">{event.name}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-700 transition-colors">
@@ -134,24 +128,23 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
         </div>
 
         <div className="p-5 space-y-5">
-          {/* ── Visibility badge + explanation ────────────────────────────── */}
+          {/* Visibility explanation */}
           {isPrivate ? (
             <div className="rounded-xl border border-amber-700/40 bg-amber-900/20 p-4 space-y-2">
               <div className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span className="text-sm font-medium text-amber-300">Private Album</span>
+                <span className="text-sm font-medium text-amber-300">Private Event</span>
               </div>
               {qrData?.guestAccessEnabled ? (
                 <p className="text-xs text-amber-200/70 leading-relaxed">
                   <strong className="text-amber-300">Guest access is ON.</strong> Anyone who scans
-                  this QR or opens the link can view the album — no login required. Revoke to
+                  this QR or opens the link can view the event — no login required. Revoke to
                   re-lock it.
                 </p>
               ) : (
                 <p className="text-xs text-amber-200/70 leading-relaxed">
-                  Only authorized members (admins, collaborators) can view this album. Viewers
-                  who scan the QR will see an access-denied screen. Enable guest access below to
-                  let anyone with the link view without logging in.
+                  Only authorized members (admins, approved photographers) can view this event.
+                  Enable guest access below to let anyone with the link view without logging in.
                 </p>
               )}
             </div>
@@ -159,15 +152,15 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
             <div className="rounded-xl border border-emerald-700/40 bg-emerald-900/20 p-4 flex items-start gap-2">
               <Globe className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-emerald-300">Public Album</p>
+                <p className="text-sm font-medium text-emerald-300">Public Event</p>
                 <p className="text-xs text-emerald-200/70 mt-0.5 leading-relaxed">
-                  Anyone who scans this QR or opens the link can view the album — no login needed.
+                  Anyone who scans this QR or opens the link can view the event — no login needed.
                 </p>
               </div>
             </div>
           )}
 
-          {/* ── QR Code ───────────────────────────────────────────────────── */}
+          {/* QR Code */}
           <div className="flex flex-col items-center">
             {loading ? (
               <div className="w-48 h-48 bg-slate-800 rounded-xl animate-pulse flex items-center justify-center">
@@ -178,7 +171,7 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
                 <div className={`p-3 rounded-2xl ${qrData.guestAccessEnabled || !isPrivate ? 'bg-white' : 'bg-white/80 grayscale'}`}>
                   <img
                     src={qrData.qrCode}
-                    alt="Album QR Code"
+                    alt="Event QR Code"
                     className="w-44 h-44 block"
                   />
                 </div>
@@ -193,7 +186,6 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
               </div>
             ) : null}
 
-            {/* Access-type indicator under QR */}
             {qrData && (
               <div className="flex items-center gap-1.5 mt-3">
                 {qrData.guestAccessEnabled || !isPrivate ? (
@@ -213,7 +205,7 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
             )}
           </div>
 
-          {/* ── Share link + copy ─────────────────────────────────────────── */}
+          {/* Share link + copy */}
           {qrData && (
             <div className="flex items-center gap-2">
               <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg min-w-0">
@@ -233,7 +225,7 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
             </div>
           )}
 
-          {/* ── Action buttons ────────────────────────────────────────────── */}
+          {/* Action buttons */}
           <div className="flex gap-2">
             <button
               onClick={handleDownload}
@@ -244,7 +236,7 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
             </button>
           </div>
 
-          {/* ── Private album: guest access controls (admin / creator only) ── */}
+          {/* Private event: guest access controls (admin / creator only) */}
           {isPrivate && canManage && qrData && (
             <div className="border-t border-slate-700/60 pt-4 space-y-3">
               <div className="flex items-center gap-1.5">
@@ -259,7 +251,7 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
                     <div>
                       <p className="text-xs font-medium text-emerald-300">Guest access is active</p>
                       <p className="text-xs text-emerald-200/60 mt-0.5">
-                        Anyone with the QR or link can view this private album without an account.
+                        Anyone with the QR or link can view this private event without an account.
                       </p>
                     </div>
                   </div>
@@ -288,7 +280,7 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
                   <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
                     <Info className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-slate-400 leading-relaxed">
-                      Enable guest access to let event attendees view this album by scanning the QR
+                      Enable guest access to let event attendees view this event by scanning the QR
                       — no account required. You can revoke it at any time.
                     </p>
                   </div>
@@ -305,12 +297,12 @@ export default function ShareAlbumModal({ album, canManage, onClose }: Props) {
             </div>
           )}
 
-          {/* ── Info for private album non-managers ───────────────────────── */}
+          {/* Info for private event non-managers */}
           {isPrivate && !canManage && qrData && !qrData.guestAccessEnabled && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
               <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-slate-400 leading-relaxed">
-                This QR links to a private album. Only authorized members can view it after scanning.
+                This QR links to a private event. Only authorized members can view it after scanning.
                 Contact an admin to enable guest access.
               </p>
             </div>

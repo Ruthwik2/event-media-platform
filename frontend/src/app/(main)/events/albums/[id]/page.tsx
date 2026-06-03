@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Album, Media } from '@/types';
 import {
   ArrowLeft, Upload, QrCode, ImageIcon, Trash2, Lock, Globe,
-  ShieldAlert, Clock, XCircle, Info,
+  ShieldAlert, Clock, XCircle, Info, Pencil, Check, X as XIcon,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -28,6 +28,11 @@ export default function AlbumDetailPage() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
   const [requesting, setRequesting] = useState(false);
+
+  // ── Rename state ─────────────────────────────────────────────────────────
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameSaving, setRenameSaving] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -111,6 +116,39 @@ export default function AlbumDetailPage() {
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete');
     }
+  };
+
+  // ── Rename handlers ───────────────────────────────────────────────────────
+  const startRename = () => {
+    if (!album) return;
+    setRenameValue(album.name);
+    setIsRenaming(true);
+  };
+
+  const cancelRename = () => {
+    setIsRenaming(false);
+    setRenameValue('');
+  };
+
+  const saveRename = async () => {
+    if (!album || !renameValue.trim()) return;
+    if (renameValue.trim() === album.name) { cancelRename(); return; }
+    setRenameSaving(true);
+    try {
+      const res = await api.patch(`/albums/${id}/rename`, { name: renameValue.trim() });
+      setAlbum((prev) => prev ? { ...prev, name: res.data.data.name } : prev);
+      toast.success('Album renamed');
+      setIsRenaming(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to rename');
+    } finally {
+      setRenameSaving(false);
+    }
+  };
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') saveRename();
+    if (e.key === 'Escape') cancelRename();
   };
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
@@ -214,15 +252,60 @@ export default function AlbumDetailPage() {
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
-            <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">{album.name}</h1>
-            {album.visibility === 'PRIVATE' ? (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-900/40 text-red-400 border border-red-800/50">
-                <Lock className="w-3 h-3" /> Private
-              </span>
+            {/* Inline rename or title */}
+            {isRenaming ? (
+              <div className="flex items-center gap-2 w-full">
+                <input
+                  autoFocus
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onKeyDown={handleRenameKeyDown}
+                  className="flex-1 bg-slate-800 border border-primary-600 rounded-lg px-3 py-1.5 text-xl font-extrabold text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
+                  maxLength={120}
+                  disabled={renameSaving}
+                />
+                <button
+                  onClick={saveRename}
+                  disabled={renameSaving || !renameValue.trim()}
+                  className="p-1.5 rounded-lg bg-primary-600 hover:bg-primary-500 text-white transition-colors disabled:opacity-50"
+                  title="Save"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={cancelRename}
+                  disabled={renameSaving}
+                  className="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
+                  title="Cancel"
+                >
+                  <XIcon className="w-4 h-4" />
+                </button>
+              </div>
             ) : (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-900/40 text-green-400 border border-green-800/50">
-                <Globe className="w-3 h-3" /> Public
-              </span>
+              <div className="flex items-center gap-2 group/title">
+                <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">{album.name}</h1>
+                {canManage && (
+                  <button
+                    onClick={startRename}
+                    title="Rename album"
+                    className="p-1.5 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-700/60 transition-all opacity-0 group-hover/title:opacity-100"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!isRenaming && (
+              album.visibility === 'PRIVATE' ? (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-900/40 text-red-400 border border-red-800/50">
+                  <Lock className="w-3 h-3" /> Private
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-900/40 text-green-400 border border-green-800/50">
+                  <Globe className="w-3 h-3" /> Public
+                </span>
+              )
             )}
           </div>
           {album.description && (
@@ -295,7 +378,6 @@ export default function AlbumDetailPage() {
           transition={{ delay: 0.1 }}
           className="text-center py-20 rounded-2xl border border-dashed border-slate-800 bg-slate-900/30"
         >
-          {/* Icon */}
           <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900 border border-slate-700/60 flex items-center justify-center">
             <ImageIcon className="w-9 h-9 text-slate-600" />
           </div>
@@ -314,7 +396,6 @@ export default function AlbumDetailPage() {
             </Link>
           )}
 
-          {/* Hint strip */}
           <div className="mt-6 inline-flex items-center gap-2 bg-slate-900/70 border border-slate-800 rounded-xl px-4 py-2.5">
             <Info className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
             <span className="text-xs text-slate-600">

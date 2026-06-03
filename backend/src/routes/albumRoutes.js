@@ -6,6 +6,7 @@ const {
   getAlbums,
   getAlbum,
   updateAlbum,
+  renameAlbum,
   deleteAlbum,
   getAlbumQR,
   addCollaborator,
@@ -30,6 +31,9 @@ router.post('/', authenticate, createAlbum);
 router.get('/:id', optionalAuth, getAlbum);
 router.put('/:id', authenticate, updateAlbum);
 router.delete('/:id', authenticate, deleteAlbum);
+
+// ── Rename ────────────────────────────────────────────────────────────────────
+router.patch('/:id/rename', authenticate, renameAlbum);
 
 // ── QR & sharing ─────────────────────────────────────────────────────────────
 router.get('/:id/qr', optionalAuth, getAlbumQR);

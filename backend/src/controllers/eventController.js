@@ -1,5 +1,17 @@
 const prisma = require('../config/database');
+const QRCode = require('qrcode');
 const { uploadToS3, deleteFromS3 } = require('../services/s3Service');
+
+// ── Permission helper ─────────────────────────────────────────────────────────
+function canAccessEvent(user, event) {
+  if (event.visibility === 'PUBLIC') return true;
+  if (!user) return false;
+  if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
+  if (user.role === 'PHOTOGRAPHER') return event.creatorId === user.id;
+  return false;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const createEvent = async (req, res) => {
 try {
 const { name, description, category, startDate, endDate, location, visibility } =
@@ -415,6 +427,188 @@ res.json({ success: true, data: enriched });
 res.status(500).json({ success: false, message: error.message });
 }
 };
+/**
+ * PATCH /events/:id/rename  (creator or ADMIN)
+ * Renames the event — validates uniqueness like the original create.
+ */
+const renameEvent = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Name is required' });
+    }
+    const trimmed = name.trim();
+    const event = await prisma.event.findUnique({ where: { id: req.params.id } });
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+    if (event.creatorId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    // Skip uniqueness check if name hasn't changed
+    if (trimmed !== event.name) {
+      const conflict = await prisma.event.findUnique({ where: { name: trimmed } });
+      if (conflict) {
+        return res.status(409).json({ success: false, message: 'An event with that name already exists' });
+      }
+    }
+    const updated = await prisma.event.update({
+      where: { id: req.params.id },
+      data: { name: trimmed },
+      include: {
+        creator: { select: { id: true, username: true, fullName: true, avatar: true } },
+        _count: { select: { albums: true } },
+      },
+    });
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ── Event Share Token ─────────────────────────────────────────────────────────
+
+/**
+ * GET /events/:id/qr  (optionalAuth)
+ * Returns QR code. For private events with a shareToken, encodes guest-access URL.
+ */
+const getEventQR = async (req, res) => {
+  try {
+    const event = await prisma.event.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, name: true, visibility: true, shareToken: true, creatorId: true },
+    });
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+    // Access check: use same logic as getEvent
+    if (event.visibility === 'PRIVATE') {
+      if (!req.user || req.user.role === 'VIEWER') {
+        // Allow if shareToken provided via query (guest trying to see QR)
+        // Otherwise block
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      if (req.user.role === 'PHOTOGRAPHER' && event.creatorId !== req.user.id) {
+        const approved = await prisma.accessRequest.findFirst({
+          where: { userId: req.user.id, targetId: event.id, type: 'EVENT', status: 'APPROVED' },
+        });
+        if (!approved) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+      }
+    }
+    let qrUrl;
+    if (event.visibility === 'PRIVATE' && event.shareToken) {
+      qrUrl = `${process.env.FRONTEND_URL}/events/share/${event.shareToken}`;
+    } else {
+      qrUrl = `${process.env.FRONTEND_URL}/events/${event.id}`;
+    }
+    const qrCode = await QRCode.toDataURL(qrUrl, {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 400,
+    });
+    res.json({
+      success: true,
+      data: {
+        qrCode,
+        url: qrUrl,
+        visibility: event.visibility,
+        hasShareToken: !!event.shareToken,
+        guestAccessEnabled: event.visibility === 'PRIVATE' && !!event.shareToken,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * POST /events/:id/share-token  (creator or ADMIN)
+ * Generates a guest-access token for a PRIVATE event.
+ */
+const generateEventShareToken = async (req, res) => {
+  try {
+    const { crypto } = await import('crypto');
+    const event = await prisma.event.findUnique({ where: { id: req.params.id } });
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+    if (event.creatorId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    if (event.visibility !== 'PRIVATE') {
+      return res.status(400).json({
+        success: false,
+        message: 'Share tokens are only for private events. Public events are accessible by everyone.',
+      });
+    }
+    const token = crypto.randomBytes(32).toString('hex');
+    await prisma.event.update({ where: { id: event.id }, data: { shareToken: token } });
+    const shareUrl = `${process.env.FRONTEND_URL}/events/share/${token}`;
+    res.json({ success: true, data: { shareToken: token, shareUrl } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * DELETE /events/:id/share-token  (creator or ADMIN)
+ * Revokes the guest share token.
+ */
+const revokeEventShareToken = async (req, res) => {
+  try {
+    const event = await prisma.event.findUnique({ where: { id: req.params.id } });
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+    if (event.creatorId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    await prisma.event.update({ where: { id: event.id }, data: { shareToken: null } });
+    res.json({ success: true, message: 'Share link revoked.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /events/by-token/:token  (no auth — public endpoint)
+ * Returns event + albums when a valid shareToken is presented.
+ */
+const getEventByShareToken = async (req, res) => {
+  try {
+    const { token } = req.params;
+    if (!/^[a-f0-9]{64}$/.test(token)) {
+      return res.status(404).json({ success: false, message: 'Invalid share link' });
+    }
+    const event = await prisma.event.findUnique({
+      where: { shareToken: token },
+      include: {
+        creator: { select: { id: true, username: true, fullName: true, avatar: true } },
+        albums: {
+          include: { _count: { select: { media: true } } },
+        },
+        _count: { select: { albums: true } },
+      },
+    });
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Share link not found or has been revoked' });
+    }
+    if (event.visibility !== 'PRIVATE') {
+      return res.status(400).json({
+        success: false,
+        message: 'This event is public — no token needed',
+        redirectId: event.id,
+      });
+    }
+    const { shareToken: _token, ...eventData } = event;
+    res.json({ success: true, data: eventData, guestAccess: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
 createEvent,
 getEvents,
@@ -422,6 +616,11 @@ getEvent,
 updateEvent,
 deleteEvent,
 getCategories,
+renameEvent,
+getEventQR,
+generateEventShareToken,
+revokeEventShareToken,
+getEventByShareToken,
 requestAccess,
 getEventAccessRequests,
 approveRejectEventRequest,
