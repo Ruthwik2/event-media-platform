@@ -57,101 +57,97 @@ const addWatermark = async (input, watermarkInfo = {}) => {
     const metadata = await sharp(input).metadata();
     const { width, height } = metadata;
 
+    if (!width || !height) throw new Error('Could not read image dimensions');
+
+    // ── Sanitise text fields ──────────────────────────────────────────────────
     const clubName  = escapeXml(watermarkInfo.clubName  || 'EventMedia');
     const eventName = escapeXml(watermarkInfo.eventName || '');
     const username  = escapeXml(watermarkInfo.username  || '');
-    const role      = escapeXml((watermarkInfo.userRole || '').toUpperCase());
+    // Format role: CLUB_MEMBER → Club Member
+    const rawRole   = (watermarkInfo.userRole || '').replace(/_/g, ' ');
+    const role      = escapeXml(rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase());
 
     const downloadDate = new Date().toLocaleDateString('en-IN', {
       day: '2-digit', month: 'short', year: 'numeric',
     });
 
+    // ── Typography ────────────────────────────────────────────────────────────
+    // Scale font to image size; cap so it never overwhelms a small image.
+    const baseFontSize = Math.min(48, Math.max(18, Math.round(Math.min(width, height) / 30)));
+    const subFontSize  = Math.round(baseFontSize * 0.72);
+    const lineGap      = Math.round(baseFontSize * 0.45);
+
+    // ── Strip geometry (full-width bar at the bottom) ─────────────────────────
+    const padV    = Math.round(baseFontSize * 0.75);  // vertical padding inside strip
+    const stripH  = padV + baseFontSize + lineGap + subFontSize + padV;
+    const stripY  = height - stripH;                  // top of the strip (always in bounds)
+    const cx      = Math.round(width / 2);            // horizontal centre
+
+    // ── Text lines ────────────────────────────────────────────────────────────
+    // Line 1 (bold): ClubName  •  EventName
     const line1 = eventName ? `${clubName}  \u2022  ${eventName}` : clubName;
-    const line2Parts = [username ? `@${username}` : null, downloadDate, role || null].filter(Boolean);
-    const line2 = line2Parts.join('  \u00b7  ');
 
-    const fontSize1 = Math.min(52, Math.max(20, Math.floor(width / 32)));
-    const fontSize2 = Math.round(fontSize1 * 0.70);
+    // Line 2 (regular): Role  |  @username  |  Date
+    const line2Parts = [
+      role      || null,
+      username  ? `@${username}` : null,
+      downloadDate,
+    ].filter(Boolean);
+    const line2 = line2Parts.join('  \u2502  ');   // │ separator
 
-    const w1 = line1.length * fontSize1 * 0.55;
-    const w2 = line2.length * fontSize2 * 0.55;
-    const innerW = Math.max(w1, w2, fontSize1 * 8);
+    // Vertical anchors for the two text baselines
+    const y1 = stripY + padV + baseFontSize;
+    const y2 = y1 + lineGap + subFontSize;
 
-    const padX   = fontSize1 * 0.9;
-    const padY   = fontSize1 * 0.7;
-    const sepGap = fontSize1 * 0.2;
+    // ── Separator line between line1 and line2 ────────────────────────────────
+    const sepY    = y1 + Math.round(lineGap * 0.45);
+    const sepPadX = Math.round(width * 0.06);       // inset from strip edges
 
-    const iconSize = fontSize1 * 1.1;
-    const iconGap  = fontSize1 * 0.45;
-
-    const badgeW = iconGap + iconSize + iconGap * 0.5 + innerW + padX;
-    const badgeH = padY + fontSize1 + sepGap + 1 + sepGap + fontSize2 + padY;
-
-    const marginR = Math.round(width  * 0.02);
-    const marginB = Math.round(height * 0.02);
-
-    const bx = Math.round(width  - badgeW - marginR);
-    const by = Math.round(height - badgeH - marginB);
-    const rx = Math.round(fontSize1 * 0.25);
-
-    const ibx  = bx + iconGap;
-    const iby  = by + (badgeH - iconSize) / 2;
-    const iR   = Math.round(iconSize * 0.18);
-    const icx  = ibx + iconSize * 0.30;
-    const icy  = iby + iconSize * 0.50;
-    const icR  = iconSize * 0.20;
-    const tCX  = ibx + iconSize * 0.72;
-    const tCY  = iby + iconSize * 0.50;
-    const tH   = iconSize * 0.30;
-    const tW   = iconSize * 0.24;
-
-    const tx   = bx + iconGap + iconSize + iconGap * 0.6;
-    const y1   = by + padY + fontSize1;
-    const sepY = y1 + sepGap;
-    const y2   = sepY + 1 + sepGap + fontSize2;
-
+    // ── SVG overlay (same pixel dimensions as the image) ─────────────────────
+    //  • Dark semi-transparent strip  → guaranteed visible on any image content
+    //  • White text + subtle shadow   → readable regardless of strip colour
+    //  • Uses "Arial, Helvetica, sans-serif" → universally available in librsvg
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <defs>
-        <linearGradient id="badgeBg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.96"/>
-          <stop offset="100%" stop-color="#e8edf2" stop-opacity="0.97"/>
+        <linearGradient id="stripGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#000000" stop-opacity="0.68"/>
+          <stop offset="100%" stop-color="#111111" stop-opacity="0.82"/>
         </linearGradient>
-        <linearGradient id="iconGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%"   stop-color="#111111"/>
-          <stop offset="100%" stop-color="#333333"/>
-        </linearGradient>
-        <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
-          <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.25"/>
+        <filter id="txtShadow" x="-2%" y="-10%" width="104%" height="130%">
+          <feDropShadow dx="0" dy="1" stdDeviation="2"
+                        flood-color="#000000" flood-opacity="0.9"/>
         </filter>
       </defs>
-      <rect x="${bx}" y="${by}" width="${badgeW}" height="${badgeH}"
-            rx="${rx}" ry="${rx}" fill="url(#badgeBg)" filter="url(#shadow)"/>
-      <rect x="${ibx}" y="${iby}" width="${iconSize}" height="${iconSize}"
-            rx="${iR}" ry="${iR}" fill="url(#iconGrad)"/>
-      <circle cx="${icx}" cy="${icy}" r="${icR}"
-              fill="none" stroke="white" stroke-width="${iconSize * 0.08}"/>
-      <circle cx="${icx}" cy="${icy}" r="${icR * 0.38}" fill="white"/>
-      <polygon points="${tCX - tW/2},${tCY + tH/2} ${tCX + tW/2},${tCY} ${tCX - tW/2},${tCY - tH/2}"
-               fill="white"/>
-      <line x1="${ibx + iconSize + iconGap * 0.3}" y1="${iby + iconSize * 0.12}"
-            x2="${ibx + iconSize + iconGap * 0.3}" y2="${iby + iconSize * 0.88}"
-            stroke="#cccccc" stroke-width="1"/>
-      <text x="${tx}" y="${y1}"
-            font-family="monospace"
-            font-size="${fontSize1}px"
+
+      <!-- Dark banner strip -->
+      <rect x="0" y="${stripY}" width="${width}" height="${stripH}"
+            fill="url(#stripGrad)"/>
+
+      <!-- Thin top-edge accent line -->
+      <line x1="0" y1="${stripY}" x2="${width}" y2="${stripY}"
+            stroke="#ffffff" stroke-opacity="0.20" stroke-width="1"/>
+
+      <!-- Line 1: Club  •  Event -->
+      <text x="${cx}" y="${y1}"
+            font-family="Arial, Helvetica, sans-serif"
+            font-size="${baseFontSize}px"
             font-weight="bold"
-            fill="#111111"
-            xml:space="preserve">${line1}</text>
-      <line x1="${tx}" y1="${sepY}"
-            x2="${bx + badgeW - padX * 0.5}" y2="${sepY}"
-            stroke="#bbbbbb" stroke-width="1"/>
-      <text x="${tx + innerW / 2}" y="${y2}"
-            font-family="monospace"
-            font-size="${fontSize2}px"
-            font-weight="normal"
-            fill="#444444"
+            fill="#ffffff"
             text-anchor="middle"
-            xml:space="preserve">${line2}</text>
+            filter="url(#txtShadow)">${line1}</text>
+
+      <!-- Thin separator -->
+      <line x1="${sepPadX}" y1="${sepY}" x2="${width - sepPadX}" y2="${sepY}"
+            stroke="#ffffff" stroke-opacity="0.25" stroke-width="1"/>
+
+      <!-- Line 2: Role  |  @user  |  Date -->
+      <text x="${cx}" y="${y2}"
+            font-family="Arial, Helvetica, sans-serif"
+            font-size="${subFontSize}px"
+            font-weight="normal"
+            fill="#e0e0e0"
+            text-anchor="middle"
+            filter="url(#txtShadow)">${line2}</text>
     </svg>`;
 
     const outputBuffer = await sharp(input)
@@ -162,6 +158,7 @@ const addWatermark = async (input, watermarkInfo = {}) => {
     return outputBuffer;
   } catch (error) {
     console.error('Error adding watermark:', error);
+    // Return the original image unchanged rather than crashing the download
     if (Buffer.isBuffer(input)) return input;
     return fs.readFileSync(input);
   }
