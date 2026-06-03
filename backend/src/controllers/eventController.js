@@ -7,7 +7,8 @@ const { randomBytes } = require('crypto');
 function canAccessEvent(user, event) {
   if (event.visibility === 'PUBLIC') return true;
   if (!user) return false;
-  if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
+  if (user.role === 'ADMIN') return true;
+  if (user.role === 'CLUB_MEMBER') return user.isApproved === true;
   if (user.role === 'PHOTOGRAPHER') return event.creatorId === user.id;
   return false;
 }

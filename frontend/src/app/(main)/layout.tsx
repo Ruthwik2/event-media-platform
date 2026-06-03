@@ -6,7 +6,7 @@ import Navbar from '@/components/layout/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const [hydrated, setHydrated] = useState(false);
@@ -21,13 +21,23 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }, []);
 
   useEffect(() => {
-    if (hydrated && !token) {
+    if (!hydrated) return;
+    // Also check localStorage directly — Zustand's async persist hydration can
+    // resolve with a null token briefly even when the token is in localStorage,
+    // causing a false redirect loop right after login.
+    const localToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+    if (!token && !localToken) {
       router.replace('/login');
+      return;
     }
-  }, [hydrated, token, router]);
+    // Unapproved club members can only see the pending-approval page
+    if (user && user.role === 'CLUB_MEMBER' && user.isApproved === false) {
+      router.replace('/pending-approval');
+    }
+  }, [hydrated, token, user, router]);
 
   // Show minimal spinner during hydration — avoids blank null flash
-  if (!hydrated || !token) {
+  if (!hydrated) {
     return (
       <div className="min-h-screen bg-[#080d14] flex items-center justify-center">
         <div className="flex items-center gap-1.5">

@@ -4,11 +4,14 @@ const { uploadToS3 } = require('../services/s3Service');
 const { randomBytes } = require('crypto');
 // ── Permission helpers ────────────────────────────────────────────────────────
 function canAccessAlbum(user, album) {
+  const isApprovedMember = user && user.role === 'CLUB_MEMBER' && user.isApproved === true;
+
   // ── Step 1: check parent event visibility ──────────────────────────────────
   const eventIsPrivate = album.event && album.event.visibility === 'PRIVATE';
   if (eventIsPrivate) {
     if (!user) return false;
-    if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
+    if (user.role === 'ADMIN') return true;
+    if (isApprovedMember) return true;
     if (user.role === 'PHOTOGRAPHER') {
       const isEventCreator = album.event.creatorId === user.id;
       const collaborators = album.collaborators || [];
@@ -17,13 +20,14 @@ function canAccessAlbum(user, album) {
       );
       return isEventCreator || isCollaborator;
     }
-    return false; // VIEWER — blocked by private event
+    return false;
   }
 
   // ── Step 2: event is public — check album-level visibility ─────────────────
   if (album.visibility === 'PUBLIC') return true;
   if (!user) return false;
-  if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
+  if (user.role === 'ADMIN') return true;
+  if (isApprovedMember) return true;
   if (user.role === 'PHOTOGRAPHER') {
     const isEventCreator = album.event && album.event.creatorId === user.id;
     const collaborators = album.collaborators || [];
@@ -41,7 +45,8 @@ if (!canAccessAlbum(user, album)) return false;
 }
 if (media.visibility === 'PUBLIC') return true;
 if (!user) return false;
-if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
+if (user.role === 'ADMIN') return true;
+if (user.role === 'CLUB_MEMBER' && user.isApproved === true) return true;
 if (user.role === 'PHOTOGRAPHER') return media.uploaderId === user.id;
 return false;
 }

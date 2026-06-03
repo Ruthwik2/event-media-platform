@@ -118,6 +118,31 @@ eventId: targetType === 'EVENT' ? targetId : undefined,
 console.error('Error notifying access response:', error);
 }
 };
+const notifyMembershipRequest = async (memberId, adminId, memberName) => {
+try {
+await createNotification({
+type: 'MEMBERSHIP_REQUEST',
+message: `${memberName} has registered as a Club Member and is awaiting approval`,
+recipientId: adminId,
+senderId: memberId,
+});
+} catch (error) {
+console.error('Error notifying membership request:', error);
+}
+};
+const notifyMembershipResponse = async (adminId, memberId, status) => {
+try {
+const statusText = status === 'APPROVED' ? 'approved' : 'rejected';
+await createNotification({
+type: status === 'APPROVED' ? 'MEMBERSHIP_APPROVED' : 'MEMBERSHIP_REJECTED',
+message: `Your club membership request has been ${statusText}`,
+recipientId: memberId,
+senderId: adminId,
+});
+} catch (error) {
+console.error('Error notifying membership response:', error);
+}
+};
 module.exports = {
 createNotification,
 notifyLike,
@@ -125,4 +150,6 @@ notifyComment,
 notifyTag,
 notifyAccessRequest,
 notifyAccessResponse,
+notifyMembershipRequest,
+notifyMembershipResponse,
 };

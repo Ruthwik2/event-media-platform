@@ -9,6 +9,7 @@ email?: string | null;
 username: string;
 fullName: string;
 role: Role;
+isApproved?: boolean;
 avatar?: string;
 bio?: string;
 referenceSelfie?: string;

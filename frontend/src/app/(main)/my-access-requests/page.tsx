@@ -30,7 +30,7 @@ export default function MyAccessRequestsPage() {
   const [reRequestingId, setReRequestingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user && user.role !== 'PHOTOGRAPHER') {
+    if (user && user.role !== 'PHOTOGRAPHER' && user.role !== 'CLUB_MEMBER') {
       router.push('/');
       return;
     }

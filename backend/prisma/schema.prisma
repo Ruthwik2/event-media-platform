@@ -35,6 +35,7 @@ model User {
   bio               String?
   role              Role      @default(VIEWER)
   isEmailVerified   Boolean   @default(false)
+  isApproved        Boolean   @default(true)
   referenceSelfie   String?
   faceId            String?
   showEmail         Boolean   @default(false)

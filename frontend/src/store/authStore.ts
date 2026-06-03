@@ -36,9 +36,11 @@ export const useAuthStore = create<AuthState>()(
           const { user, accessToken } = response.data.data;
           localStorage.setItem('accessToken', accessToken);
           
-          // Store token in cookie for middleware access
-          if (typeof window !== 'undefined') {
-            document.cookie = `accessToken=${accessToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+          // Write cookie synchronously before resolving so middleware sees it
+          // on the very next navigation request.
+          if (typeof document !== 'undefined') {
+            const isSecure = location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = `accessToken=${accessToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax${isSecure}`;
           }
           
           set({ user, token: accessToken, isLoading: false });
@@ -55,9 +57,11 @@ export const useAuthStore = create<AuthState>()(
           const { user, accessToken } = response.data.data;
           localStorage.setItem('accessToken', accessToken);
           
-          // Store token in cookie for middleware access
-          if (typeof window !== 'undefined') {
-            document.cookie = `accessToken=${accessToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+          // Write cookie synchronously before resolving so middleware sees it
+          // on the very next navigation request.
+          if (typeof document !== 'undefined') {
+            const isSecure = location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = `accessToken=${accessToken}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax${isSecure}`;
           }
           
           set({ user, token: accessToken, isLoading: false });

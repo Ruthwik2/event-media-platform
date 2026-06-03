@@ -31,7 +31,10 @@ export default function LoginPage() {
     try {
       await login(email.trim(), password);
       toast.success('Welcome back!');
-      router.push('/');
+      // Use hard navigation so the browser sends the newly-set cookie with
+      // the request — router.push() is client-side and the middleware can
+      // read the cookie before it is flushed, causing a redirect loop.
+      window.location.href = '/';
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Login failed');
     }

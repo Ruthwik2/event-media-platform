@@ -60,6 +60,9 @@ const register = async (req, res) => {
     const allowedRoles = ['VIEWER', 'CLUB_MEMBER', 'PHOTOGRAPHER'];
     const userRole = allowedRoles.includes(role) ? role : 'VIEWER';
 
+    // CLUB_MEMBERs require admin approval before they can access content
+    const isApproved = userRole !== 'CLUB_MEMBER';
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -67,14 +70,35 @@ const register = async (req, res) => {
         password: hashedPassword,
         fullName,
         role: userRole,
+        isApproved,
         isEmailVerified: true, // Auto-verify for demo
       },
       select: {
         id: true, email: true, username: true,
         fullName: true, role: true, avatar: true, createdAt: true,
+        isApproved: true,
         showEmail: true, allowTagging: true, publicProfile: true,
       },
     });
+
+    // If new CLUB_MEMBER, auto-create a PENDING membership request so admins see it
+    if (userRole === 'CLUB_MEMBER') {
+      await prisma.accessRequest.create({
+        data: { userId: user.id, targetId: user.id, type: 'MEMBERSHIP' },
+      });
+      // Notify admins
+      try {
+        const admins = await prisma.user.findMany({
+          where: { role: 'ADMIN' },
+          select: { id: true },
+        });
+        const { default: createNotif } = await import('../services/notificationService.js').catch(() => ({ default: null }));
+        const createNotification = require('../services/notificationService');
+        for (const admin of admins) {
+          await createNotification.notifyMembershipRequest(user.id, admin.id, user.fullName).catch(() => {});
+        }
+      } catch { /* notifications are best-effort */ }
+    }
 
     const { accessToken } = generateTokens(user.id);
 
@@ -100,6 +124,19 @@ const login = async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       return res.status(400).json({ success: false, message: 'Incorrect password. Please try again' });
+    }
+
+    // If CLUB_MEMBER and not yet approved, check if they have a rejected request — update to PENDING
+    if (user.role === 'CLUB_MEMBER' && !user.isApproved) {
+      const existingReq = await prisma.accessRequest.findUnique({
+        where: { userId_targetId_type: { userId: user.id, targetId: user.id, type: 'MEMBERSHIP' } },
+      });
+      if (!existingReq) {
+        // No request exists (e.g. grandfathered account) — create one
+        await prisma.accessRequest.create({
+          data: { userId: user.id, targetId: user.id, type: 'MEMBERSHIP' },
+        });
+      }
     }
 
     const { accessToken } = generateTokens(user.id);
@@ -446,4 +483,108 @@ const changePassword = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-module.exports = { register, login, getProfile, updateProfile, uploadSelfie, getAllUsers, deleteUser, changePassword };
+/**
+ * POST /auth/membership-request
+ * CLUB_MEMBER re-requests approval after being rejected.
+ */
+const requestMembership = async (req, res) => {
+  try {
+    if (req.user.role !== 'CLUB_MEMBER') {
+      return res.status(403).json({ success: false, message: 'Only club members can request membership approval' });
+    }
+    if (req.user.isApproved) {
+      return res.status(400).json({ success: false, message: 'Your membership is already approved' });
+    }
+    const existing = await prisma.accessRequest.findUnique({
+      where: { userId_targetId_type: { userId: req.user.id, targetId: req.user.id, type: 'MEMBERSHIP' } },
+    });
+    if (existing) {
+      if (existing.status === 'PENDING') {
+        return res.status(400).json({ success: false, message: 'Approval request already pending' });
+      }
+      // REJECTED → reset to PENDING
+      await prisma.accessRequest.update({
+        where: { id: existing.id },
+        data: { status: 'PENDING', updatedAt: new Date() },
+      });
+    } else {
+      await prisma.accessRequest.create({
+        data: { userId: req.user.id, targetId: req.user.id, type: 'MEMBERSHIP' },
+      });
+    }
+    // Notify admins
+    try {
+      const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+      const notifService = require('../services/notificationService');
+      for (const admin of admins) {
+        await notifService.notifyMembershipRequest(req.user.id, admin.id, req.user.fullName).catch(() => {});
+      }
+    } catch { /* best-effort */ }
+    res.json({ success: true, message: 'Membership request submitted. An admin will review it shortly.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /auth/membership-requests  (ADMIN only)
+ * Returns all club member approval requests.
+ */
+const getMembershipRequests = async (req, res) => {
+  try {
+    const { status = 'PENDING' } = req.query;
+    const whereStatus = status === 'ALL' ? {} : { status };
+    const requests = await prisma.accessRequest.findMany({
+      where: { type: 'MEMBERSHIP', ...whereStatus },
+      include: {
+        user: {
+          select: { id: true, username: true, fullName: true, avatar: true, email: true, createdAt: true, isApproved: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ success: true, data: requests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * PATCH /auth/membership-requests/:rid  (ADMIN only)
+ * Approve or reject a club member.
+ */
+const approveRejectMembership = async (req, res) => {
+  try {
+    const { rid } = req.params;
+    const { status } = req.body;
+    if (!['APPROVED', 'REJECTED'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+    const request = await prisma.accessRequest.findFirst({
+      where: { id: rid, type: 'MEMBERSHIP' },
+    });
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Request not found' });
+    }
+    // Update request status
+    const updated = await prisma.accessRequest.update({
+      where: { id: rid },
+      data: { status },
+    });
+    // Update the user's isApproved flag
+    await prisma.user.update({
+      where: { id: request.userId },
+      data: { isApproved: status === 'APPROVED' },
+    });
+    // Notify the club member
+    try {
+      const notifService = require('../services/notificationService');
+      await notifService.notifyMembershipResponse(req.user.id, request.userId, status).catch(() => {});
+    } catch { /* best-effort */ }
+    res.json({ success: true, data: updated, message: `Membership ${status.toLowerCase()}` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { register, login, getProfile, updateProfile, uploadSelfie, getAllUsers, deleteUser, changePassword, requestMembership, getMembershipRequests, approveRejectMembership };

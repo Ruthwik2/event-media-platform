@@ -20,6 +20,7 @@ const authenticate = async (req, res, next) => {
         fullName: true,
         role: true,
         avatar: true,
+        isApproved: true,
       },
     });
 
@@ -53,6 +54,7 @@ const optionalAuth = async (req, res, next) => {
         fullName: true,
         role: true,
         avatar: true,
+        isApproved: true,
       },
     });
 
