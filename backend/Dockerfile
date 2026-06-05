@@ -3,6 +3,9 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Install dependencies for native modules (canvas, sharp)
+# fontconfig + ttf-dejavu are REQUIRED so sharp/librsvg can render the SVG text
+# watermark — without a font installed, Alpine renders no text and the watermark
+# silently disappears from downloaded photos.
 RUN apk add --no-cache \
     python3 \
     make \
@@ -12,7 +15,10 @@ RUN apk add --no-cache \
     jpeg-dev \
     giflib-dev \
     openssl \
-    openssl-dev
+    openssl-dev \
+    fontconfig \
+    ttf-dejavu \
+    && fc-cache -f
 
 COPY package*.json ./
 RUN npm install --production=false

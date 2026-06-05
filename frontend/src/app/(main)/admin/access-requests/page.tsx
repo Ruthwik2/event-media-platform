@@ -222,7 +222,9 @@ export default function AccessRequestsPage() {
                           <span className="font-medium">{member.user.fullName}</span>
                           <span className="text-xs text-slate-400">@{member.user.username}</span>
                           <StatusBadge status={member.status} />
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-900/40 text-blue-400 border border-blue-800/50">Club Member</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-900/40 text-blue-400 border border-blue-800/50">
+                            Viewer → Club Member
+                          </span>
                         </div>
                         <p className="text-xs text-slate-500 mt-1">{member.user.email}</p>
                         <p className="text-xs text-slate-500 mt-0.5">

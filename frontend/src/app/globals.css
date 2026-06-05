@@ -10,6 +10,14 @@
     --foreground: 210 40% 98%;
     --glow-primary: rgba(14, 165, 233, 0.15);
     --glow-blue: rgba(99, 102, 241, 0.1);
+    /* Drives native controls (date/time pickers, selects, file inputs,
+       scrollbars) so their text + icons match the active theme. Without this
+       the datetime-local text and calendar icon are nearly invisible. */
+    color-scheme: dark;
+  }
+
+  html[data-theme='light'] {
+    color-scheme: light;
   }
 
   * {

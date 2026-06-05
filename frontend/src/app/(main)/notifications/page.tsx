@@ -31,6 +31,8 @@ case 'ACCESS_APPROVED':
 return <ShieldCheck className="w-4 h-4 text-green-400" />;
 case 'ACCESS_REJECTED':
 return <ShieldX className="w-4 h-4 text-red-400" />;
+case 'MEMBERSHIP_PENDING':
+return <ShieldAlert className="w-4 h-4 text-amber-400" />;
 case 'MEMBERSHIP_REQUEST':
 return <Users className="w-4 h-4 text-yellow-400" />;
 case 'MEMBERSHIP_APPROVED':

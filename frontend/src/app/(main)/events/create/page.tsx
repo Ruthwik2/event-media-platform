@@ -1,10 +1,23 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import { Calendar, MapPin, Tag, FileText, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+
+// Scrollable category options for the event form.
+const CATEGORIES = [
+  'Cultural', 'Sports', 'Technical', 'Workshop', 'Seminar', 'Conference',
+  'Music', 'Dance', 'Drama', 'Art', 'Photography', 'Gaming', 'Hackathon',
+  'Webinar', 'Festival', 'Competition', 'Exhibition', 'Meetup', 'Other',
+];
+
+// Format a Date as the value a datetime-local input expects: YYYY-MM-DDTHH:mm
+const toLocalInput = (d: Date) => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -19,6 +32,22 @@ export default function CreateEventPage() {
     visibility: 'PUBLIC',
   });
   const [coverImage, setCoverImage] = useState<File | null>(null);
+
+  // Pre-populate sensible start/end date-times (with hh:mm) after mount.
+  // Done in an effect — not in useState — to avoid an SSR/client hydration
+  // mismatch from calling new Date() during render.
+  useEffect(() => {
+    const start = new Date();
+    start.setMinutes(0, 0, 0);
+    start.setHours(start.getHours() + 1); // next full hour
+    const end = new Date(start);
+    end.setHours(end.getHours() + 2);
+    setFormData((f) => ({
+      ...f,
+      startDate: f.startDate || toLocalInput(start),
+      endDate: f.endDate || toLocalInput(end),
+    }));
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -88,15 +117,18 @@ export default function CreateEventPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Category *</label>
-              <input
-                type="text"
+              <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
                 className="input"
-                placeholder="Cultural, Sports, Tech..."
                 required
-              />
+              >
+                <option value="" disabled>Select a category...</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="label">Location</label>
@@ -120,6 +152,7 @@ export default function CreateEventPage() {
                 value={formData.startDate}
                 onChange={handleChange}
                 className="input"
+                step={60}
                 required
               />
             </div>
@@ -131,6 +164,7 @@ export default function CreateEventPage() {
                 value={formData.endDate}
                 onChange={handleChange}
                 className="input"
+                step={60}
                 min={formData.startDate || undefined}
               />
             </div>

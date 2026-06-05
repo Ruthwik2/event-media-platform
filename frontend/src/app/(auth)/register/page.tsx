@@ -37,13 +37,19 @@ export default function RegisterPage() {
     setPasswordMismatch(false);
     try {
       const result = await register(formData);
-      toast.success('Account created successfully!');
-      // Club members must wait for admin approval before accessing the app
-      if (result?.user?.role === 'CLUB_MEMBER' && !result?.user?.isApproved) {
-        router.push('/pending-approval');
+      // A Club Member signup is created as a Viewer and must be approved by an
+      // admin before being promoted. They still get full Viewer access now.
+      const pendingClubMember =
+        formData.role === 'CLUB_MEMBER' && result?.user?.role !== 'CLUB_MEMBER';
+      if (pendingClubMember) {
+        toast.success(
+          "You're registered as a Viewer. Your Club Member access is pending admin approval.",
+          { duration: 6000 }
+        );
       } else {
-        router.push('/');
+        toast.success('Account created successfully!');
       }
+      router.push('/');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Registration failed');
     }

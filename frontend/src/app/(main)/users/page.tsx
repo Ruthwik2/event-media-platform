@@ -182,11 +182,20 @@ export default function UsersPage() {
                       <td className="px-4 py-3 text-sm">{u.fullName}</td>
                       <td className="px-4 py-3 text-sm text-slate-400">{u.email}</td>
                       <td className="px-4 py-3">
-                        <span className={`badge border ${getRoleBadgeColor(u.role, u.isApproved)} text-xs`}>
-                          {u.role === 'CLUB_MEMBER' && u.isApproved === false
-                            ? 'Pending Approval'
-                            : u.role === 'CLUB_MEMBER' ? 'Club Member' : u.role}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`badge border ${getRoleBadgeColor(u.role, u.isApproved)} text-xs`}>
+                            {u.role === 'CLUB_MEMBER'
+                              ? 'Club Member'
+                              : u.role === 'VIEWER'
+                                ? 'Viewer'
+                                : u.role.charAt(0) + u.role.slice(1).toLowerCase()}
+                          </span>
+                          {u.pendingClubRequest && (
+                            <span className="badge border bg-yellow-900/50 text-yellow-400 border-yellow-800 text-xs">
+                              Club Member pending
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-400">
                         {new Date(u.createdAt).toLocaleDateString()}

@@ -106,7 +106,8 @@ const addWatermark = async (input, watermarkInfo = {}) => {
     // ── SVG overlay (same pixel dimensions as the image) ─────────────────────
     //  • Dark semi-transparent strip  → guaranteed visible on any image content
     //  • White text + subtle shadow   → readable regardless of strip colour
-    //  • Uses "Arial, Helvetica, sans-serif" → universally available in librsvg
+    //  • Uses "DejaVu Sans" (installed in the Docker image) with Arial/sans-serif
+    //    fallbacks → librsvg always resolves a real font and renders the text
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <defs>
         <linearGradient id="stripGrad" x1="0" y1="0" x2="0" y2="1">
@@ -129,7 +130,7 @@ const addWatermark = async (input, watermarkInfo = {}) => {
 
       <!-- Line 1: Club  •  Event -->
       <text x="${cx}" y="${y1}"
-            font-family="Arial, Helvetica, sans-serif"
+            font-family="DejaVu Sans, Arial, Helvetica, sans-serif"
             font-size="${baseFontSize}px"
             font-weight="bold"
             fill="#ffffff"
@@ -142,7 +143,7 @@ const addWatermark = async (input, watermarkInfo = {}) => {
 
       <!-- Line 2: Role  |  @user  |  Date -->
       <text x="${cx}" y="${y2}"
-            font-family="Arial, Helvetica, sans-serif"
+            font-family="DejaVu Sans, Arial, Helvetica, sans-serif"
             font-size="${subFontSize}px"
             font-weight="normal"
             fill="#e0e0e0"

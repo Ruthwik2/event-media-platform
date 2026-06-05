@@ -118,6 +118,22 @@ eventId: targetType === 'EVENT' ? targetId : undefined,
 console.error('Error notifying access response:', error);
 }
 };
+// Sent to the user right after they sign up as a club member: they are a Viewer
+// for now and an admin must approve their club-member access. This is a
+// self-notification, so it bypasses createNotification (which skips self) and
+// writes/emits directly.
+const notifyMembershipPending = async (userId) => {
+try {
+const message = `You're registered as a Viewer. An admin must approve your Club Member access — you'll be notified once they do.`;
+const notification = await prisma.notification.create({
+data: { type: 'MEMBERSHIP_PENDING', message, recipientId: userId, senderId: userId },
+include: { sender: { select: { id: true, username: true, fullName: true, avatar: true } } },
+});
+sendNotification(userId, notification);
+} catch (error) {
+console.error('Error notifying membership pending:', error);
+}
+};
 const notifyMembershipRequest = async (memberId, adminId, memberName) => {
 try {
 await createNotification({
@@ -132,10 +148,12 @@ console.error('Error notifying membership request:', error);
 };
 const notifyMembershipResponse = async (adminId, memberId, status) => {
 try {
-const statusText = status === 'APPROVED' ? 'approved' : 'rejected';
+const message = status === 'APPROVED'
+? `Your Club Member access has been approved. You are now a Club Member!`
+: `Your Club Member request was declined. You remain a Viewer — you can request again anytime.`;
 await createNotification({
 type: status === 'APPROVED' ? 'MEMBERSHIP_APPROVED' : 'MEMBERSHIP_REJECTED',
-message: `Your club membership request has been ${statusText}`,
+message,
 recipientId: memberId,
 senderId: adminId,
 });
@@ -150,6 +168,7 @@ notifyComment,
 notifyTag,
 notifyAccessRequest,
 notifyAccessResponse,
+notifyMembershipPending,
 notifyMembershipRequest,
 notifyMembershipResponse,
 };

@@ -10,6 +10,8 @@ username: string;
 fullName: string;
 role: Role;
 isApproved?: boolean;
+/** Admin-only: true when this Viewer has a pending Club Member upgrade request */
+pendingClubRequest?: boolean;
 avatar?: string;
 bio?: string;
 referenceSelfie?: string;

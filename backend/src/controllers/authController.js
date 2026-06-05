@@ -58,10 +58,15 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const allowedRoles = ['VIEWER', 'CLUB_MEMBER', 'PHOTOGRAPHER'];
-    const userRole = allowedRoles.includes(role) ? role : 'VIEWER';
+    const requestedRole = allowedRoles.includes(role) ? role : 'VIEWER';
 
-    // CLUB_MEMBERs require admin approval before they can access content
-    const isApproved = userRole !== 'CLUB_MEMBER';
+    // A user who signs up as a Club Member starts out as a VIEWER and must be
+    // approved by an admin before being promoted to CLUB_MEMBER. Until then they
+    // have full Viewer access and appear as a Viewer everywhere (e.g. the admin
+    // users list). The pending upgrade is tracked via a MEMBERSHIP access request.
+    const wantsClubMember = requestedRole === 'CLUB_MEMBER';
+    const userRole = wantsClubMember ? 'VIEWER' : requestedRole;
+    const isApproved = true; // viewers / photographers are immediately usable
 
     const user = await prisma.user.create({
       data: {
@@ -81,21 +86,23 @@ const register = async (req, res) => {
       },
     });
 
-    // If new CLUB_MEMBER, auto-create a PENDING membership request so admins see it
-    if (userRole === 'CLUB_MEMBER') {
+    // Club-member signups: create a PENDING membership request, notify admins,
+    // and notify the new user that they are a Viewer pending club-member approval.
+    if (wantsClubMember) {
       await prisma.accessRequest.create({
         data: { userId: user.id, targetId: user.id, type: 'MEMBERSHIP' },
       });
-      // Notify admins
       try {
+        const notifService = require('../services/notificationService');
+        // Tell the new user they're a Viewer awaiting club-member approval
+        await notifService.notifyMembershipPending(user.id).catch(() => {});
+        // Notify all admins so they can review the request
         const admins = await prisma.user.findMany({
           where: { role: 'ADMIN' },
           select: { id: true },
         });
-        const { default: createNotif } = await import('../services/notificationService.js').catch(() => ({ default: null }));
-        const createNotification = require('../services/notificationService');
         for (const admin of admins) {
-          await createNotification.notifyMembershipRequest(user.id, admin.id, user.fullName).catch(() => {});
+          await notifService.notifyMembershipRequest(user.id, admin.id, user.fullName).catch(() => {});
         }
       } catch { /* notifications are best-effort */ }
     }
@@ -104,8 +111,10 @@ const register = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully',
-      data: { user, accessToken },
+      message: wantsClubMember
+        ? 'Account created as Viewer. Your Club Member access is pending admin approval.'
+        : 'Account created successfully',
+      data: { user, accessToken, pendingClubMember: wantsClubMember },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -362,10 +371,26 @@ const getAllUsers = async (req, res) => {
       prisma.user.count({ where }),
     ]);
 
+    // Flag viewers who have a PENDING club-member request so admins can see, in
+    // the users list, who is a Viewer awaiting promotion to Club Member.
+    let pendingClubSet = new Set();
+    if (req.user.role === 'ADMIN' && users.length > 0) {
+      const pendingReqs = await prisma.accessRequest.findMany({
+        where: {
+          type: 'MEMBERSHIP',
+          status: 'PENDING',
+          userId: { in: users.map((u) => u.id) },
+        },
+        select: { userId: true },
+      });
+      pendingClubSet = new Set(pendingReqs.map((r) => r.userId));
+    }
+
     res.json({
       success: true,
       data: users.map((user) => ({
         ...user,
+        pendingClubRequest: pendingClubSet.has(user.id),
         email: req.user.role === 'ADMIN' || user.id === req.user.id || user.showEmail
           ? user.email
           : null,
@@ -486,15 +511,16 @@ const changePassword = async (req, res) => {
 };
 /**
  * POST /auth/membership-request
- * CLUB_MEMBER re-requests approval after being rejected.
+ * A VIEWER requests to be promoted to CLUB_MEMBER (initial request or after a
+ * previous request was rejected).
  */
 const requestMembership = async (req, res) => {
   try {
-    if (req.user.role !== 'CLUB_MEMBER') {
-      return res.status(403).json({ success: false, message: 'Only club members can request membership approval' });
+    if (req.user.role === 'CLUB_MEMBER') {
+      return res.status(400).json({ success: false, message: 'You are already a club member' });
     }
-    if (req.user.isApproved) {
-      return res.status(400).json({ success: false, message: 'Your membership is already approved' });
+    if (req.user.role !== 'VIEWER') {
+      return res.status(403).json({ success: false, message: 'Only viewers can request club membership' });
     }
     const existing = await prisma.accessRequest.findUnique({
       where: { userId_targetId_type: { userId: req.user.id, targetId: req.user.id, type: 'MEMBERSHIP' } },
@@ -572,13 +598,13 @@ const approveRejectMembership = async (req, res) => {
       where: { id: rid },
       data: { status },
     });
-    // Update the user's isApproved flag; if rejected, demote to VIEWER
+    // APPROVED  → promote the Viewer to CLUB_MEMBER
+    // REJECTED  → they remain a Viewer (full viewer access either way)
     await prisma.user.update({
       where: { id: request.userId },
-      data: {
-        isApproved: status === 'APPROVED',
-        ...(status === 'REJECTED' ? { role: 'VIEWER' } : {}),
-      },
+      data: status === 'APPROVED'
+        ? { role: 'CLUB_MEMBER', isApproved: true }
+        : { role: 'VIEWER', isApproved: true },
     });
     // Notify the club member
     try {

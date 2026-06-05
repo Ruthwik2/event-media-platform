@@ -15,20 +15,43 @@ export default function MediaCard({ media, compact, naturalHeight, thumbnailOnly
   const [imgError, setImgError] = useState(false);
   const src = media.thumbnailUrl || media.url;
 
-  if (thumbnailOnly) {
-    return imgError || !src ? (
-      <div className="w-full h-full flex items-center justify-center bg-white/[0.03]">
-        {isVideo ? <Play className="w-5 h-5 text-slate-700" /> : <ImageIcon className="w-5 h-5 text-slate-700" />}
-      </div>
-    ) : (
+  // A video with no generated image thumbnail is rendered via a <video> element
+  // seeked to its first frame (#t=0.1), so it acts as a poster instead of a blank box.
+  const usePosterVideo = isVideo && !media.thumbnailUrl && !!media.url;
+
+  const renderVisual = (className: string, fallbackIconSize: string) => {
+    if (imgError || !src) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-white/[0.03]">
+          {isVideo ? <Play className={`${fallbackIconSize} text-slate-700`} /> : <ImageIcon className={`${fallbackIconSize} text-slate-700`} />}
+        </div>
+      );
+    }
+    if (usePosterVideo) {
+      return (
+        <video
+          src={`${media.url}#t=0.1`}
+          className={className}
+          muted
+          playsInline
+          preload="metadata"
+          onError={() => setImgError(true)}
+        />
+      );
+    }
+    return (
       <img
         src={src}
         alt={media.originalName}
-        className="w-full h-full object-cover"
+        className={className}
         loading="lazy"
         onError={() => setImgError(true)}
       />
     );
+  };
+
+  if (thumbnailOnly) {
+    return renderVisual('w-full h-full object-cover', 'w-5 h-5');
   }
 
   return (
@@ -38,15 +61,28 @@ export default function MediaCard({ media, compact, naturalHeight, thumbnailOnly
       }`}
     >
       {!imgError && src ? (
-        <img
-          src={src}
-          alt={media.originalName}
-          className={`w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] ${
-            naturalHeight ? 'h-auto' : 'h-full'
-          }`}
-          loading="lazy"
-          onError={() => setImgError(true)}
-        />
+        usePosterVideo ? (
+          <video
+            src={`${media.url}#t=0.1`}
+            className={`w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] ${
+              naturalHeight ? 'h-auto' : 'h-full'
+            }`}
+            muted
+            playsInline
+            preload="metadata"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <img
+            src={src}
+            alt={media.originalName}
+            className={`w-full object-cover transition-transform duration-300 group-hover:scale-[1.04] ${
+              naturalHeight ? 'h-auto' : 'h-full'
+            }`}
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        )
       ) : (
         <div className={`w-full flex items-center justify-center bg-white/[0.03] ${naturalHeight ? 'h-40' : 'h-full'}`}>
           {isVideo
