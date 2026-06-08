@@ -7,41 +7,58 @@ import { Search, Image } from 'lucide-react';
 import MediaCard from '@/components/media/MediaCard';
 import MediaLightbox from '@/components/media/MediaLightbox';
 
+const EMPTY_FILTERS = {
+  tags: '',
+  eventName: '',
+  albumName: '',
+  uploadDate: '',
+  username: '',
+};
+
 export default function SearchPage() {
   const searchParams = useSearchParams();
-  const q = searchParams.get('q') || '';
-  const [query, setQuery] = useState(q);
+  const [query, setQuery] = useState('');
   const [results, setResults] = useState<Media[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
-  const [filters, setFilters] = useState({
-    tags: '',
-    eventName: '',
-    albumName: '',
-    uploadDate: '',
-    username: '',
-  });
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
 
+  // Hydrate query + every filter from the URL, then auto-search. Tag links
+  // (e.g. /search?tags=person) and other deep links land here — previously
+  // only `q` was read, so arriving via a tag chip searched for nothing.
   useEffect(() => {
-    if (q) {
-      setQuery(q);
-      handleSearch(q);
+    const urlQuery = searchParams.get('q') || '';
+    const urlFilters = {
+      tags: searchParams.get('tags') || '',
+      eventName: searchParams.get('eventName') || '',
+      albumName: searchParams.get('albumName') || '',
+      uploadDate: searchParams.get('uploadDate') || '',
+      username: searchParams.get('username') || '',
+    };
+    setQuery(urlQuery);
+    setFilters(urlFilters);
+    if (urlQuery || Object.values(urlFilters).some(Boolean)) {
+      handleSearch(urlQuery, urlFilters);
     }
-  }, [q]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
-  const handleSearch = async (searchQuery?: string) => {
-    const sq = searchQuery || query;
-    if (!sq && !filters.tags && !filters.eventName && !filters.uploadDate && !filters.username) return;
+  const handleSearch = async (
+    searchQuery?: string,
+    searchFilters: typeof EMPTY_FILTERS = filters
+  ) => {
+    const sq = searchQuery ?? query;
+    if (!sq && !Object.values(searchFilters).some(Boolean)) return;
 
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (sq) params.append('q', sq);
-      if (filters.tags) params.append('tags', filters.tags);
-      if (filters.eventName) params.append('eventName', filters.eventName);
-      if (filters.albumName) params.append('albumName', filters.albumName);
-      if (filters.uploadDate) params.append('uploadDate', filters.uploadDate);
-      if (filters.username) params.append('username', filters.username);
+      if (searchFilters.tags) params.append('tags', searchFilters.tags);
+      if (searchFilters.eventName) params.append('eventName', searchFilters.eventName);
+      if (searchFilters.albumName) params.append('albumName', searchFilters.albumName);
+      if (searchFilters.uploadDate) params.append('uploadDate', searchFilters.uploadDate);
+      if (searchFilters.username) params.append('username', searchFilters.username);
 
       const res = await api.get(`/media/search?${params.toString()}`);
       setResults(res.data.data || []);
@@ -86,6 +103,7 @@ export default function SearchPage() {
               placeholder="mountains, people..."
               value={filters.tags}
               onChange={(e) => setFilters({ ...filters, tags: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="input"
             />
           </div>
@@ -96,6 +114,7 @@ export default function SearchPage() {
               placeholder="Cultural Fest..."
               value={filters.eventName}
               onChange={(e) => setFilters({ ...filters, eventName: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="input"
             />
           </div>
@@ -106,6 +125,7 @@ export default function SearchPage() {
               placeholder="Day 1 Photos..."
               value={filters.albumName}
               onChange={(e) => setFilters({ ...filters, albumName: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="input"
             />
           </div>
@@ -115,6 +135,7 @@ export default function SearchPage() {
               type="date"
               value={filters.uploadDate}
               onChange={(e) => setFilters({ ...filters, uploadDate: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="input"
             />
           </div>
@@ -125,6 +146,7 @@ export default function SearchPage() {
               placeholder="photographer1..."
               value={filters.username}
               onChange={(e) => setFilters({ ...filters, username: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="input"
             />
           </div>

@@ -4,29 +4,52 @@ import api from '@/lib/axios';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CATEGORIES } from '@/lib/categories';
+import { Album } from '@/types';
 
 interface Props {
   eventId: string;
+  // When provided the modal acts as an editor for this album; otherwise it
+  // creates a new album under `eventId`.
+  album?: Album;
   onClose: () => void;
   onCreated: () => void;
 }
 
-export default function CreateAlbumModal({ eventId, onClose, onCreated }: Props) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
-  const [visibility, setVisibility] = useState('PUBLIC');
+export default function CreateAlbumModal({ eventId, album, onClose, onCreated }: Props) {
+  const isEdit = !!album;
+  const [name, setName] = useState(album?.name || '');
+  const [description, setDescription] = useState(album?.description || '');
+  const [category, setCategory] = useState(album?.category || '');
+  const [visibility, setVisibility] = useState<string>(album?.visibility || 'PUBLIC');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('/albums', { name, description, category: category || undefined, visibility, eventId });
-      toast.success('Album created!');
+      if (isEdit) {
+        await api.put(`/albums/${album!.id}`, {
+          name,
+          description,
+          category: category || null,
+          visibility,
+        });
+        toast.success('Album updated');
+      } else {
+        await api.post('/albums', {
+          name,
+          description,
+          category: category || undefined,
+          visibility,
+          eventId,
+        });
+        toast.success('Album created!');
+      }
       onCreated();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create album');
+      toast.error(
+        error.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} album`
+      );
     } finally {
       setLoading(false);
     }
@@ -36,8 +59,8 @@ export default function CreateAlbumModal({ eventId, onClose, onCreated }: Props)
     <div className="modal-backdrop" onClick={onClose}>
       <div className="glass-panel p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Create Album</h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+          <h2 className="text-lg font-bold">{isEdit ? 'Edit Album' : 'Create Album'}</h2>
+          <button onClick={onClose} className="p-1.5 hover:bg-[#f0ede8] rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -96,7 +119,9 @@ export default function CreateAlbumModal({ eventId, onClose, onCreated }: Props)
               Cancel
             </button>
             <button type="submit" disabled={loading} className="btn-primary flex-1 justify-center">
-              {loading ? 'Creating...' : 'Create'}
+              {loading
+                ? isEdit ? 'Saving...' : 'Creating...'
+                : isEdit ? 'Save Changes' : 'Create'}
             </button>
           </div>
         </form>

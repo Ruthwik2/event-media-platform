@@ -804,13 +804,15 @@ const searchMedia = async (req, res) => {
 
     const where = {};
 
-    // ── 1. Visibility gate ───────────────────────────────────────────────────
-    // Track photographer OR separately so we can AND it with search conditions
-    // without overwriting it (previously where.OR = conditions wiped this).
+    // ── 1. Visibility gate (always AND-ed — never widened by a filter match) ──
+    // A media item matching one search filter must still pass the visibility
+    // rules for the caller; otherwise OR-ing filters would leak private media.
     let visibilityOR = null;
     if (!req.user || req.user.role === 'VIEWER') {
-      where.visibility = 'PUBLIC';
-      // Album visibility guard set here; merged carefully with eventName/albumName below
+      // Public media in public albums of public events only.
+      visibilityOR = [
+        { visibility: 'PUBLIC', album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } } },
+      ];
     } else if (req.user.role === 'PHOTOGRAPHER') {
       visibilityOR = [
         { visibility: 'PUBLIC', album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } } },
@@ -821,73 +823,66 @@ const searchMedia = async (req, res) => {
     }
     // ADMIN and CLUB_MEMBER: no visibility filter — see everything
 
-    // ── 2. Album filter — merge visibility guard + eventName + albumName ─────
-    // Bug was: `where.album = { event: ... }` overwrote the visibility guard
-    // `{ visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } }` for VIEWERs.
-    let albumFilter = null;
-    if (!req.user || req.user.role === 'VIEWER') {
-      albumFilter = { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } };
-    }
-    if (eventName) {
-      albumFilter = albumFilter
-        ? { ...albumFilter, event: { ...(albumFilter.event || {}), name: { contains: eventName, mode: 'insensitive' } } }
-        : { event: { name: { contains: eventName, mode: 'insensitive' } } };
-    }
-    if (albumName) {
-      albumFilter = albumFilter
-        ? { ...albumFilter, name: { contains: albumName, mode: 'insensitive' } }
-        : { name: { contains: albumName, mode: 'insensitive' } };
-    }
-    if (albumFilter) where.album = albumFilter;
+    // ── 2. Search filters — each filled field is AND-ed (intersection) ────────
+    // A media item must match EVERY filled-in filter (Tags AND Event AND Album
+    // AND Date AND Username AND free-text q). An empty field adds no constraint,
+    // so it can be anything.
+    const filterAND = [];
 
-    // ── 3. Scalar filters ────────────────────────────────────────────────────
     if (tags) {
       const tagArray = tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-      if (tagArray.length > 0) where.tags = { hasSome: tagArray };
+      // Each comma-separated tag must be present (intersection within Tags too).
+      if (tagArray.length > 0) filterAND.push({ tags: { hasEvery: tagArray } });
+    }
+
+    if (eventName) {
+      filterAND.push({ album: { event: { name: { contains: eventName, mode: 'insensitive' } } } });
+    }
+
+    if (albumName) {
+      filterAND.push({ album: { name: { contains: albumName, mode: 'insensitive' } } });
     }
 
     if (uploadDate) {
       const date = new Date(uploadDate);
       const nextDay = new Date(date);
       nextDay.setDate(nextDay.getDate() + 1);
-      where.createdAt = { gte: date, lt: nextDay };
+      filterAND.push({ createdAt: { gte: date, lt: nextDay } });
     }
 
     if (username) {
-      // Bug was: only matched username, missed fullName
-      where.uploader = {
-        OR: [
-          { username: { contains: username, mode: 'insensitive' } },
-          { fullName: { contains: username, mode: 'insensitive' } },
-        ],
-      };
+      filterAND.push({
+        uploader: {
+          OR: [
+            { username: { contains: username, mode: 'insensitive' } },
+            { fullName: { contains: username, mode: 'insensitive' } },
+          ],
+        },
+      });
     }
 
-    // ── 4. Free-text query conditions (q) ────────────────────────────────────
-    // Bug was: aiCaption missing, album name missing, fullName missing
-    const searchConditions = [];
+    // Free-text query (q) — fans out across many columns (OR internally), but
+    // the whole match is one more AND constraint alongside the other filters.
     if (q) {
-      searchConditions.push(
-        { originalName: { contains: q, mode: 'insensitive' } },
-        { caption: { contains: q, mode: 'insensitive' } },
-        { aiCaption: { contains: q, mode: 'insensitive' } },
-        { tags: { has: q.toLowerCase() } },
-        { album: { name: { contains: q, mode: 'insensitive' } } },
-        { album: { event: { name: { contains: q, mode: 'insensitive' } } } },
-        { uploader: { username: { contains: q, mode: 'insensitive' } } },
-        { uploader: { fullName: { contains: q, mode: 'insensitive' } } },
-      );
+      filterAND.push({
+        OR: [
+          { originalName: { contains: q, mode: 'insensitive' } },
+          { caption: { contains: q, mode: 'insensitive' } },
+          { aiCaption: { contains: q, mode: 'insensitive' } },
+          { tags: { has: q.toLowerCase() } },
+          { album: { name: { contains: q, mode: 'insensitive' } } },
+          { album: { event: { name: { contains: q, mode: 'insensitive' } } } },
+          { uploader: { username: { contains: q, mode: 'insensitive' } } },
+          { uploader: { fullName: { contains: q, mode: 'insensitive' } } },
+        ],
+      });
     }
 
-    // ── 5. Combine visibility OR + search OR with AND (not overwrite) ─────────
-    // Bug was: `where.OR = conditions` silently wiped the PHOTOGRAPHER visibility OR.
-    if (visibilityOR && searchConditions.length > 0) {
-      where.AND = [{ OR: visibilityOR }, { OR: searchConditions }];
-    } else if (visibilityOR) {
-      where.OR = visibilityOR;
-    } else if (searchConditions.length > 0) {
-      where.OR = searchConditions;
-    }
+    // ── 3. Combine: visibility (AND) × each filled filter (AND) ───────────────
+    const andClauses = [];
+    if (visibilityOR) andClauses.push({ OR: visibilityOR });
+    andClauses.push(...filterAND);
+    if (andClauses.length > 0) where.AND = andClauses;
 
     const [results, total] = await Promise.all([
       prisma.media.findMany({

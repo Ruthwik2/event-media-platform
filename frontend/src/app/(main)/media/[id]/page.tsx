@@ -343,7 +343,7 @@ export default function MediaDetailPage() {
                 {media.tags.map((tag) => (
                   <Link
                     key={tag}
-                    href={`/search?tags=${tag}`}
+                    href={`/search?tags=${encodeURIComponent(tag)}`}
                     className="text-xs bg-[#f8f7f5] text-slate-400 px-2 py-1 rounded hover:bg-[#f0ede8]"
                   >
                     #{tag}

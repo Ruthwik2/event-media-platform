@@ -301,9 +301,14 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
             {media.tags && media.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {media.tags.map((tag) => (
-                  <span key={tag} className="text-[10px] bg-[#f8f7f5] text-slate-400 px-1.5 py-0.5 rounded">
+                  <Link
+                    key={tag}
+                    href={`/search?tags=${encodeURIComponent(tag)}`}
+                    onClick={onClose}
+                    className="text-[10px] bg-[#f8f7f5] text-slate-400 px-1.5 py-0.5 rounded hover:bg-[#f0ede8] hover:text-primary-600 transition-colors"
+                  >
                     #{tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}

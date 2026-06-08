@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Album, Media } from '@/types';
 import {
   ArrowLeft, Upload, QrCode, ImageIcon, Trash2, Lock, Globe,
-  ShieldAlert, Clock, XCircle, Info, Pencil, Check, X as XIcon,
+  ShieldAlert, Clock, XCircle, Info, Pencil,
   LayoutGrid, LayoutDashboard, List,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import MediaCard from '@/components/media/MediaCard';
 import MediaLightbox from '@/components/media/MediaLightbox';
 import ShareAlbumModal from '@/components/albums/ShareAlbumModal';
+import CreateAlbumModal from '@/components/albums/CreateAlbumModal';
 
 type GalleryLayout = 'grid' | 'masonry' | 'list';
 const LAYOUTS: { key: GalleryLayout; label: string; icon: typeof LayoutGrid }[] = [
@@ -33,15 +34,12 @@ export default function AlbumDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const [showShare, setShowShare] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [deletingAlbum, setDeletingAlbum] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
   const [requesting, setRequesting] = useState(false);
 
-  // ── Rename state ─────────────────────────────────────────────────────────
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [renameValue, setRenameValue] = useState('');
-  const [renameSaving, setRenameSaving] = useState(false);
 
   // ── Gallery layout (per-album, remembered in the browser) ──────────────────
   const [layout, setLayout] = useState<GalleryLayout>('grid');
@@ -138,38 +136,6 @@ export default function AlbumDetailPage() {
     }
   };
 
-  // ── Rename handlers ───────────────────────────────────────────────────────
-  const startRename = () => {
-    if (!album) return;
-    setRenameValue(album.name);
-    setIsRenaming(true);
-  };
-
-  const cancelRename = () => {
-    setIsRenaming(false);
-    setRenameValue('');
-  };
-
-  const saveRename = async () => {
-    if (!album || !renameValue.trim()) return;
-    if (renameValue.trim() === album.name) { cancelRename(); return; }
-    setRenameSaving(true);
-    try {
-      const res = await api.patch(`/albums/${id}/rename`, { name: renameValue.trim() });
-      setAlbum((prev) => prev ? { ...prev, name: res.data.data.name } : prev);
-      toast.success('Album renamed');
-      setIsRenaming(false);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to rename');
-    } finally {
-      setRenameSaving(false);
-    }
-  };
-
-  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') saveRename();
-    if (e.key === 'Escape') cancelRename();
-  };
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
@@ -272,62 +238,21 @@ export default function AlbumDetailPage() {
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
-            {/* Inline rename or title */}
-            {isRenaming ? (
-              <div className="flex items-center gap-2 w-full">
-                <input
-                  autoFocus
-                  value={renameValue}
-                  onChange={(e) => setRenameValue(e.target.value)}
-                  onKeyDown={handleRenameKeyDown}
-                  className="flex-1 bg-[#f8f7f5] border border-primary-600 rounded-lg px-3 py-1.5 text-xl font-extrabold text-[#2a2724] focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
-                  maxLength={120}
-                  disabled={renameSaving}
-                />
-                <button
-                  onClick={saveRename}
-                  disabled={renameSaving || !renameValue.trim()}
-                  className="p-1.5 rounded-lg bg-primary-600 hover:bg-primary-500 text-white transition-colors disabled:opacity-50"
-                  title="Save"
-                >
-                  <Check className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={cancelRename}
-                  disabled={renameSaving}
-                  className="p-1.5 rounded-lg bg-[#f0ede8] hover:bg-[#e7e3dd] text-[#6b6560] transition-colors"
-                  title="Cancel"
-                >
-                  <XIcon className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 group/title">
-                <h1 className="text-2xl font-extrabold text-[#2a2724] tracking-tight">{album.name}</h1>
-                {canManage && (
-                  <button
-                    onClick={startRename}
-                    title="Rename album"
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-[#f0ede8] transition-colors"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            )}
+            {/* Title */}
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-extrabold text-[#2a2724] tracking-tight">{album.name}</h1>
+            </div>
 
-            {!isRenaming && (
-              album.visibility === 'PRIVATE' ? (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
-                  <Lock className="w-3 h-3" /> Private
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <Globe className="w-3 h-3" /> Public
-                </span>
-              )
+            {album.visibility === 'PRIVATE' ? (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
+                <Lock className="w-3 h-3" /> Private
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <Globe className="w-3 h-3" /> Public
+              </span>
             )}
-            {!isRenaming && album.category && (
+            {album.category && (
               <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full bg-[#f0ede8] text-[#6b6560] border border-[#e7e3dd]">
                 {album.category}
               </span>
@@ -353,6 +278,15 @@ export default function AlbumDetailPage() {
             <Link href={`/upload?albumId=${id}`} className="btn-primary text-sm">
               <Upload className="w-4 h-4" /> Upload
             </Link>
+          )}
+          {canManage && (
+            <button
+              onClick={() => setShowEdit(true)}
+              className="btn-secondary text-sm"
+            >
+              <Pencil className="w-4 h-4" />
+              <span className="hidden sm:inline">Edit</span>
+            </button>
           )}
           {canManage && (
             <button
@@ -525,6 +459,18 @@ export default function AlbumDetailPage() {
           album={album as any}
           canManage={!!canManage}
           onClose={() => setShowShare(false)}
+        />
+      )}
+
+      {showEdit && album && (
+        <CreateAlbumModal
+          eventId={album.eventId}
+          album={album}
+          onClose={() => setShowEdit(false)}
+          onCreated={() => {
+            setShowEdit(false);
+            fetchAlbum();
+          }}
         />
       )}
     </div>

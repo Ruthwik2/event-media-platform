@@ -8,13 +8,14 @@ import { Event, Album } from '@/types';
 import {
   Calendar, User, Plus, ImageIcon, ArrowLeft, Trash2,
   Lock, Globe, ShieldAlert, Clock, XCircle, FolderOpen, Images,
-  Pencil, Check, X as XIcon, QrCode,
+  Pencil, QrCode,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import CreateAlbumModal from '@/components/albums/CreateAlbumModal';
 import ShareEventModal from '@/components/events/ShareEventModal';
+import EditEventModal from '@/components/events/EditEventModal';
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -24,6 +25,8 @@ export default function EventDetailPage() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateAlbum, setShowCreateAlbum] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
+  const [showEditEvent, setShowEditEvent] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [deletingAlbumId, setDeletingAlbumId] = useState<string | null>(null);
   const [confirmDeleteEvent, setConfirmDeleteEvent] = useState(false);
@@ -35,10 +38,6 @@ export default function EventDetailPage() {
   const [albumSort, setAlbumSort] = useState('newest');
   const [albumCategory, setAlbumCategory] = useState('');
 
-  // ── Rename state ─────────────────────────────────────────────────────────
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [renameValue, setRenameValue] = useState('');
-  const [renameSaving, setRenameSaving] = useState(false);
 
   useEffect(() => {
     fetchEvent();
@@ -103,38 +102,6 @@ export default function EventDetailPage() {
     }
   };
 
-  // ── Rename handlers ───────────────────────────────────────────────────────
-  const startRename = () => {
-    if (!event) return;
-    setRenameValue(event.name);
-    setIsRenaming(true);
-  };
-
-  const cancelRename = () => {
-    setIsRenaming(false);
-    setRenameValue('');
-  };
-
-  const saveRename = async () => {
-    if (!event || !renameValue.trim()) return;
-    if (renameValue.trim() === event.name) { cancelRename(); return; }
-    setRenameSaving(true);
-    try {
-      const res = await api.patch(`/events/${id}/rename`, { name: renameValue.trim() });
-      setEvent((prev) => prev ? { ...prev, name: res.data.data.name } : prev);
-      toast.success('Event renamed');
-      setIsRenaming(false);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to rename');
-    } finally {
-      setRenameSaving(false);
-    }
-  };
-
-  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') saveRename();
-    if (e.key === 'Escape') cancelRename();
-  };
 
   // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
@@ -268,51 +235,10 @@ export default function EventDetailPage() {
                 </span>
               </div>
 
-              {/* Inline rename or title */}
-              {isRenaming ? (
-                <div className="flex items-center gap-2 mt-1">
-                  <input
-                    autoFocus
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onKeyDown={handleRenameKeyDown}
-                    className="flex-1 bg-[#f8f7f5] border border-primary-600 rounded-lg px-3 py-2 text-2xl font-extrabold text-[#2a2724] focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
-                    maxLength={120}
-                    disabled={renameSaving}
-                  />
-                  <button
-                    onClick={saveRename}
-                    disabled={renameSaving || !renameValue.trim()}
-                    className="p-2 rounded-lg bg-primary-600 hover:bg-primary-500 text-white transition-colors disabled:opacity-50"
-                    title="Save"
-                  >
-                    <Check className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={cancelRename}
-                    disabled={renameSaving}
-                    className="p-2 rounded-lg bg-[#f0ede8] hover:bg-[#e7e3dd] text-[#6b6560] transition-colors"
-                    title="Cancel"
-                  >
-                    <XIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 group/title">
-                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#2a2724]">
-                    {event.name}
-                  </h1>
-                  {isOwner && (
-                    <button
-                      onClick={startRename}
-                      title="Rename event"
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-[#f0ede8] transition-colors"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              )}
+              {/* Title */}
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#2a2724]">
+                {event.name}
+              </h1>
 
               {event.description && (
                 <p className="mt-2 text-slate-400 text-sm leading-relaxed max-w-xl">
@@ -324,6 +250,15 @@ export default function EventDetailPage() {
             {/* Action buttons */}
             {isOwner && (
               <div className="flex-shrink-0 mt-1 flex items-center gap-2">
+                {/* Edit button */}
+                <button
+                  onClick={() => setShowEditEvent(true)}
+                  title="Edit event details"
+                  className="p-2 hover:bg-primary-600/20 border border-[#e7e3dd]/80 hover:border-primary-500/50 text-slate-500 hover:text-primary-600 rounded-xl transition-all"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+
                 {/* Share button */}
                 <button
                   onClick={() => setShowShare(true)}
@@ -519,19 +454,31 @@ export default function EventDetailPage() {
                     </div>
                   </Link>
 
-                  {/* Delete album button */}
+                  {/* Edit + Delete album buttons (creator/admin only) */}
                   {canDeleteAlbum(album) && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleDeleteAlbum(album.id, album.name);
-                      }}
-                      disabled={deletingAlbumId === album.id}
-                      title="Delete album"
-                      className="absolute top-2.5 right-2.5 p-1.5 bg-white/90 hover:bg-red-600 border border-[#e7e3dd] hover:border-red-500 text-slate-500 hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 z-10 backdrop-blur-sm"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all z-10">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setEditingAlbum(album);
+                        }}
+                        title="Edit album"
+                        className="p-1.5 bg-white/90 hover:bg-primary-600 border border-[#e7e3dd] hover:border-primary-500 text-slate-500 hover:text-white rounded-lg transition-all backdrop-blur-sm"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleDeleteAlbum(album.id, album.name);
+                        }}
+                        disabled={deletingAlbumId === album.id}
+                        title="Delete album"
+                        className="p-1.5 bg-white/90 hover:bg-red-600 border border-[#e7e3dd] hover:border-red-500 text-slate-500 hover:text-white rounded-lg transition-all disabled:opacity-50 backdrop-blur-sm"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   )}
                 </motion.div>
               ))}
@@ -552,6 +499,29 @@ export default function EventDetailPage() {
           onCreated={() => {
             setShowCreateAlbum(false);
             fetchEvent();
+          }}
+        />
+      )}
+
+      {editingAlbum && (
+        <CreateAlbumModal
+          eventId={id as string}
+          album={editingAlbum}
+          onClose={() => setEditingAlbum(null)}
+          onCreated={() => {
+            setEditingAlbum(null);
+            fetchEvent();
+          }}
+        />
+      )}
+
+      {showEditEvent && event && (
+        <EditEventModal
+          event={event}
+          onClose={() => setShowEditEvent(false)}
+          onUpdated={(updated) => {
+            setEvent((prev) => (prev ? { ...prev, ...updated } : updated));
+            setShowEditEvent(false);
           }}
         />
       )}

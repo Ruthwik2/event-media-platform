@@ -313,10 +313,18 @@ function InstagramPost({ media, onDelete }: PostProps) {
           </p>
         )}
 
-        {/* Tags */}
+        {/* Tags — click to find similar photos via search */}
         {media.tags && media.tags.length > 0 && (
-          <p className="text-sm text-primary-400 mt-1">
-            {media.tags.map((t) => `#${t}`).join(' ')}
+          <p className="text-sm mt-1 flex flex-wrap gap-x-1.5 gap-y-0.5">
+            {media.tags.map((t) => (
+              <Link
+                key={t}
+                href={`/search?tags=${encodeURIComponent(t)}`}
+                className="text-primary-400 hover:text-primary-600 hover:underline"
+              >
+                #{t}
+              </Link>
+            ))}
           </p>
         )}
 
