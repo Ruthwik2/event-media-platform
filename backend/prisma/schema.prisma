@@ -188,6 +188,10 @@ model MediaTag {
   mediaId      String
   taggedUserId String
   taggerUserId String
+  // Position of the tag badge on the photo, as a percentage (0-100) of width/height.
+  // Null for legacy / non-positional tags.
+  x            Float?
+  y            Float?
   media        Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
   taggedUser   User     @relation("TaggedUser", fields: [taggedUserId], references: [id], onDelete: Cascade)
   taggerUser   User     @relation("TaggerUser", fields: [taggerUserId], references: [id], onDelete: Cascade)

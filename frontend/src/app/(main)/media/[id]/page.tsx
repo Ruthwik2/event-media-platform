@@ -168,14 +168,6 @@ export default function MediaDetailPage() {
     }
   };
 
-  const handleOpenTagModal = () => {
-    if (!user) {
-      toast.error('Please login to tag users');
-      return;
-    }
-    setShowTagModal(true);
-  };
-
   const handleTagUser = async (taggedUserId?: string) => {
     if (!taggedUserId) return;
     setTaggingUserId(taggedUserId);
@@ -184,10 +176,21 @@ export default function MediaDetailPage() {
       toast.success('User tagged');
       setShowTagModal(false);
       setUserSearch('');
+      fetchMedia();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to tag user');
     } finally {
       setTaggingUserId(null);
+    }
+  };
+
+  const handleUntag = async (taggedUserId: string) => {
+    try {
+      await api.delete(`/media/${id}/tag/${taggedUserId}`);
+      toast.success('Tag removed');
+      fetchMedia();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to remove tag');
     }
   };
 
@@ -214,6 +217,7 @@ export default function MediaDetailPage() {
   if (!media) return null;
 
   const canDelete = (user?.id === media.uploader?.id || user?.role === 'ADMIN') && user?.role !== 'CLUB_MEMBER';
+  const canTag = !!user && (user.id === media.uploader?.id || user.role === 'ADMIN');
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -275,13 +279,15 @@ export default function MediaDetailPage() {
                 <button onClick={handleDownload} className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5]">
                   <Download className="w-5 h-5" />
                 </button>
-                <button
-                  onClick={handleOpenTagModal}
-                  className="flex items-center gap-2 rounded-lg border border-[#e7e3dd] px-3 py-2 text-sm text-[#6b6560] hover:bg-[#f8f7f5]"
-                >
-                  <Tag className="w-4 h-4" />
-                  Tag User
-                </button>
+                {canTag && (
+                  <button
+                    onClick={() => setShowTagModal(true)}
+                    className="flex items-center gap-2 rounded-lg border border-[#e7e3dd] px-3 py-2 text-sm text-[#6b6560] hover:bg-[#f8f7f5]"
+                  >
+                    <Tag className="w-4 h-4" />
+                    Tag People
+                  </button>
+                )}
                 {canDelete && (
                   <div className="relative">
                     <button
@@ -343,6 +349,55 @@ export default function MediaDetailPage() {
                     #{tag}
                   </Link>
                 ))}
+              </div>
+            )}
+
+            {media.taggedUsers && media.taggedUsers.length > 0 && (
+              <div className="mb-3">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-2">
+                  <Tag className="w-3.5 h-3.5" />
+                  Tagged
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {media.taggedUsers.map((mt) => {
+                    const canRemove =
+                      user?.role === 'ADMIN' ||
+                      user?.id === media.uploader?.id ||
+                      user?.id === mt.taggerUserId ||
+                      user?.id === mt.taggedUserId;
+                    return (
+                      <span
+                        key={mt.id}
+                        className="inline-flex items-center gap-1.5 bg-[#f8f7f5] hover:bg-[#f0ede8] rounded-full pl-1 pr-2 py-0.5"
+                      >
+                        <Link
+                          href={`/users/${mt.taggedUser?.id}`}
+                          className="inline-flex items-center gap-1.5 group"
+                        >
+                          {mt.taggedUser?.avatar ? (
+                            <img src={mt.taggedUser.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
+                          ) : (
+                            <span className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center text-[9px] font-bold">
+                              {mt.taggedUser?.fullName?.[0] || mt.taggedUser?.username?.[0] || '?'}
+                            </span>
+                          )}
+                          <span className="text-xs font-medium group-hover:text-primary-400 transition-colors">
+                            @{mt.taggedUser?.username}
+                          </span>
+                        </Link>
+                        {canRemove && (
+                          <button
+                            onClick={() => handleUntag(mt.taggedUserId)}
+                            className="text-slate-400 hover:text-red-500 transition-colors"
+                            aria-label="Remove tag"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -412,8 +467,8 @@ export default function MediaDetailPage() {
           <div className="glass-panel w-full max-w-md p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-semibold">Tag User</h2>
-                <p className="text-sm text-slate-400">Search for a user to tag in this media</p>
+                <h2 className="text-lg font-semibold">Tag a person</h2>
+                <p className="text-sm text-slate-400">Search for someone to tag in this photo</p>
               </div>
               <button
                 type="button"

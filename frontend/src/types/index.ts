@@ -66,10 +66,19 @@ tags: string[];
 albumId: string;
 album?: Partial<Album>;
 uploader: Partial<User>;
+taggedUsers?: MediaTag[];
 createdAt: string;
 isLiked?: boolean;
 isFavourited?: boolean;
 _count?: { likes: number; comments: number; downloads: number };
+}
+export interface MediaTag {
+id: string;
+taggedUserId: string;
+taggerUserId: string;
+x?: number | null;
+y?: number | null;
+taggedUser: Partial<User>;
 }
 export interface Comment {
 id: string;

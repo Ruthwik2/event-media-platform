@@ -1,11 +1,12 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import api from '@/lib/axios';
 import { Media, Comment } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import {
   Search, X, Heart, MessageCircle, Bookmark,
-  Send, Play, Film, Camera, MoreHorizontal, Download,
+  Send, Play, Film, Camera, MoreHorizontal, Download, Tag,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -170,13 +171,16 @@ function InstagramPost({ media, onDelete }: PostProps) {
     >
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-3">
+        <Link
+          href={media.uploader?.id ? `/users/${media.uploader.id}` : '#'}
+          className="flex items-center gap-3 group"
+        >
           <Avatar src={media.uploader?.avatar} name={uploaderName} />
           <div>
-            <p className="text-sm font-semibold leading-none">{uploaderUsername}</p>
+            <p className="text-sm font-semibold leading-none group-hover:text-primary-400 transition-colors">{uploaderUsername}</p>
             <p className="text-xs text-slate-500 mt-0.5">{timeAgo}</p>
           </div>
-        </div>
+        </Link>
         <button className="text-slate-500 hover:text-[#4a4540] p-1 rounded-lg transition-colors">
           <MoreHorizontal className="w-5 h-5" />
         </button>
@@ -315,6 +319,33 @@ function InstagramPost({ media, onDelete }: PostProps) {
           <p className="text-sm text-primary-400 mt-1">
             {media.tags.map((t) => `#${t}`).join(' ')}
           </p>
+        )}
+
+        {/* Tagged people */}
+        {media.taggedUsers && media.taggedUsers.length > 0 && (
+          <div className="mt-2">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-1.5">
+              <Tag className="w-3.5 h-3.5" /> Tagged
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {media.taggedUsers.map((mt) => (
+                <Link
+                  key={mt.id}
+                  href={`/users/${mt.taggedUser?.id}`}
+                  className="inline-flex items-center gap-1.5 bg-[#f8f7f5] hover:bg-[#f0ede8] rounded-full pl-1 pr-2 py-0.5 group"
+                >
+                  {mt.taggedUser?.avatar ? (
+                    <img src={mt.taggedUser.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
+                  ) : (
+                    <span className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center text-[9px] font-bold">
+                      {mt.taggedUser?.fullName?.[0] || mt.taggedUser?.username?.[0] || '?'}
+                    </span>
+                  )}
+                  <span className="text-xs font-medium group-hover:text-primary-400 transition-colors">@{mt.taggedUser?.username}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Comments toggle */}

@@ -376,10 +376,10 @@ export default function AlbumDetailPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="text-center py-20 rounded-2xl border border-dashed border-[#e7e3dd] bg-slate-900/30"
+          className="text-center py-20 rounded-2xl border border-dashed border-[#e7e3dd] bg-[#faf9f7]"
         >
-          <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900 border border-[#e7e3dd] flex items-center justify-center">
-            <ImageIcon className="w-9 h-9 text-slate-600" />
+          <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-[#f0ede8] border border-[#e7e3dd] flex items-center justify-center">
+            <ImageIcon className="w-9 h-9 text-slate-500" />
           </div>
 
           <h3 className="text-lg font-bold text-[#6b6560] mb-2">No media yet</h3>
@@ -396,9 +396,9 @@ export default function AlbumDetailPage() {
             </Link>
           )}
 
-          <div className="mt-6 inline-flex items-center gap-2 bg-slate-900/70 border border-[#e7e3dd] rounded-xl px-4 py-2.5">
-            <Info className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
-            <span className="text-xs text-slate-600">
+          <div className="mt-6 inline-flex items-center gap-2 bg-[#f8f7f5] border border-[#e7e3dd] rounded-xl px-4 py-2.5">
+            <Info className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+            <span className="text-xs text-slate-500">
               Supports JPG, PNG, MP4 and more · Up to 100 MB per file
             </span>
           </div>

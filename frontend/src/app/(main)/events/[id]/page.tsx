@@ -316,8 +316,8 @@ export default function EventDetailPage() {
 
                 {/* Delete button */}
                 {confirmDeleteEvent ? (
-                  <div className="flex items-center gap-2 bg-slate-900/90 rounded-xl p-2 border border-red-800/60 shadow-lg">
-                    <span className="text-xs text-red-400 px-1 font-medium">Delete event?</span>
+                  <div className="flex items-center gap-2 bg-white rounded-xl p-2 border border-red-200 shadow-lg">
+                    <span className="text-xs text-red-600 px-1 font-medium">Delete event?</span>
                     <button
                       onClick={handleDeleteEvent}
                       className="text-xs bg-red-600 hover:bg-red-500 text-white px-2.5 py-1 rounded-lg transition-colors font-medium"
@@ -346,18 +346,18 @@ export default function EventDetailPage() {
         </div>
 
         {/* Meta strip */}
-        <div className="flex flex-wrap gap-x-6 gap-y-2 px-7 py-4 border-t border-[#e7e3dd]/60 bg-slate-950/40">
-          <span className="flex items-center gap-1.5 text-sm text-slate-400">
-            <Calendar className="w-3.5 h-3.5 text-primary-400" />
+        <div className="flex flex-wrap gap-x-6 gap-y-2 px-7 py-4 border-t border-[#e7e3dd]/60 bg-[#faf9f7]">
+          <span className="flex items-center gap-1.5 text-sm text-[#6b6560]">
+            <Calendar className="w-3.5 h-3.5 text-primary-500" />
             {format(new Date(event.startDate), 'MMM dd, yyyy')}
             {event.endDate && <> – {format(new Date(event.endDate), 'MMM dd, yyyy')}</>}
           </span>
-          <span className="flex items-center gap-1.5 text-sm text-slate-400">
-            <User className="w-3.5 h-3.5 text-primary-400" />
+          <span className="flex items-center gap-1.5 text-sm text-[#6b6560]">
+            <User className="w-3.5 h-3.5 text-primary-500" />
             {(event.creator as any)?.fullName}
           </span>
-          <span className="flex items-center gap-1.5 text-sm text-slate-400">
-            <Images className="w-3.5 h-3.5 text-primary-400" />
+          <span className="flex items-center gap-1.5 text-sm text-[#6b6560]">
+            <Images className="w-3.5 h-3.5 text-primary-500" />
             {visibleAlbums.length} {visibleAlbums.length === 1 ? 'Album' : 'Albums'}
           </span>
         </div>
@@ -395,9 +395,9 @@ export default function EventDetailPage() {
                   className="relative group"
                 >
                   <Link href={`/events/albums/${album.id}`}>
-                    <div className="rounded-2xl overflow-hidden border border-[#e7e3dd]/80 bg-slate-900 hover:border-primary-700/70 hover:shadow-lg hover:shadow-primary-900/20 cursor-pointer transition-all duration-200 hover:-translate-y-0.5">
+                    <div className="rounded-2xl overflow-hidden border border-[#e7e3dd] bg-white hover:border-primary-400 hover:shadow-lg cursor-pointer transition-all duration-200 hover:-translate-y-0.5">
                       {/* Thumbnail */}
-                      <div className="h-36 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
+                      <div className="h-36 bg-[#f0ede8] relative overflow-hidden">
                         {album.coverImage ? (
                           <img
                             src={album.coverImage}
@@ -405,27 +405,27 @@ export default function EventDetailPage() {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800/80 to-slate-900">
-                            <FolderOpen className="w-9 h-9 text-slate-700" />
+                          <div className="w-full h-full flex items-center justify-center bg-[#f0ede8]">
+                            <FolderOpen className="w-9 h-9 text-slate-400" />
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
+                        {album.coverImage && <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />}
 
                         {/* Visibility badge */}
                         <div className="absolute top-2.5 left-2.5">
                           {album.visibility === 'PRIVATE' ? (
-                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-900/85 text-red-400 border border-red-800/50 backdrop-blur-sm">
+                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-red-50/95 text-red-700 border border-red-200 backdrop-blur-sm">
                               <Lock className="w-2.5 h-2.5" /> Private
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-900/85 text-green-400 border border-green-800/50 backdrop-blur-sm">
+                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-green-50/95 text-green-700 border border-green-200 backdrop-blur-sm">
                               <Globe className="w-2.5 h-2.5" /> Public
                             </span>
                           )}
                         </div>
 
                         {/* Media count */}
-                        <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 text-xs text-[#6b6560] bg-slate-900/75 backdrop-blur-sm px-2 py-0.5 rounded-md">
+                        <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 text-xs text-[#4a4540] bg-white/90 border border-[#e7e3dd] backdrop-blur-sm px-2 py-0.5 rounded-md">
                           <ImageIcon className="w-3 h-3" />
                           {(album as any)._count?.media || 0}
                         </div>
@@ -455,7 +455,7 @@ export default function EventDetailPage() {
                       }}
                       disabled={deletingAlbumId === album.id}
                       title="Delete album"
-                      className="absolute top-2.5 right-2.5 p-1.5 bg-slate-900/85 hover:bg-red-600 border border-[#e7e3dd] hover:border-red-500 text-slate-400 hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 z-10 backdrop-blur-sm"
+                      className="absolute top-2.5 right-2.5 p-1.5 bg-white/90 hover:bg-red-600 border border-[#e7e3dd] hover:border-red-500 text-slate-500 hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 z-10 backdrop-blur-sm"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

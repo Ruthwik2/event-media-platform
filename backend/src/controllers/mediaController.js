@@ -297,6 +297,9 @@ const getMedia = async (req, res) => {
         where,
         include: {
           uploader: { select: { id: true, username: true, fullName: true, avatar: true } },
+          taggedUsers: {
+            include: { taggedUser: { select: { id: true, username: true, fullName: true, avatar: true } } },
+          },
           _count: { select: { likes: true, comments: true, downloads: true } },
           ...(req.user && {
             likes: { where: { userId: req.user.id }, select: { id: true } },
@@ -518,6 +521,11 @@ const tagUser = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Media not found' });
     }
 
+    // Only the photo's uploader (or an admin) may tag people in it.
+    if (media.uploaderId !== req.user.id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, message: 'Only the uploader can tag people in this photo' });
+    }
+
     const taggedUser = await prisma.user.findUnique({
       where: { id: taggedUserId },
       select: { allowTagging: true },
@@ -542,6 +550,39 @@ const tagUser = async (req, res) => {
     await notifyTag(req.user.id, req.params.id, taggedUserId);
 
     res.json({ success: true, message: 'User tagged' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Remove a tag. Allowed for the tagged user (untag themselves), the person who
+// added the tag, the media's uploader, or an admin.
+const untagUser = async (req, res) => {
+  try {
+    const { id, taggedUserId } = req.params;
+
+    const tag = await prisma.mediaTag.findUnique({
+      where: { mediaId_taggedUserId: { mediaId: id, taggedUserId } },
+      include: { media: { select: { uploaderId: true } } },
+    });
+    if (!tag) {
+      return res.status(404).json({ success: false, message: 'Tag not found' });
+    }
+
+    const canRemove =
+      req.user.role === 'ADMIN' ||
+      req.user.id === taggedUserId ||
+      req.user.id === tag.taggerUserId ||
+      req.user.id === tag.media.uploaderId;
+    if (!canRemove) {
+      return res.status(403).json({ success: false, message: 'Not allowed to remove this tag' });
+    }
+
+    await prisma.mediaTag.delete({
+      where: { mediaId_taggedUserId: { mediaId: id, taggedUserId } },
+    });
+
+    res.json({ success: true, message: 'Tag removed' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -937,6 +978,6 @@ const getAnalytics = async (req, res) => {
 module.exports = {
   uploadMedia, getMedia, getMediaItem, deleteMedia,
   likeMedia, commentOnMedia, getComments, toggleFavourite,
-  tagUser, downloadMedia, getFavourites, findMyPhotos,
+  tagUser, untagUser, downloadMedia, getFavourites, findMyPhotos,
   searchMedia, getAnalytics,
 };

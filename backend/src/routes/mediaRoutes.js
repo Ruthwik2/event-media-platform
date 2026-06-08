@@ -5,7 +5,7 @@ const { upload } = require('../middleware/upload');
 const {
   uploadMedia, getMedia, getMediaItem, deleteMedia,
   likeMedia, commentOnMedia, getComments, toggleFavourite,
-  tagUser, downloadMedia, getFavourites, findMyPhotos,
+  tagUser, untagUser, downloadMedia, getFavourites, findMyPhotos,
   searchMedia, getAnalytics,
 } = require('../controllers/mediaController');
 
@@ -24,5 +24,6 @@ router.post('/:id/like', authenticate, likeMedia);
 router.post('/:id/comment', authenticate, commentOnMedia);
 router.post('/:id/favourite', authenticate, toggleFavourite);
 router.post('/:id/tag', authenticate, tagUser);
+router.delete('/:id/tag/:taggedUserId', authenticate, untagUser);
 
 module.exports = router;

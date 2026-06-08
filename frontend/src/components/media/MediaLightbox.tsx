@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { Media, Comment, User } from '@/types';
+import Link from 'next/link';
+import { Media, Comment, User, MediaTag } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/lib/axios';
 import {
@@ -59,8 +60,10 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
   const [taggableUsers, setTaggableUsers] = useState<Partial<User>[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [taggingUserId, setTaggingUserId] = useState<string | null>(null);
+  const [taggedUsers, setTaggedUsers] = useState<MediaTag[]>(media.taggedUsers || []);
 
   const currentIndex = allMedia.findIndex((m) => m.id === media.id);
+  const canTag = !!user && (user.id === media.uploader?.id || user.role === 'ADMIN');
 
   // FIX: declare these with useCallback BEFORE the useEffect that depends on them
   const navigatePrev = useCallback(() => {
@@ -83,6 +86,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
 
   useEffect(() => {
     fetchComments();
+    fetchTags();
     setLiked(media.isLiked || false);
     setLikeCount(media._count?.likes || 0);
     setFavourited(media.isFavourited || false);
@@ -102,6 +106,15 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
     try {
       const res = await api.get(`/media/${media.id}/comments`);
       setComments(res.data.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchTags = async () => {
+    try {
+      const res = await api.get(`/media/${media.id}`);
+      setTaggedUsers(res.data.data?.taggedUsers || []);
     } catch (error) {
       console.error(error);
     }
@@ -197,10 +210,21 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
       toast.success('User tagged');
       setShowTagModal(false);
       setUserSearch('');
+      fetchTags();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to tag user');
     } finally {
       setTaggingUserId(null);
+    }
+  };
+
+  const handleUntag = async (taggedUserId: string) => {
+    try {
+      await api.delete(`/media/${media.id}/tag/${taggedUserId}`);
+      toast.success('Tag removed');
+      fetchTags();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to remove tag');
     }
   };
 
@@ -230,12 +254,12 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
           </button>
 
           {currentIndex > 0 && (
-            <button onClick={navigatePrev} className="absolute left-4 p-2 bg-black/50 rounded-full hover:bg-black/70">
+            <button onClick={navigatePrev} className="absolute left-4 z-10 p-2 bg-black/50 rounded-full hover:bg-black/70">
               <ChevronLeft className="w-6 h-6" />
             </button>
           )}
           {currentIndex < allMedia.length - 1 && (
-            <button onClick={navigateNext} className="absolute right-4 p-2 bg-black/50 rounded-full hover:bg-black/70">
+            <button onClick={navigateNext} className="absolute right-4 z-10 p-2 bg-black/50 rounded-full hover:bg-black/70">
               <ChevronRight className="w-6 h-6" />
             </button>
           )}
@@ -258,7 +282,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
           className="w-80 bg-slate-900 border-l border-[#e7e3dd] flex flex-col h-full overflow-hidden"
         >
           <div className="p-4 border-b border-[#e7e3dd]">
-            <div className="flex items-center gap-3">
+            <Link href={media.uploader?.id ? `/users/${media.uploader.id}` : '#'} className="flex items-center gap-3 group">
               {media.uploader?.avatar ? (
                 <img src={media.uploader.avatar} alt="" className="w-8 h-8 rounded-full" />
               ) : (
@@ -267,12 +291,12 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
                 </div>
               )}
               <div>
-                <p className="text-sm font-medium">{media.uploader?.fullName}</p>
+                <p className="text-sm font-medium group-hover:text-primary-400 transition-colors">{media.uploader?.fullName}</p>
                 <p className="text-xs text-slate-500">
                   {formatDistanceToNow(new Date(media.createdAt), { addSuffix: true })}
                 </p>
               </div>
-            </div>
+            </Link>
             {media.caption && <p className="text-sm text-[#6b6560] mt-3">{media.caption}</p>}
             {media.tags && media.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
@@ -340,27 +364,66 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
             )}
           </div>
 
-          <div className="p-3 border-b border-[#e7e3dd]">
-            <button
-              type="button"
-              onClick={handleOpenTagModal}
-              className="w-full flex items-center justify-center gap-2 rounded-lg border border-[#e7e3dd] px-3 py-2 text-sm text-[#6b6560] hover:bg-[#f8f7f5]"
-            >
-              <Tag className="w-4 h-4" />
-              Tag User
-            </button>
-          </div>
+          {canTag && (
+            <div className="p-3 border-b border-[#e7e3dd]">
+              <button
+                type="button"
+                onClick={handleOpenTagModal}
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-[#e7e3dd] px-3 py-2 text-sm text-[#6b6560] hover:bg-[#f8f7f5]"
+              >
+                <Tag className="w-4 h-4" />
+                Tag People
+              </button>
+            </div>
+          )}
+
+          {/* Tagged people list */}
+          {taggedUsers.length > 0 && (
+            <div className="p-3 border-b border-[#e7e3dd]">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-2">
+                <Tag className="w-3.5 h-3.5" /> Tagged
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {taggedUsers.map((mt) => {
+                  const canRemove =
+                    user?.role === 'ADMIN' ||
+                    user?.id === media.uploader?.id ||
+                    user?.id === mt.taggerUserId ||
+                    user?.id === mt.taggedUserId;
+                  return (
+                    <span key={mt.id} className="inline-flex items-center gap-1.5 bg-[#f8f7f5] hover:bg-[#f0ede8] rounded-full pl-1 pr-2 py-0.5">
+                      <Link href={`/users/${mt.taggedUser?.id}`} className="inline-flex items-center gap-1.5 group">
+                        {mt.taggedUser?.avatar ? (
+                          <img src={mt.taggedUser.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
+                        ) : (
+                          <span className="w-5 h-5 rounded-full bg-primary-600 text-white flex items-center justify-center text-[9px] font-bold">
+                            {mt.taggedUser?.fullName?.[0] || mt.taggedUser?.username?.[0] || '?'}
+                          </span>
+                        )}
+                        <span className="text-xs font-medium group-hover:text-primary-400 transition-colors">@{mt.taggedUser?.username}</span>
+                      </Link>
+                      {canRemove && (
+                        <button onClick={() => handleUntag(mt.taggedUserId)} className="text-slate-400 hover:text-red-500 transition-colors" aria-label="Remove tag">
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Comments */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {comments.map((comment) => (
               <div key={comment.id} className="text-sm">
                 <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 bg-[#f0ede8] rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
+                  <Link href={comment.user?.id ? `/users/${comment.user.id}` : '#'} className="w-6 h-6 bg-[#f0ede8] rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
                     {comment.user?.fullName?.[0]}
-                  </div>
+                  </Link>
                   <div>
-                    <span className="font-medium text-xs">{comment.user?.username}</span>
+                    <Link href={comment.user?.id ? `/users/${comment.user.id}` : '#'} className="font-medium text-xs hover:text-primary-400 transition-colors">{comment.user?.username}</Link>
                     <p className="text-[#6b6560] text-xs mt-0.5">{comment.content}</p>
                     <p className="text-[10px] text-slate-600 mt-1">
                       {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
@@ -402,8 +465,8 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
           <div className="card w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-semibold">Tag User</h2>
-                <p className="text-sm text-slate-400">Search for a user to tag in this media</p>
+                <h2 className="text-lg font-semibold">Tag a person</h2>
+                <p className="text-sm text-slate-400">Search for someone to tag in this photo</p>
               </div>
               <button
                 type="button"
