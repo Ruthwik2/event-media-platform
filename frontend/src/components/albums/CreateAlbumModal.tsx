@@ -3,6 +3,7 @@ import { useState } from 'react';
 import api from '@/lib/axios';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { CATEGORIES } from '@/lib/categories';
 
 interface Props {
   eventId: string;
@@ -13,6 +14,7 @@ interface Props {
 export default function CreateAlbumModal({ eventId, onClose, onCreated }: Props) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
   const [visibility, setVisibility] = useState('PUBLIC');
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +22,7 @@ export default function CreateAlbumModal({ eventId, onClose, onCreated }: Props)
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('/albums', { name, description, visibility, eventId });
+      await api.post('/albums', { name, description, category: category || undefined, visibility, eventId });
       toast.success('Album created!');
       onCreated();
     } catch (error: any) {
@@ -61,6 +63,20 @@ export default function CreateAlbumModal({ eventId, onClose, onCreated }: Props)
               className="input min-h-[80px] resize-y"
               placeholder="Optional description..."
             />
+          </div>
+
+          <div>
+            <label className="label">Category</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="input"
+            >
+              <option value="">No category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
           </div>
 
           <div>

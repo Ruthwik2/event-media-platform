@@ -28,10 +28,6 @@ export default function SettingsPage() {
     if (typeof window === 'undefined') return 'light';
     return localStorage.getItem('theme') || 'light';
   });
-  const [galleryLayout, setGalleryLayout] = useState(() => {
-    if (typeof window === 'undefined') return 'grid';
-    return localStorage.getItem('galleryLayout') || 'grid';
-  });
 
   useEffect(() => {
     const applyTheme = (value: string) => {
@@ -54,11 +50,6 @@ export default function SettingsPage() {
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
   }, [theme]);
-
-  useEffect(() => {
-    localStorage.setItem('galleryLayout', galleryLayout);
-    window.dispatchEvent(new CustomEvent('galleryLayoutChange', { detail: galleryLayout }));
-  }, [galleryLayout]);
 
   useEffect(() => {
     if (!user) return;
@@ -297,22 +288,6 @@ export default function SettingsPage() {
               <option value="dark">Dark</option>
               <option value="light">Light</option>
               <option value="system">System</option>
-            </select>
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium">Gallery Layout</p>
-              <p className="text-xs text-slate-500">Default media gallery layout</p>
-            </div>
-            <select
-              className="input w-auto text-sm"
-              value={galleryLayout}
-              onChange={(e) => setGalleryLayout(e.target.value)}
-            >
-              <option value="grid">Grid</option>
-              <option value="masonry">Masonry</option>
-              <option value="list">List</option>
             </select>
           </div>
         </div>

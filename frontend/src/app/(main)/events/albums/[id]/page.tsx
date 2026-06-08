@@ -8,12 +8,21 @@ import { Album, Media } from '@/types';
 import {
   ArrowLeft, Upload, QrCode, ImageIcon, Trash2, Lock, Globe,
   ShieldAlert, Clock, XCircle, Info, Pencil, Check, X as XIcon,
+  LayoutGrid, LayoutDashboard, List,
 } from 'lucide-react';
+import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import MediaCard from '@/components/media/MediaCard';
 import MediaLightbox from '@/components/media/MediaLightbox';
 import ShareAlbumModal from '@/components/albums/ShareAlbumModal';
+
+type GalleryLayout = 'grid' | 'masonry' | 'list';
+const LAYOUTS: { key: GalleryLayout; label: string; icon: typeof LayoutGrid }[] = [
+  { key: 'grid', label: 'Grid', icon: LayoutGrid },
+  { key: 'masonry', label: 'Masonry', icon: LayoutDashboard },
+  { key: 'list', label: 'List', icon: List },
+];
 
 export default function AlbumDetailPage() {
   const { id } = useParams();
@@ -33,6 +42,17 @@ export default function AlbumDetailPage() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [renameSaving, setRenameSaving] = useState(false);
+
+  // ── Gallery layout (per-album, remembered in the browser) ──────────────────
+  const [layout, setLayout] = useState<GalleryLayout>('grid');
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem(`albumLayout:${id}`) : null;
+    if (saved === 'grid' || saved === 'masonry' || saved === 'list') setLayout(saved);
+  }, [id]);
+  const changeLayout = (next: GalleryLayout) => {
+    setLayout(next);
+    if (typeof window !== 'undefined') localStorage.setItem(`albumLayout:${id}`, next);
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -307,6 +327,11 @@ export default function AlbumDetailPage() {
                 </span>
               )
             )}
+            {!isRenaming && album.category && (
+              <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full bg-[#f0ede8] text-[#6b6560] border border-[#e7e3dd]">
+                {album.category}
+              </span>
+            )}
           </div>
           {album.description && (
             <p className="text-slate-400 text-sm mb-1 leading-relaxed">{album.description}</p>
@@ -344,33 +369,108 @@ export default function AlbumDetailPage() {
 
       {/* ── Media Grid or Empty State ── */}
       {media.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-          {media.map((item, i) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, scale: 0.93 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.02 }}
-              className="cursor-pointer relative group"
-            >
-              <div onClick={() => setSelectedMedia(item)}>
-                <MediaCard media={item} compact />
-              </div>
-              {(user?.id === (item as any).uploaderId || user?.role === 'ADMIN') && (
+        <>
+          {/* Layout toolbar — choose how this album's media is displayed */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-[#4a4540]">Media</h2>
+            <div className="inline-flex items-center gap-0.5 rounded-lg border border-[#e7e3dd] bg-white p-0.5">
+              {LAYOUTS.map(({ key, label, icon: Icon }) => (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMediaDelete(item.id);
-                  }}
-                  className="absolute top-1.5 right-1.5 p-1.5 bg-red-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                  title="Delete media"
+                  key={key}
+                  onClick={() => changeLayout(key)}
+                  title={`${label} layout`}
+                  aria-pressed={layout === key}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    layout === key
+                      ? 'bg-primary-600 text-white'
+                      : 'text-slate-500 hover:bg-[#f0ede8] hover:text-[#4a4540]'
+                  }`}
                 >
-                  <Trash2 className="w-3 h-3 text-white" />
+                  <Icon className="w-4 h-4" />
                 </button>
-              )}
-            </motion.div>
-          ))}
-        </div>
+              ))}
+            </div>
+          </div>
+
+          {layout === 'list' ? (
+            <div className="space-y-2">
+              {media.map((item) => {
+                const canDelete = user?.id === (item as any).uploaderId || user?.role === 'ADMIN';
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 p-2 rounded-xl border border-[#e7e3dd] bg-white hover:border-primary-400 transition-colors relative group"
+                  >
+                    <div
+                      onClick={() => setSelectedMedia(item)}
+                      className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden cursor-pointer bg-[#f0ede8]"
+                    >
+                      <MediaCard media={item} thumbnailOnly />
+                    </div>
+                    <div
+                      onClick={() => setSelectedMedia(item)}
+                      className="min-w-0 flex-1 cursor-pointer"
+                    >
+                      <p className="text-sm font-medium text-[#2a2724] truncate">
+                        {item.caption || item.originalName}
+                      </p>
+                      <p className="text-xs text-slate-500 truncate">
+                        {item.uploader?.fullName || item.uploader?.username || 'Unknown'}
+                        {' · '}
+                        {format(new Date(item.createdAt), 'MMM dd, yyyy')}
+                      </p>
+                    </div>
+                    {canDelete && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleMediaDelete(item.id); }}
+                        className="p-2 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete media"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div
+              className={
+                layout === 'masonry'
+                  ? 'columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-2'
+                  : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2'
+              }
+            >
+              {media.map((item, i) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.93 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.02 }}
+                  className={`cursor-pointer relative group ${
+                    layout === 'masonry' ? 'mb-2 break-inside-avoid' : ''
+                  }`}
+                >
+                  <div onClick={() => setSelectedMedia(item)}>
+                    <MediaCard media={item} compact naturalHeight={layout === 'masonry'} />
+                  </div>
+                  {(user?.id === (item as any).uploaderId || user?.role === 'ADMIN') && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMediaDelete(item.id);
+                      }}
+                      className="absolute top-1.5 right-1.5 p-1.5 bg-red-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      title="Delete media"
+                    >
+                      <Trash2 className="w-3 h-3 text-white" />
+                    </button>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </>
       ) : (
         <motion.div
           initial={{ opacity: 0 }}

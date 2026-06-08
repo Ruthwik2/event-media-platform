@@ -84,6 +84,7 @@ model Album {
   id            String    @id @default(uuid())
   name          String
   description   String?
+  category      String?
   coverImage    String?
   visibility    Visibility @default(PUBLIC)
   eventId       String

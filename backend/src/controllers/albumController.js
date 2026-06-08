@@ -53,7 +53,7 @@ return false;
 // ─────────────────────────────────────────────────────────────────────────────
 const createAlbum = async (req, res) => {
 try {
-const { name, description, visibility, eventId } = req.body;
+const { name, description, category, visibility, eventId } = req.body;
 const event = await prisma.event.findUnique({ where: { id: eventId } });
 if (!event) {
 return res.status(404).json({ success: false, message: 'Event not found' });
@@ -71,6 +71,7 @@ const album = await prisma.album.create({
 data: {
 name,
 description,
+category: category || null,
 visibility: visibility || 'PUBLIC',
 eventId,
 qrCode,
@@ -191,7 +192,7 @@ res.status(500).json({ success: false, message: error.message });
 };
 const updateAlbum = async (req, res) => {
 try {
-const { name, description, visibility } = req.body;
+const { name, description, category, visibility } = req.body;
 const album = await prisma.album.findUnique({
 where: { id: req.params.id },
 include: { event: true },
@@ -204,7 +205,7 @@ return res.status(403).json({ success: false, message: 'Not authorized' });
 }
 const updated = await prisma.album.update({
 where: { id: req.params.id },
-data: { name, description, visibility },
+data: { name, description, category, visibility },
 });
 res.json({ success: true, data: updated });
 } catch (error) {

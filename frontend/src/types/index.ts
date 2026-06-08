@@ -40,6 +40,7 @@ export interface Album {
 id: string;
 name: string;
 description?: string;
+category?: string;
 coverImage?: string;
 visibility: Visibility;
 eventId: string;

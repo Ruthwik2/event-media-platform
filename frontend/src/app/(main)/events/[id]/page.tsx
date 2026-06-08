@@ -31,6 +31,10 @@ export default function EventDetailPage() {
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
   const [requesting, setRequesting] = useState(false);
 
+  // ── Album sort / filter state ─────────────────────────────────────────────
+  const [albumSort, setAlbumSort] = useState('newest');
+  const [albumCategory, setAlbumCategory] = useState('');
+
   // ── Rename state ─────────────────────────────────────────────────────────
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState('');
@@ -205,6 +209,21 @@ export default function EventDetailPage() {
     if (!user || user?.role === 'VIEWER') return false;
     return true;
   });
+
+  // Distinct categories present among the visible albums, for the filter dropdown.
+  const albumCategories = Array.from(
+    new Set(visibleAlbums.map((a) => a.category).filter(Boolean) as string[])
+  ).sort();
+
+  // Apply category filter + sort (client-side — albums are already loaded).
+  const displayedAlbums = visibleAlbums
+    .filter((album) => !albumCategory || album.category === albumCategory)
+    .sort((a, b) => {
+      if (albumSort === 'name') return a.name.localeCompare(b.name);
+      const ta = new Date(a.createdAt).getTime();
+      const tb = new Date(b.createdAt).getTime();
+      return albumSort === 'oldest' ? ta - tb : tb - ta;
+    });
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -382,10 +401,57 @@ export default function EventDetailPage() {
           )}
         </div>
 
-        {visibleAlbums.length > 0 ? (
+        {/* Sort & category filter — mirrors the Events page */}
+        {visibleAlbums.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <select
+              value={albumCategory}
+              onChange={(e) => setAlbumCategory(e.target.value)}
+              className="input w-auto text-sm"
+            >
+              <option value="">All Categories</option>
+              {albumCategories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            <select
+              value={albumSort}
+              onChange={(e) => setAlbumSort(e.target.value)}
+              className="input w-auto text-sm"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="name">Name</option>
+            </select>
+          </div>
+        )}
+
+        {visibleAlbums.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16 rounded-2xl border border-dashed border-[#e7e3dd] bg-[#f0ede8]"
+          >
+            <div className="w-16 h-16 bg-[#f8f7f5] rounded-2xl flex items-center justify-center mx-auto mb-4 ring-1 ring-slate-700/50">
+              <FolderOpen className="w-8 h-8 text-slate-600" />
+            </div>
+            <p className="font-semibold text-[#6b6560] mb-1">No albums yet</p>
+            <p className="text-sm text-slate-500 mb-5 max-w-xs mx-auto">
+              Create an album to start organising media for this event
+            </p>
+            {canCreateAlbum && (
+              <button
+                onClick={() => setShowCreateAlbum(true)}
+                className="btn-primary text-sm mx-auto"
+              >
+                <Plus className="w-4 h-4" /> Create First Album
+              </button>
+            )}
+          </motion.div>
+        ) : displayedAlbums.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <AnimatePresence>
-              {visibleAlbums.map((album, i) => (
+              {displayedAlbums.map((album, i) => (
                 <motion.div
                   key={album.id}
                   initial={{ opacity: 0, y: 16 }}
@@ -439,9 +505,16 @@ export default function EventDetailPage() {
                             {album.description}
                           </p>
                         )}
-                        <p className="text-xs text-slate-600 mt-1">
-                          {format(new Date(album.createdAt), 'MMM dd, yyyy')}
-                        </p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          {album.category && (
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#f0ede8] text-[#6b6560] border border-[#e7e3dd]">
+                              {album.category}
+                            </span>
+                          )}
+                          <p className="text-xs text-slate-600">
+                            {format(new Date(album.createdAt), 'MMM dd, yyyy')}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </Link>
@@ -465,27 +538,10 @@ export default function EventDetailPage() {
             </AnimatePresence>
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16 rounded-2xl border border-dashed border-[#e7e3dd] bg-[#f0ede8]"
-          >
-            <div className="w-16 h-16 bg-[#f8f7f5] rounded-2xl flex items-center justify-center mx-auto mb-4 ring-1 ring-slate-700/50">
-              <FolderOpen className="w-8 h-8 text-slate-600" />
-            </div>
-            <p className="font-semibold text-[#6b6560] mb-1">No albums yet</p>
-            <p className="text-sm text-slate-500 mb-5 max-w-xs mx-auto">
-              Create an album to start organising media for this event
-            </p>
-            {canCreateAlbum && (
-              <button
-                onClick={() => setShowCreateAlbum(true)}
-                className="btn-primary text-sm mx-auto"
-              >
-                <Plus className="w-4 h-4" /> Create First Album
-              </button>
-            )}
-          </motion.div>
+          <div className="text-center py-12 rounded-2xl border border-dashed border-[#e7e3dd] bg-[#faf9f7]">
+            <p className="font-semibold text-[#6b6560] mb-1">No albums match these filters</p>
+            <p className="text-sm text-slate-500">Try a different category</p>
+          </div>
         )}
       </div>
 

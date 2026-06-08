@@ -134,15 +134,6 @@ export default function LoginPage() {
               Sign up
             </Link>
           </div>
-
-          <div className="mt-6 p-3 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md">
-            <p className="text-xs text-slate-400 mb-2 font-medium">Demo Accounts:</p>
-            <div className="space-y-1 text-xs text-slate-500">
-              <p>Admin: admin@eventmedia.com / Password123!</p>
-              <p>Photographer: photographer@eventmedia.com / Password123!</p>
-              <p>Member: member@eventmedia.com / Password123!</p>
-            </div>
-          </div>
         </div>
       </motion.div>
     </div>
