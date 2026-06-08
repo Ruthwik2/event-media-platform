@@ -311,7 +311,10 @@ export default function MediaDetailPage() {
         <div className="space-y-4">
           {/* Info */}
           <div className="card p-4">
-            <div className="flex items-center gap-3 mb-4">
+            <Link
+              href={media.uploader?.id ? `/users/${media.uploader.id}` : '#'}
+              className="flex items-center gap-3 mb-4 group"
+            >
               {media.uploader?.avatar ? (
                 <img src={media.uploader.avatar} alt="" className="w-10 h-10 rounded-full" />
               ) : (
@@ -320,10 +323,10 @@ export default function MediaDetailPage() {
                 </div>
               )}
               <div>
-                <p className="font-medium">{media.uploader?.fullName}</p>
+                <p className="font-medium group-hover:text-primary-400 transition-colors">{media.uploader?.fullName}</p>
                 <p className="text-xs text-slate-500">@{media.uploader?.username}</p>
               </div>
-            </div>
+            </Link>
 
             {media.caption && (
               <p className="text-sm text-[#6b6560] mb-3">{media.caption}</p>
@@ -383,11 +386,11 @@ export default function MediaDetailPage() {
               {comments.map((comment) => (
                 <div key={comment.id} className="text-sm">
                   <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 bg-[#f0ede8] rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
+                    <Link href={comment.user?.id ? `/users/${comment.user.id}` : '#'} className="w-6 h-6 bg-[#f0ede8] rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
                       {comment.user?.fullName?.[0]}
-                    </div>
+                    </Link>
                     <div>
-                      <span className="font-medium text-xs">{comment.user?.username}</span>
+                      <Link href={comment.user?.id ? `/users/${comment.user.id}` : '#'} className="font-medium text-xs hover:text-primary-400 transition-colors">{comment.user?.username}</Link>
                       <p className="text-[#6b6560] text-xs">{comment.content}</p>
                       <p className="text-[10px] text-slate-600 mt-1">
                         {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}

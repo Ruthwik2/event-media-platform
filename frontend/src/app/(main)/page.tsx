@@ -163,8 +163,45 @@ export default function HomePage() {
         ))}
       </motion.section>
 
-      {/* Recent Media */}
+      {/* Events */}
       <motion.section {...fadeUp(0.1)}>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">Recent Events</h2>
+            <p className="text-xs text-slate-600 mt-0.5">Browse upcoming and past events</p>
+          </div>
+          <Link href="/events" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary-400 transition-colors duration-150 group">
+            View All
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        </div>
+
+        {events.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {events.map((event, i) => (
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+              >
+                <EventCard event={event} />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 card">
+            <div className="w-14 h-14 bg-[#f0ede8] rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-7 h-7 text-slate-600" />
+            </div>
+            <p className="text-slate-500 font-medium">No events yet</p>
+            <p className="text-slate-700 text-sm mt-1">Events will appear here once created</p>
+          </div>
+        )}
+      </motion.section>
+
+      {/* Recent Media */}
+      <motion.section {...fadeUp(0.15)}>
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-lg font-bold tracking-tight">Recent Uploads</h2>
@@ -204,43 +241,6 @@ export default function HomePage() {
             </div>
             <p className="text-slate-500 font-medium">No media uploaded yet</p>
             <p className="text-slate-700 text-sm mt-1">Start by uploading your first photo</p>
-          </div>
-        )}
-      </motion.section>
-
-      {/* Events */}
-      <motion.section {...fadeUp(0.15)}>
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">Recent Events</h2>
-            <p className="text-xs text-slate-600 mt-0.5">Browse upcoming and past events</p>
-          </div>
-          <Link href="/events" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary-400 transition-colors duration-150 group">
-            View All
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-        </div>
-
-        {events.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {events.map((event, i) => (
-              <motion.div
-                key={event.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
-              >
-                <EventCard event={event} />
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 card">
-            <div className="w-14 h-14 bg-[#f0ede8] rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-7 h-7 text-slate-600" />
-            </div>
-            <p className="text-slate-500 font-medium">No events yet</p>
-            <p className="text-slate-700 text-sm mt-1">Events will appear here once created</p>
           </div>
         )}
       </motion.section>

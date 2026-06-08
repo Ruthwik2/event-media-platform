@@ -3,7 +3,7 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const { avatarUpload, selfieUpload } = require('../middleware/upload');
 const {
-  register, login, getProfile, updateProfile, uploadSelfie, getAllUsers, deleteUser, changePassword,
+  register, login, getProfile, getPublicProfile, updateProfile, uploadSelfie, getAllUsers, deleteUser, changePassword,
   requestMembership, getMembershipRequests, approveRejectMembership,
 } = require('../controllers/authController');
 
@@ -14,6 +14,7 @@ router.get('/profile', authenticate, getProfile);
 router.put('/profile', authenticate, avatarUpload.single('avatar'), updateProfile);
 router.post('/selfie', authenticate, selfieUpload.single('selfie'), uploadSelfie);
 router.get('/users', authenticate, getAllUsers);
+router.get('/users/:userId', authenticate, getPublicProfile);
 router.delete('/users/:userId', authenticate, deleteUser);
 router.put('/password', authenticate, changePassword);
 

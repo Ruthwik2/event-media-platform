@@ -187,6 +187,57 @@ const getProfile = async (req, res) => {
   }
 };
 
+// Public profile of another user. Honours the owner's privacy toggles:
+//   • publicProfile=false → only the owner or an admin may view the full profile
+//   • showEmail=false     → the email is withheld from everyone but the owner/admin
+const getPublicProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const isSelf = userId === req.user.id;
+    const isAdmin = req.user.role === 'ADMIN';
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true, username: true, fullName: true, avatar: true,
+        bio: true, role: true, createdAt: true, email: true,
+        showEmail: true, publicProfile: true,
+        _count: { select: { mediaUploads: true, events: true } },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Private profile: reveal only the minimal identity to outsiders.
+    if (!user.publicProfile && !isSelf && !isAdmin) {
+      return res.json({
+        success: true,
+        data: {
+          id: user.id,
+          username: user.username,
+          fullName: user.fullName,
+          avatar: user.avatar,
+          isPrivate: true,
+        },
+      });
+    }
+
+    const { showEmail, email, ...rest } = user;
+    res.json({
+      success: true,
+      data: {
+        ...rest,
+        email: showEmail || isSelf || isAdmin ? email : null,
+        isPrivate: false,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 const updateProfile = async (req, res) => {
   try {
     const { fullName, bio, username, showEmail, allowTagging, publicProfile } = req.body;
@@ -218,6 +269,7 @@ const updateProfile = async (req, res) => {
       select: {
         id: true, email: true, username: true,
         fullName: true, role: true, avatar: true, bio: true,
+        referenceSelfie: true, isApproved: true, createdAt: true,
         showEmail: true, allowTagging: true, publicProfile: true,
       },
     });
@@ -617,4 +669,4 @@ const approveRejectMembership = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getProfile, updateProfile, uploadSelfie, getAllUsers, deleteUser, changePassword, requestMembership, getMembershipRequests, approveRejectMembership };
+module.exports = { register, login, getProfile, getPublicProfile, updateProfile, uploadSelfie, getAllUsers, deleteUser, changePassword, requestMembership, getMembershipRequests, approveRejectMembership };
