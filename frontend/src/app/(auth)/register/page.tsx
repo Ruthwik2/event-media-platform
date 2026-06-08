@@ -64,14 +64,14 @@ export default function RegisterPage() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_8px_32px_rgba(22, 112, 107,0.45)] ring-1 ring-white/20">
+          <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
             <Camera className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold gradient-text">Create Account</h1>
-          <p className="text-slate-400 mt-2">Join the EventMedia community</p>
+          <p className="text-slate-400 mt-2">Join the CIG Media community</p>
         </div>
 
-        <div className="glass-panel p-6 sm:p-7">
+        <div className="card p-6 sm:p-7">
           <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div>
               <label className="label">Full Name</label>
@@ -183,7 +183,7 @@ export default function RegisterPage() {
                 </button>
               </div>
               {passwordMismatch && (
-                <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
+                <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
               )}
             </div>
 
@@ -216,7 +216,7 @@ export default function RegisterPage() {
 
           <div className="mt-4 text-center text-sm text-slate-400">
             Already have an account?{' '}
-            <Link href="/login" className="text-primary-400 hover:text-primary-300 font-medium">
+            <Link href="/login" className="text-primary-600 hover:text-primary-700 font-semibold">
               Sign in
             </Link>
           </div>
