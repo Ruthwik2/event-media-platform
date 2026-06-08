@@ -25,8 +25,8 @@ export default function SettingsPage() {
   const [showPasswords, setShowPasswords] = useState(false);
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') return 'system';
-    return localStorage.getItem('theme') || 'dark';
+    if (typeof window === 'undefined') return 'light';
+    return localStorage.getItem('theme') || 'light';
   });
   const [galleryLayout, setGalleryLayout] = useState(() => {
     if (typeof window === 'undefined') return 'grid';
