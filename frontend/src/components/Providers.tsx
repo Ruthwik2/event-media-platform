@@ -19,25 +19,10 @@ function SocketProvider({ children }: { children: React.ReactNode }) {
   useSocket();
 
   useEffect(() => {
-    const applyTheme = (value: string) => {
-      const root = document.documentElement;
-      if (value === 'system') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.dataset.theme = prefersDark ? 'dark' : 'light';
-      } else {
-        root.dataset.theme = value;
-      }
-    };
-
-    const storedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(storedTheme);
-
-    if (storedTheme !== 'system') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => applyTheme('system');
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
+    // The app is light-only. Pin the theme and clear any stale 'dark'/'system'
+    // preference a user may have saved before the dark-mode option was removed.
+    document.documentElement.dataset.theme = 'light';
+    localStorage.removeItem('theme');
   }, []);
 
   return <>{children}</>;

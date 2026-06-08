@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { Settings, Shield, Bell, Palette, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Settings, Shield, Bell, Eye, EyeOff, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 
@@ -24,32 +24,6 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswords, setShowPasswords] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === 'undefined') return 'light';
-    return localStorage.getItem('theme') || 'light';
-  });
-
-  useEffect(() => {
-    const applyTheme = (value: string) => {
-      const root = document.documentElement;
-      if (value === 'system') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.dataset.theme = prefersDark ? 'dark' : 'light';
-      } else {
-        root.dataset.theme = value;
-      }
-    };
-
-    localStorage.setItem('theme', theme);
-    applyTheme(theme);
-
-    if (theme !== 'system') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = () => applyTheme('system');
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, [theme]);
 
   useEffect(() => {
     if (!user) return;
@@ -256,37 +230,6 @@ export default function SettingsPage() {
             {loading ? 'Updating...' : 'Update Password'}
           </button>
         </form>
-      </div>
-
-      {/* Appearance */}
-      <div className="card p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-primary-900/50 rounded-lg flex items-center justify-center">
-            <Palette className="w-5 h-5 text-primary-400" />
-          </div>
-          <div>
-            <h2 className="font-semibold">Appearance</h2>
-            <p className="text-sm text-slate-400">Customize your experience</p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium">Theme</p>
-              <p className="text-xs text-slate-500">Choose your preferred theme</p>
-            </div>
-            <select
-              className="input w-auto text-sm"
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-            >
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-              <option value="system">System</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       {/* Data & Account */}
