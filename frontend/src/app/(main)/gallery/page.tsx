@@ -6,7 +6,7 @@ import { Media, Comment } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import {
   Search, X, Heart, MessageCircle, Bookmark,
-  Send, Play, Film, Camera, MoreHorizontal, Download, Tag,
+  Send, Play, Film, Camera, Download, Tag,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -125,8 +125,10 @@ function InstagramPost({ media, onDelete }: PostProps) {
     setSaved(!wasSaved);
     try {
       await api.post(`/media/${media.id}/favourite`);
+      toast.success(wasSaved ? 'Removed from favourites' : 'Added to favourites');
     } catch {
       setSaved(wasSaved);
+      toast.error('Failed to update favourites');
     }
   };
 
@@ -181,9 +183,6 @@ function InstagramPost({ media, onDelete }: PostProps) {
             <p className="text-xs text-slate-500 mt-0.5">{timeAgo}</p>
           </div>
         </Link>
-        <button className="text-slate-500 hover:text-[#4a4540] p-1 rounded-lg transition-colors">
-          <MoreHorizontal className="w-5 h-5" />
-        </button>
       </div>
 
       {/* ── Media ── */}
@@ -283,7 +282,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
           >
             <Bookmark
               className={`w-6 h-6 transition-all duration-200 ${
-                saved ? 'fill-white text-white' : 'text-[#6b6560] hover:text-[#2a2724]'
+                saved ? 'fill-primary-600 text-primary-600 scale-110' : 'text-[#6b6560] hover:text-[#2a2724]'
               }`}
             />
           </button>

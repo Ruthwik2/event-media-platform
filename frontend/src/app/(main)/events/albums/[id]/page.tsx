@@ -288,7 +288,7 @@ export default function AlbumDetailPage() {
                   <button
                     onClick={startRename}
                     title="Rename album"
-                    className="p-1.5 rounded-lg text-slate-600 hover:text-[#4a4540] hover:bg-[#f0ede8]/60 transition-all opacity-0 group-hover/title:opacity-100"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-[#f0ede8] transition-colors"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>

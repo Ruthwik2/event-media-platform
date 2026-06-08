@@ -287,7 +287,7 @@ export default function EventDetailPage() {
                     <button
                       onClick={startRename}
                       title="Rename event"
-                      className="p-1.5 rounded-lg text-slate-600 hover:text-[#4a4540] hover:bg-[#f0ede8]/60 transition-all opacity-0 group-hover/title:opacity-100"
+                      className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 hover:bg-[#f0ede8] transition-colors"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
