@@ -95,12 +95,12 @@ export default function MyPhotosPage() {
           <Camera className="w-4 h-4 text-[#6b6560]" />
           <span className="font-medium text-[#4a4540]">Face Recognition Setup</span>
           {faceRecognitionEnabled && (
-            <span className="ml-auto flex items-center gap-1 text-xs text-green-400 bg-green-900/30 border border-green-700/40 px-2 py-0.5 rounded-full">
+            <span className="badge-status-active ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded-full">
               <CheckCircle className="w-3 h-3" /> Active
             </span>
           )}
           {hasSelfie && !faceRecognitionEnabled && (
-            <span className="ml-auto flex items-center gap-1 text-xs text-yellow-400 bg-yellow-900/30 border border-yellow-700/40 px-2 py-0.5 rounded-full">
+            <span className="badge-status-warning ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded-full">
               <AlertTriangle className="w-3 h-3" /> Not indexed
             </span>
           )}
