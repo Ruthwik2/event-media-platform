@@ -87,17 +87,21 @@ export default function HomePage() {
         <div className="relative z-10">
           {loading ? (
             <div className="h-14 md:h-20 w-72 skeleton mb-3" />
-          ) : clubName ? (
-            <motion.h1
-              {...fadeUp(0.05)}
-              className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight leading-none"
-            >
-              {clubName}
-            </motion.h1>
           ) : (
-            <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 tracking-tight leading-none">
-              Event Media
-            </h1>
+            <motion.div {...fadeUp(0.05)} className="flex items-center gap-3 mb-3 flex-wrap">
+              <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-none">
+                {clubName || 'Event Media'}
+              </h1>
+              {isAdmin && (
+                <button
+                  onClick={() => setShowClubSetup(true)}
+                  title={clubName ? 'Edit club name' : 'Set club name'}
+                  className="p-2 rounded-xl text-slate-400 hover:text-primary-600 hover:bg-[#f0ede8] transition-colors flex-shrink-0"
+                >
+                  <Pencil className="w-5 h-5" />
+                </button>
+              )}
+            </motion.div>
           )}
 
           <p className="hero-subtitle text-slate-500 text-base md:text-lg mb-8 max-w-md">
@@ -117,15 +121,6 @@ export default function HomePage() {
                   <Sparkles className="w-4 h-4" />
                   Find My Photos
                 </Link>
-                {isAdmin && (
-                  <button
-                    onClick={() => setShowClubSetup(true)}
-                    className="btn-secondary text-xs opacity-50 hover:opacity-100"
-                  >
-                    <Pencil className="w-3 h-3" />
-                    {clubName ? 'Edit Club Name' : 'Set Club Name'}
-                  </button>
-                )}
               </>
             ) : (
               <>
