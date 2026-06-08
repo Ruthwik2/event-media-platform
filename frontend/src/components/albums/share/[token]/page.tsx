@@ -92,7 +92,7 @@ export default function AlbumSharePage() {
           <div className="w-16 h-16 rounded-2xl bg-red-900/30 border border-red-700/40 flex items-center justify-center mx-auto mb-5">
             <Lock className="w-8 h-8 text-red-400" />
           </div>
-          <h1 className="text-xl font-bold text-slate-100 mb-2">Link Not Found</h1>
+          <h1 className="text-xl font-bold text-[#2a2724] mb-2">Link Not Found</h1>
           <p className="text-slate-400 text-sm leading-relaxed">
             This share link is invalid or has been revoked by the album owner.
             If you believe this is an error, contact the person who shared it with you.
@@ -108,7 +108,7 @@ export default function AlbumSharePage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
           <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-slate-100 mb-2">Something Went Wrong</h1>
+          <h1 className="text-xl font-bold text-[#2a2724] mb-2">Something Went Wrong</h1>
           <p className="text-slate-400 text-sm">Failed to load the album. Please try again.</p>
           <button onClick={() => window.location.reload()} className="btn-secondary mt-4 text-sm">
             Retry
@@ -122,12 +122,12 @@ export default function AlbumSharePage() {
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Header */}
-      <div className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-[#e7e3dd] bg-slate-950/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-bold text-slate-100 truncate">{album.name}</h1>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-900/40 text-emerald-400 border border-emerald-800/50 flex-shrink-0">
+              <h1 className="font-bold text-[#2a2724] truncate">{album.name}</h1>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-900/40 text-emerald-600 border border-emerald-800/50 flex-shrink-0">
                 Shared Album
               </span>
             </div>
@@ -148,7 +148,7 @@ export default function AlbumSharePage() {
         )}
 
         {/* Guest access notice */}
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-[#f0ede8] border border-[#e7e3dd]">
           <Lock className="w-3.5 h-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-slate-500 leading-relaxed">
             You're viewing a private album via a shared link. Please do not redistribute this link
@@ -165,7 +165,7 @@ export default function AlbumSharePage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.02 }}
-                className="relative group cursor-pointer aspect-square bg-slate-800 rounded-xl overflow-hidden"
+                className="relative group cursor-pointer aspect-square bg-[#f8f7f5] rounded-xl overflow-hidden"
                 onClick={() => {
                   const photoIdx = photoMedia.findIndex((p) => p.id === item.id);
                   if (photoIdx !== -1) setLightbox(photoIdx);
@@ -183,7 +183,7 @@ export default function AlbumSharePage() {
                     </div>
                   </>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-slate-800">
+                  <div className="w-full h-full flex items-center justify-center bg-[#f8f7f5]">
                     <span className="text-slate-500 text-xs">Video</span>
                   </div>
                 )}
@@ -210,25 +210,25 @@ export default function AlbumSharePage() {
           >
             <button
               onClick={() => setLightbox(null)}
-              className="absolute top-4 right-4 p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+              className="absolute top-4 right-4 p-2 rounded-lg bg-[#f8f7f5] hover:bg-[#f0ede8] transition-colors"
             >
-              <X className="w-5 h-5 text-slate-300" />
+              <X className="w-5 h-5 text-[#6b6560]" />
             </button>
 
             {lightbox > 0 && (
               <button
                 onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
-                className="absolute left-4 p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors"
+                className="absolute left-4 p-2 rounded-lg bg-[#f8f7f5] hover:bg-[#f0ede8] transition-colors"
               >
-                <ChevronLeft className="w-5 h-5 text-slate-300" />
+                <ChevronLeft className="w-5 h-5 text-[#6b6560]" />
               </button>
             )}
             {lightbox < photoMedia.length - 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
-                className="absolute right-4 p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 transition-colors"
+                className="absolute right-4 p-2 rounded-lg bg-[#f8f7f5] hover:bg-[#f0ede8] transition-colors"
               >
-                <ChevronRight className="w-5 h-5 text-slate-300" />
+                <ChevronRight className="w-5 h-5 text-[#6b6560]" />
               </button>
             )}
 
@@ -244,7 +244,7 @@ export default function AlbumSharePage() {
             />
 
             {lightboxItem.caption && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/70 rounded-lg text-sm text-slate-300 text-center max-w-xs">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/70 rounded-lg text-sm text-[#6b6560] text-center max-w-xs">
                 {lightboxItem.caption}
               </div>
             )}

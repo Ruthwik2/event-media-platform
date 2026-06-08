@@ -98,7 +98,7 @@ export default function PendingApprovalPage() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Camera className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">EventMedia</h1>
@@ -126,9 +126,9 @@ export default function PendingApprovalPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-700/60 bg-slate-800/50 p-4">
+              <div className="rounded-xl border border-[#e7e3dd] bg-[#f0ede8] p-4">
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  If you believe this was a mistake, click <strong className="text-slate-200">Request Again</strong> below
+                  If you believe this was a mistake, click <strong className="text-[#4a4540]">Request Again</strong> below
                   and an admin will review your account.
                 </p>
               </div>
@@ -150,7 +150,7 @@ export default function PendingApprovalPage() {
             <>
               {/* Pending state */}
               <div className="flex flex-col items-center text-center gap-3 py-2">
-                <div className="w-14 h-14 rounded-full bg-amber-900/30 border border-amber-700/40 flex items-center justify-center">
+                <div className="w-14 h-14 rounded-full bg-amber-900/30 border border-amber-200 flex items-center justify-center">
                   <ShieldAlert className="w-7 h-7 text-amber-400" />
                 </div>
                 <div>
@@ -162,22 +162,22 @@ export default function PendingApprovalPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-amber-700/30 bg-amber-900/10 p-4 space-y-2">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                  <span className="text-xs font-medium text-amber-300">What happens next?</span>
+                  <span className="text-xs font-medium text-amber-700">What happens next?</span>
                 </div>
-                <ul className="text-xs text-amber-200/70 space-y-1 ml-6 list-disc leading-relaxed">
+                <ul className="text-xs text-amber-600 space-y-1 ml-6 list-disc leading-relaxed">
                   <li>An admin will review your membership request</li>
                   <li>You'll receive a notification when a decision is made</li>
                   <li>Once approved, you can access all club events and media</li>
                 </ul>
               </div>
 
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-[#f0ede8] border border-[#e7e3dd]">
                 <Bell className="w-4 h-4 text-primary-400 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Logged in as <strong className="text-slate-200">{user?.fullName}</strong>{' '}
+                  Logged in as <strong className="text-[#4a4540]">{user?.fullName}</strong>{' '}
                   ({user?.username}). You can check back later or click refresh below to see if
                   your status has changed.
                 </p>
@@ -195,7 +195,7 @@ export default function PendingApprovalPage() {
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors py-1"
+            className="w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-[#4a4540] transition-colors py-1"
           >
             <LogOut className="w-4 h-4" />
             Sign out

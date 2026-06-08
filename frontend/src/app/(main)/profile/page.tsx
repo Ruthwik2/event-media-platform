@@ -55,7 +55,7 @@ export default function ProfilePage() {
                   className="w-20 h-20 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-blue-600 rounded-full flex items-center justify-center text-2xl font-bold">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-2xl font-bold">
                   {user.fullName[0]}
                 </div>
               )}

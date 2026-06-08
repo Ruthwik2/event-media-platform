@@ -73,19 +73,19 @@ export default function UsersPage() {
       case 'ADMIN':
         return 'bg-red-900/50 text-red-400 border-red-800';
       case 'PHOTOGRAPHER':
-        return 'bg-blue-900/50 text-blue-400 border-blue-800';
+        return 'bg-primary-900/50 text-primary-400 border-primary-800';
       case 'CLUB_MEMBER':
         return isApproved === false
           ? 'bg-yellow-900/50 text-yellow-400 border-yellow-800'
-          : 'bg-purple-900/50 text-purple-400 border-purple-800';
+          : 'bg-primary-900/50 text-primary-400 border-primary-800';
       default:
-        return 'bg-slate-900/50 text-slate-400 border-slate-800';
+        return 'bg-[#f8f7f5] text-slate-400 border-[#e7e3dd]';
     }
   };
 
   return (
     <div className="space-y-6">
-      <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-slate-200">
+      <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-[#2a2724]">
         <ArrowLeft className="w-4 h-4" /> Back to Home
       </Link>
 
@@ -96,7 +96,7 @@ export default function UsersPage() {
 
       {/* Stats */}
       <div className="card p-4 flex items-center gap-2">
-        <Users className="w-5 h-5 text-blue-400" />
+        <Users className="w-5 h-5 text-primary-400" />
         <div>
           <p className="text-sm text-slate-400">Total Users</p>
           <p className="text-xl font-bold">{totalUsers}</p>
@@ -139,7 +139,7 @@ export default function UsersPage() {
         <div className="card p-4">
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-12 bg-slate-800 rounded animate-pulse" />
+              <div key={i} className="h-12 bg-[#f8f7f5] rounded animate-pulse" />
             ))}
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function UsersPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-700">
+                  <tr className="border-b border-[#e7e3dd]">
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-400">Username</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-400">Full Name</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-400">Email</th>
@@ -165,7 +165,7 @@ export default function UsersPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
-                      className="border-b border-slate-700/50 hover:bg-slate-800/30 transition-colors"
+                      className="border-b border-[#e7e3dd] hover:bg-[#f0ede8] transition-colors"
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">

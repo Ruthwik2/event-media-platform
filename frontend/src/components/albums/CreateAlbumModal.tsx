@@ -31,11 +31,11 @@ export default function CreateAlbumModal({ eventId, onClose, onCreated }: Props)
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
-      <div className="card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="glass-panel p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold">Create Album</h2>
-          <button onClick={onClose} className="p-1 hover:bg-slate-800 rounded">
+          <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>

@@ -103,58 +103,58 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="card w-full max-w-md overflow-hidden"
+        className="bg-white border border-[#e7e3dd] rounded-2xl shadow-[0_8px_32px_rgba(42,39,36,0.12)] w-full max-w-md overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-700/60">
+        <div className="flex items-center justify-between p-5 border-b border-[#e7e3dd]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-slate-700/50">
+            <div className="p-2 rounded-lg bg-[#f0ede8]">
               {isPrivate
-                ? <Lock className="w-4 h-4 text-amber-400" />
-                : <Globe className="w-4 h-4 text-emerald-400" />
+                ? <Lock className="w-4 h-4 text-amber-600" />
+                : <Globe className="w-4 h-4 text-emerald-600" />
               }
             </div>
             <div>
-              <h3 className="font-semibold text-sm">Share Event</h3>
-              <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[200px]">{event.name}</p>
+              <h3 className="font-semibold text-sm text-[#2a2724]">Share Event</h3>
+              <p className="text-xs text-[#6b6560] mt-0.5 truncate max-w-[200px]">{event.name}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-700 transition-colors">
-            <X className="w-4 h-4 text-slate-400" />
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#f0ede8] transition-colors">
+            <X className="w-4 h-4 text-[#6b6560]" />
           </button>
         </div>
 
         <div className="p-5 space-y-5">
           {/* Visibility banner */}
           {isPrivate ? (
-            <div className="rounded-xl border border-amber-700/40 bg-amber-900/20 p-4 space-y-2">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-2">
               <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span className="text-sm font-medium text-amber-300">Private Event</span>
+                <Lock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span className="text-sm font-medium text-amber-800">Private Event</span>
               </div>
               {qrData?.guestAccessEnabled ? (
-                <p className="text-xs text-amber-200/70 leading-relaxed">
-                  <strong className="text-amber-300">Guest access is ON.</strong> Share the QR or
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  <strong className="text-amber-800">Guest access is ON.</strong> Share the QR or
                   link below to give others access to this event. Revoke to re-lock it.
                 </p>
               ) : (
-                <p className="text-xs text-amber-200/70 leading-relaxed">
+                <p className="text-xs text-amber-700 leading-relaxed">
                   Only authorized members (admins, approved photographers) can view this event.
                   Enable guest access below to share a direct link.
                 </p>
               )}
             </div>
           ) : (
-            <div className="rounded-xl border border-emerald-700/40 bg-emerald-900/20 p-4 flex items-start gap-2">
-              <Globe className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex items-start gap-2">
+              <Globe className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-emerald-300">Public Event</p>
-                <p className="text-xs text-emerald-200/70 mt-0.5 leading-relaxed">
+                <p className="text-sm font-medium text-emerald-800">Public Event</p>
+                <p className="text-xs text-emerald-700 mt-0.5 leading-relaxed">
                   Share this QR or link to give others access to this event.
                 </p>
               </div>
@@ -164,12 +164,12 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
           {/* QR Code */}
           <div className="flex flex-col items-center">
             {loading ? (
-              <div className="w-48 h-48 bg-slate-800 rounded-xl animate-pulse flex items-center justify-center">
-                <RefreshCw className="w-8 h-8 text-slate-600 animate-spin" />
+              <div className="w-48 h-48 bg-[#f0ede8] rounded-xl animate-pulse flex items-center justify-center">
+                <RefreshCw className="w-8 h-8 text-[#6b6560] animate-spin" />
               </div>
             ) : qrData ? (
               <div className="relative" ref={canvasRef}>
-                <div className="p-3 rounded-2xl bg-white">
+                <div className="p-3 rounded-2xl bg-white border border-[#e7e3dd]">
                   <QRCodeCanvas
                     value={qrData.url}
                     size={176}
@@ -186,18 +186,18 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
           {/* Share link + copy */}
           {qrData && (
             <div className="flex items-center gap-2">
-              <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg min-w-0">
-                <Link2 className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-                <span className="text-xs text-slate-400 truncate font-mono">{qrData.url}</span>
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-[#f8f7f5] border border-[#e7e3dd] rounded-lg min-w-0">
+                <Link2 className="w-3.5 h-3.5 text-[#6b6560] flex-shrink-0" />
+                <span className="text-xs text-[#2a2724] truncate font-mono">{qrData.url}</span>
               </div>
               <button
                 onClick={handleCopy}
-                className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors flex-shrink-0"
+                className="p-2 rounded-lg bg-[#f0ede8] hover:bg-[#e7e3dd] transition-colors flex-shrink-0"
                 title="Copy link"
               >
                 {copied
-                  ? <Check className="w-4 h-4 text-emerald-400" />
-                  : <Copy className="w-4 h-4 text-slate-300" />
+                  ? <Check className="w-4 h-4 text-emerald-600" />
+                  : <Copy className="w-4 h-4 text-[#2a2724]" />
                 }
               </button>
             </div>
@@ -216,19 +216,19 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
 
           {/* Private event: guest access controls (admin / creator only) */}
           {isPrivate && canManage && qrData && (
-            <div className="border-t border-slate-700/60 pt-4 space-y-3">
+            <div className="border-t border-[#e7e3dd] pt-4 space-y-3">
               <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-xs font-medium text-slate-300">Guest Access</span>
+                <Users className="w-3.5 h-3.5 text-[#6b6560]" />
+                <span className="text-xs font-medium text-[#2a2724]">Guest Access</span>
               </div>
 
               {qrData.guestAccessEnabled ? (
                 <div className="space-y-2">
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-900/20 border border-emerald-700/30">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs font-medium text-emerald-300">Guest access is active</p>
-                      <p className="text-xs text-emerald-200/60 mt-0.5">
+                      <p className="text-xs font-medium text-emerald-800">Guest access is active</p>
+                      <p className="text-xs text-emerald-700 mt-0.5">
                         Share the QR or link to give others access to this private event.
                       </p>
                     </div>
@@ -255,9 +255,9 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
-                    <Info className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-[#f8f7f5] border border-[#e7e3dd]">
+                    <Info className="w-4 h-4 text-[#6b6560] flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-[#6b6560] leading-relaxed">
                       Enable guest access to generate a direct share link for this private event.
                       You can revoke it at any time.
                     </p>
@@ -277,9 +277,9 @@ export default function ShareEventModal({ event, canManage, onClose }: Props) {
 
           {/* Info for private event non-managers */}
           {isPrivate && !canManage && qrData && !qrData.guestAccessEnabled && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-slate-800/60 border border-slate-700/40">
-              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-slate-400 leading-relaxed">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-[#f8f7f5] border border-[#e7e3dd]">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-[#6b6560] leading-relaxed">
                 This QR links to a private event. Only authorized members can view it after scanning.
                 Contact an admin to enable guest access.
               </p>

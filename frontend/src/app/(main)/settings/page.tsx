@@ -159,7 +159,7 @@ export default function SettingsPage() {
               </div>
               <button
                 onClick={() => setNotifications({ ...notifications, [key]: !notifications[key as keyof typeof notifications] })}
-                className={`w-11 h-6 rounded-full transition-colors relative ${notifications[key as keyof typeof notifications] ? 'bg-primary-600' : 'bg-slate-700'
+                className={`w-11 h-6 rounded-full transition-colors relative ${notifications[key as keyof typeof notifications] ? 'bg-primary-600' : 'bg-[#f0ede8]'
                   }`}
               >
                 <span
@@ -197,7 +197,7 @@ export default function SettingsPage() {
               </div>
               <button
                 onClick={() => handlePrivacyToggle(key as keyof typeof privacy)}
-                className={`w-11 h-6 rounded-full transition-colors relative ${privacy[key as keyof typeof privacy] ? 'bg-primary-600' : 'bg-slate-700'
+                className={`w-11 h-6 rounded-full transition-colors relative ${privacy[key as keyof typeof privacy] ? 'bg-primary-600' : 'bg-[#f0ede8]'
                   }`}
               >
                 <span
@@ -274,8 +274,8 @@ export default function SettingsPage() {
       {/* Appearance */}
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-purple-900/50 rounded-lg flex items-center justify-center">
-            <Palette className="w-5 h-5 text-purple-400" />
+          <div className="w-10 h-10 bg-primary-900/50 rounded-lg flex items-center justify-center">
+            <Palette className="w-5 h-5 text-primary-400" />
           </div>
           <div>
             <h2 className="font-semibold">Appearance</h2>
@@ -325,7 +325,7 @@ export default function SettingsPage() {
         <div className="space-y-3">
           <button
             onClick={handleExportData}
-            className="w-full flex items-center justify-between p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+            className="w-full flex items-center justify-between p-3 rounded-lg bg-[#f8f7f5] hover:bg-[#f0ede8] transition-colors"
           >
             <div className="flex items-center gap-3">
               <Download className="w-5 h-5 text-slate-400" />

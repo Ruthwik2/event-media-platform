@@ -42,7 +42,7 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/55 backdrop-blur-[10px]"
           onClick={onDismiss}
         />
 
@@ -52,17 +52,17 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
+          className="glass-panel relative w-full max-w-md overflow-hidden"
         >
           {/* Accent bar */}
-          <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-blue-400 to-cyan-400" />
+          <div className="h-1 w-full bg-gradient-to-r from-primary-500 via-primary-400 to-cyan-400" />
 
           <div className="p-7">
             {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
-                  <Camera className="w-6 h-6 text-blue-400" />
+                <div className="w-11 h-11 rounded-xl bg-primary-500/15 border border-primary-500/30 flex items-center justify-center">
+                  <Camera className="w-6 h-6 text-primary-400" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Welcome, Admin!</h2>
@@ -72,7 +72,7 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
               {onDismiss && (
                 <button
                   onClick={onDismiss}
-                  className="text-slate-500 hover:text-slate-300 transition-colors p-1"
+                  className="text-slate-500 hover:text-[#4a4540] transition-colors p-1"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -96,15 +96,15 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
             ) : (
               <>
                 <div className="mb-2">
-                  <p className="text-slate-300 text-sm leading-relaxed mb-4">
-                    Set your <span className="text-blue-400 font-medium">club name</span> — it will be
+                  <p className="text-[#6b6560] text-sm leading-relaxed mb-4">
+                    Set your <span className="text-primary-400 font-medium">club name</span> — it will be
                     displayed on the homepage for all users and automatically embedded in every
                     watermark when photos are downloaded.
                   </p>
 
                   {/* Preview watermark badge */}
-                  <div className="mb-5 rounded-xl overflow-hidden bg-slate-800 border border-slate-700">
-                    <div className="px-4 py-2 border-b border-slate-700">
+                  <div className="mb-5 rounded-xl overflow-hidden bg-[#f8f7f5] border border-[#e7e3dd]">
+                    <div className="px-4 py-2 border-b border-[#e7e3dd]">
                       <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Watermark Preview</p>
                     </div>
                     <div className="p-4 flex items-center gap-3">
@@ -128,7 +128,7 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
                     </div>
                   </div>
 
-                  <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
+                  <label className="block text-sm font-medium text-[#6b6560] mb-2 flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-slate-400" />
                     Club / Organisation Name
                   </label>
@@ -138,7 +138,7 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
                     onChange={(e) => { setClubName(e.target.value); setError(''); }}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                     placeholder="e.g. Photography Club, NIT Warangal"
-                    className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors text-sm"
+                    className="w-full bg-[#f8f7f5] border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors text-sm"
                     autoFocus
                   />
                   {error && (
@@ -152,7 +152,7 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
                   {onDismiss && (
                     <button
                       onClick={onDismiss}
-                      className="flex-1 py-2.5 rounded-lg border border-slate-600 text-slate-300 text-sm hover:bg-slate-800 transition-colors"
+                      className="flex-1 py-2.5 rounded-lg border border-slate-600 text-[#6b6560] text-sm hover:bg-[#f8f7f5] transition-colors"
                     >
                       Skip for now
                     </button>
@@ -160,7 +160,7 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
                   <button
                     onClick={handleSubmit}
                     disabled={loading || !clubName.trim()}
-                    className="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors"
+                    className="flex-1 py-2.5 rounded-lg bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors"
                   >
                     {loading ? 'Saving…' : 'Save Club Name'}
                   </button>

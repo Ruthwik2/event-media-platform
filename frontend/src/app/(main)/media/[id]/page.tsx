@@ -205,8 +205,8 @@ export default function MediaDetailPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="aspect-video bg-slate-800 rounded-xl animate-pulse" />
-        <div className="h-8 w-1/3 bg-slate-800 rounded animate-pulse" />
+        <div className="aspect-video bg-[#f8f7f5] rounded-xl animate-pulse" />
+        <div className="h-8 w-1/3 bg-[#f8f7f5] rounded animate-pulse" />
       </div>
     );
   }
@@ -217,7 +217,7 @@ export default function MediaDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <Link href="/gallery" className="flex items-center gap-2 text-slate-400 hover:text-slate-200">
+      <Link href="/gallery" className="flex items-center gap-2 text-slate-400 hover:text-[#2a2724]">
         <ArrowLeft className="w-4 h-4" /> Back to Gallery
       </Link>
 
@@ -243,7 +243,7 @@ export default function MediaDetailPage() {
                 <button
                   onClick={handleLike}
                   className={`p-2 rounded-lg transition-colors ${
-                    liked ? 'text-red-400 bg-red-900/20' : 'text-slate-400 hover:bg-slate-800'
+                    liked ? 'text-red-400 bg-red-900/20' : 'text-slate-400 hover:bg-[#f8f7f5]'
                   }`}
                 >
                   <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
@@ -252,7 +252,7 @@ export default function MediaDetailPage() {
 
                 <button
                   onClick={() => document.getElementById('comment-input')?.focus()}
-                  className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 ml-2"
+                  className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5] ml-2"
                 >
                   <MessageCircle className="w-5 h-5" />
                 </button>
@@ -261,7 +261,7 @@ export default function MediaDetailPage() {
                 <button
                   onClick={handleFavourite}
                   className={`p-2 rounded-lg transition-colors ml-2 ${
-                    favourited ? 'text-yellow-400 bg-yellow-900/20' : 'text-slate-400 hover:bg-slate-800'
+                    favourited ? 'text-yellow-400 bg-yellow-900/20' : 'text-slate-400 hover:bg-[#f8f7f5]'
                   }`}
                 >
                   <Bookmark className={`w-5 h-5 ${favourited ? 'fill-current' : ''}`} />
@@ -269,15 +269,15 @@ export default function MediaDetailPage() {
               </div>
 
               <div className="flex items-center gap-1">
-                <button onClick={handleShare} className="p-2 rounded-lg text-slate-400 hover:bg-slate-800">
+                <button onClick={handleShare} className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5]">
                   <Share2 className="w-5 h-5" />
                 </button>
-                <button onClick={handleDownload} className="p-2 rounded-lg text-slate-400 hover:bg-slate-800">
+                <button onClick={handleDownload} className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5]">
                   <Download className="w-5 h-5" />
                 </button>
                 <button
                   onClick={handleOpenTagModal}
-                  className="flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
+                  className="flex items-center gap-2 rounded-lg border border-[#e7e3dd] px-3 py-2 text-sm text-[#6b6560] hover:bg-[#f8f7f5]"
                 >
                   <Tag className="w-4 h-4" />
                   Tag User
@@ -286,15 +286,15 @@ export default function MediaDetailPage() {
                   <div className="relative">
                     <button
                       onClick={() => setShowMenu(!showMenu)}
-                      className="p-2 rounded-lg text-slate-400 hover:bg-slate-800"
+                      className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5]"
                     >
                       <MoreHorizontal className="w-5 h-5" />
                     </button>
                     {showMenu && (
-                      <div className="absolute right-0 top-10 card border border-slate-700 py-1 w-36 z-10">
+                      <div className="absolute right-0 top-10 card border border-[#e7e3dd] py-1 w-36 z-10">
                         <button
                           onClick={handleDelete}
-                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-slate-800 w-full"
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-[#f8f7f5] w-full"
                         >
                           <Trash2 className="w-4 h-4" /> Delete
                         </button>
@@ -326,7 +326,7 @@ export default function MediaDetailPage() {
             </div>
 
             {media.caption && (
-              <p className="text-sm text-slate-300 mb-3">{media.caption}</p>
+              <p className="text-sm text-[#6b6560] mb-3">{media.caption}</p>
             )}
 
             {media.tags && media.tags.length > 0 && (
@@ -335,7 +335,7 @@ export default function MediaDetailPage() {
                   <Link
                     key={tag}
                     href={`/search?tags=${tag}`}
-                    className="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded hover:bg-slate-700"
+                    className="text-xs bg-[#f8f7f5] text-slate-400 px-2 py-1 rounded hover:bg-[#f0ede8]"
                   >
                     #{tag}
                   </Link>
@@ -383,12 +383,12 @@ export default function MediaDetailPage() {
               {comments.map((comment) => (
                 <div key={comment.id} className="text-sm">
                   <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
+                    <div className="w-6 h-6 bg-[#f0ede8] rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
                       {comment.user?.fullName?.[0]}
                     </div>
                     <div>
                       <span className="font-medium text-xs">{comment.user?.username}</span>
-                      <p className="text-slate-300 text-xs">{comment.content}</p>
+                      <p className="text-[#6b6560] text-xs">{comment.content}</p>
                       <p className="text-[10px] text-slate-600 mt-1">
                         {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                       </p>
@@ -405,8 +405,8 @@ export default function MediaDetailPage() {
       </div>
 
       {showTagModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="card w-full max-w-md p-5">
+        <div className="modal-backdrop">
+          <div className="glass-panel w-full max-w-md p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-semibold">Tag User</h2>
@@ -415,7 +415,7 @@ export default function MediaDetailPage() {
               <button
                 type="button"
                 onClick={() => setShowTagModal(false)}
-                className="p-2 rounded-lg text-slate-400 hover:bg-slate-800"
+                className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -443,7 +443,7 @@ export default function MediaDetailPage() {
                     type="button"
                     onClick={() => handleTagUser(candidate.id)}
                     disabled={taggingUserId === candidate.id}
-                    className="w-full flex items-center gap-3 rounded-lg border border-slate-800 p-3 text-left hover:bg-slate-800 disabled:opacity-60"
+                    className="w-full flex items-center gap-3 rounded-lg border border-[#e7e3dd] p-3 text-left hover:bg-[#f8f7f5] disabled:opacity-60"
                   >
                     {candidate.avatar ? (
                       <img src={candidate.avatar} alt="" className="w-9 h-9 rounded-full" />

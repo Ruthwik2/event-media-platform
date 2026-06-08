@@ -136,12 +136,12 @@ export default function EventDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6 max-w-5xl mx-auto">
-        <div className="h-8 w-32 bg-slate-800 rounded-lg animate-pulse" />
-        <div className="h-56 bg-slate-800 rounded-2xl animate-pulse" />
-        <div className="h-6 w-48 bg-slate-800 rounded animate-pulse" />
+        <div className="h-8 w-32 bg-[#f8f7f5] rounded-lg animate-pulse" />
+        <div className="h-56 bg-[#f8f7f5] rounded-2xl animate-pulse" />
+        <div className="h-6 w-48 bg-[#f8f7f5] rounded animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-44 bg-slate-800 rounded-2xl animate-pulse" />
+            <div key={i} className="h-44 bg-[#f8f7f5] rounded-2xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -212,7 +212,7 @@ export default function EventDetailPage() {
       {/* Back link */}
       <Link
         href="/events"
-        className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors group"
+        className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#4a4540] transition-colors group"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Back to Events
@@ -223,7 +223,7 @@ export default function EventDetailPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="rounded-2xl overflow-hidden border border-slate-800/80 bg-gradient-to-br from-primary-950/70 via-slate-900 to-blue-950/50"
+        className="rounded-2xl overflow-hidden border border-[#e7e3dd]/80 bg-gradient-to-br from-primary-950/70 via-slate-900 to-primary-900/50"
       >
         {/* Hero body */}
         <div className="px-7 pt-7 pb-5">
@@ -244,7 +244,7 @@ export default function EventDetailPage() {
                     <><Lock className="w-3 h-3" /> Private</>
                   )}
                 </span>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-slate-800/80 text-slate-300 border-slate-700/60">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-[#f8f7f5] text-[#6b6560] border-[#e7e3dd]">
                   {event.category}
                 </span>
               </div>
@@ -257,7 +257,7 @@ export default function EventDetailPage() {
                     value={renameValue}
                     onChange={(e) => setRenameValue(e.target.value)}
                     onKeyDown={handleRenameKeyDown}
-                    className="flex-1 bg-slate-800 border border-primary-600 rounded-lg px-3 py-2 text-2xl font-extrabold text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
+                    className="flex-1 bg-[#f8f7f5] border border-primary-600 rounded-lg px-3 py-2 text-2xl font-extrabold text-[#2a2724] focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
                     maxLength={120}
                     disabled={renameSaving}
                   />
@@ -272,7 +272,7 @@ export default function EventDetailPage() {
                   <button
                     onClick={cancelRename}
                     disabled={renameSaving}
-                    className="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
+                    className="p-2 rounded-lg bg-[#f0ede8] hover:bg-[#e7e3dd] text-[#6b6560] transition-colors"
                     title="Cancel"
                   >
                     <XIcon className="w-4 h-4" />
@@ -280,14 +280,14 @@ export default function EventDetailPage() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2 group/title">
-                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-100">
+                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#2a2724]">
                     {event.name}
                   </h1>
                   {isOwner && (
                     <button
                       onClick={startRename}
                       title="Rename event"
-                      className="p-1.5 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-700/60 transition-all opacity-0 group-hover/title:opacity-100"
+                      className="p-1.5 rounded-lg text-slate-600 hover:text-[#4a4540] hover:bg-[#f0ede8]/60 transition-all opacity-0 group-hover/title:opacity-100"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
@@ -309,7 +309,7 @@ export default function EventDetailPage() {
                 <button
                   onClick={() => setShowShare(true)}
                   title="Share event"
-                  className="p-2 hover:bg-primary-600/20 border border-slate-700/80 hover:border-primary-500/50 text-slate-500 hover:text-primary-400 rounded-xl transition-all"
+                  className="p-2 hover:bg-primary-600/20 border border-[#e7e3dd]/80 hover:border-primary-500/50 text-slate-500 hover:text-primary-400 rounded-xl transition-all"
                 >
                   <QrCode className="w-4 h-4" />
                 </button>
@@ -326,7 +326,7 @@ export default function EventDetailPage() {
                     </button>
                     <button
                       onClick={() => setConfirmDeleteEvent(false)}
-                      className="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1 rounded-lg transition-colors font-medium"
+                      className="text-xs bg-[#f0ede8] hover:bg-[#e7e3dd] text-[#4a4540] px-2.5 py-1 rounded-lg transition-colors font-medium"
                     >
                       No
                     </button>
@@ -335,7 +335,7 @@ export default function EventDetailPage() {
                   <button
                     onClick={() => setConfirmDeleteEvent(true)}
                     title="Delete event"
-                    className="p-2 hover:bg-red-600/20 border border-slate-700/80 hover:border-red-500/50 text-slate-500 hover:text-red-400 rounded-xl transition-all"
+                    className="p-2 hover:bg-red-600/20 border border-[#e7e3dd]/80 hover:border-red-500/50 text-slate-500 hover:text-red-400 rounded-xl transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -346,7 +346,7 @@ export default function EventDetailPage() {
         </div>
 
         {/* Meta strip */}
-        <div className="flex flex-wrap gap-x-6 gap-y-2 px-7 py-4 border-t border-slate-800/60 bg-slate-950/40">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 px-7 py-4 border-t border-[#e7e3dd]/60 bg-slate-950/40">
           <span className="flex items-center gap-1.5 text-sm text-slate-400">
             <Calendar className="w-3.5 h-3.5 text-primary-400" />
             {format(new Date(event.startDate), 'MMM dd, yyyy')}
@@ -366,7 +366,7 @@ export default function EventDetailPage() {
       {/* ── Albums Section ── */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-slate-200">
+          <h2 className="text-base font-bold text-[#4a4540]">
             Albums
             <span className="ml-2 text-sm font-normal text-slate-500">
               ({visibleAlbums.length})
@@ -395,7 +395,7 @@ export default function EventDetailPage() {
                   className="relative group"
                 >
                   <Link href={`/events/albums/${album.id}`}>
-                    <div className="rounded-2xl overflow-hidden border border-slate-800/80 bg-slate-900 hover:border-primary-700/70 hover:shadow-lg hover:shadow-primary-900/20 cursor-pointer transition-all duration-200 hover:-translate-y-0.5">
+                    <div className="rounded-2xl overflow-hidden border border-[#e7e3dd]/80 bg-slate-900 hover:border-primary-700/70 hover:shadow-lg hover:shadow-primary-900/20 cursor-pointer transition-all duration-200 hover:-translate-y-0.5">
                       {/* Thumbnail */}
                       <div className="h-36 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
                         {album.coverImage ? (
@@ -425,7 +425,7 @@ export default function EventDetailPage() {
                         </div>
 
                         {/* Media count */}
-                        <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 text-xs text-slate-300 bg-slate-900/75 backdrop-blur-sm px-2 py-0.5 rounded-md">
+                        <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 text-xs text-[#6b6560] bg-slate-900/75 backdrop-blur-sm px-2 py-0.5 rounded-md">
                           <ImageIcon className="w-3 h-3" />
                           {(album as any)._count?.media || 0}
                         </div>
@@ -433,7 +433,7 @@ export default function EventDetailPage() {
 
                       {/* Album info */}
                       <div className="px-4 py-3">
-                        <h3 className="font-semibold text-slate-100 truncate">{album.name}</h3>
+                        <h3 className="font-semibold text-[#2a2724] truncate">{album.name}</h3>
                         {album.description && (
                           <p className="text-xs text-slate-500 mt-1 line-clamp-2">
                             {album.description}
@@ -455,7 +455,7 @@ export default function EventDetailPage() {
                       }}
                       disabled={deletingAlbumId === album.id}
                       title="Delete album"
-                      className="absolute top-2.5 right-2.5 p-1.5 bg-slate-900/85 hover:bg-red-600 border border-slate-700 hover:border-red-500 text-slate-400 hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 z-10 backdrop-blur-sm"
+                      className="absolute top-2.5 right-2.5 p-1.5 bg-slate-900/85 hover:bg-red-600 border border-[#e7e3dd] hover:border-red-500 text-slate-400 hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 z-10 backdrop-blur-sm"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -468,12 +468,12 @@ export default function EventDetailPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-16 rounded-2xl border border-dashed border-slate-800 bg-slate-900/40"
+            className="text-center py-16 rounded-2xl border border-dashed border-[#e7e3dd] bg-[#f0ede8]"
           >
-            <div className="w-16 h-16 bg-slate-800/80 rounded-2xl flex items-center justify-center mx-auto mb-4 ring-1 ring-slate-700/50">
+            <div className="w-16 h-16 bg-[#f8f7f5] rounded-2xl flex items-center justify-center mx-auto mb-4 ring-1 ring-slate-700/50">
               <FolderOpen className="w-8 h-8 text-slate-600" />
             </div>
-            <p className="font-semibold text-slate-300 mb-1">No albums yet</p>
+            <p className="font-semibold text-[#6b6560] mb-1">No albums yet</p>
             <p className="text-sm text-slate-500 mb-5 max-w-xs mx-auto">
               Create an album to start organising media for this event
             </p>

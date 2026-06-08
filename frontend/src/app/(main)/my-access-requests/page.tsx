@@ -112,7 +112,7 @@ export default function MyAccessRequestsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-1 border-b border-slate-700">
+      <div className="flex gap-1 border-b border-[#e7e3dd]">
         {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as FilterType[]).map((f) => (
           <button
             key={f}
@@ -120,7 +120,7 @@ export default function MyAccessRequestsPage() {
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               filter === f
                 ? 'border-primary-500 text-primary-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                : 'border-transparent text-slate-400 hover:text-[#2a2724]'
             }`}
           >
             {f.charAt(0) + f.slice(1).toLowerCase()}
@@ -132,7 +132,7 @@ export default function MyAccessRequestsPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-slate-800 rounded-xl animate-pulse" />
+            <div key={i} className="h-24 bg-[#f8f7f5] rounded-xl animate-pulse" />
           ))}
         </div>
       ) : requests.length === 0 ? (
@@ -166,14 +166,14 @@ export default function MyAccessRequestsPage() {
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                         request.type === 'EVENT'
-                          ? 'bg-blue-900/50'
-                          : 'bg-purple-900/50'
+                          ? 'bg-primary-900/50'
+                          : 'bg-primary-900/50'
                       }`}
                     >
                       {request.type === 'EVENT' ? (
-                        <Calendar className="w-5 h-5 text-blue-400" />
+                        <Calendar className="w-5 h-5 text-primary-400" />
                       ) : (
-                        <ImageIcon className="w-5 h-5 text-purple-400" />
+                        <ImageIcon className="w-5 h-5 text-primary-400" />
                       )}
                     </div>
                     <div className="min-w-0">
@@ -181,8 +181,8 @@ export default function MyAccessRequestsPage() {
                         <span
                           className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
                             request.type === 'EVENT'
-                              ? 'bg-blue-900/40 text-blue-400 border-blue-800/50'
-                              : 'bg-purple-900/40 text-purple-400 border-purple-800/50'
+                              ? 'bg-primary-900/40 text-primary-400 border-primary-800/50'
+                              : 'bg-primary-900/40 text-primary-400 border-primary-800/50'
                           }`}
                         >
                           {request.type === 'EVENT' ? (
@@ -235,7 +235,7 @@ export default function MyAccessRequestsPage() {
                       <button
                         onClick={() => handleReRequest(request)}
                         disabled={reRequestingId === request.id}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-[#f0ede8] hover:bg-[#e7e3dd] disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
                       >
                         <RefreshCw
                           className={`w-4 h-4 ${

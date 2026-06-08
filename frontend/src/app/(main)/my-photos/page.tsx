@@ -92,8 +92,8 @@ export default function MyPhotosPage() {
       {/* Face Recognition Setup card */}
       <div className="card p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Camera className="w-4 h-4 text-slate-300" />
-          <span className="font-medium text-slate-200">Face Recognition Setup</span>
+          <Camera className="w-4 h-4 text-[#6b6560]" />
+          <span className="font-medium text-[#4a4540]">Face Recognition Setup</span>
           {faceRecognitionEnabled && (
             <span className="ml-auto flex items-center gap-1 text-xs text-green-400 bg-green-900/30 border border-green-700/40 px-2 py-0.5 rounded-full">
               <CheckCircle className="w-3 h-3" /> Active
@@ -116,7 +116,7 @@ export default function MyPhotosPage() {
                 className="w-20 h-20 rounded-full object-cover border-2 border-slate-600"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-slate-700 border-2 border-dashed border-slate-500 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-[#f0ede8] border-2 border-dashed border-slate-500 flex items-center justify-center">
                 <Camera className="w-7 h-7 text-slate-500" />
               </div>
             )}
@@ -124,7 +124,7 @@ export default function MyPhotosPage() {
 
           {/* Description + button */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-slate-300 mb-3">
+            <p className="text-sm text-[#6b6560] mb-3">
               {faceRecognitionEnabled
                 ? 'Your face is indexed. Photos of you from all events appear below automatically.'
                 : hasSelfie
@@ -154,7 +154,7 @@ export default function MyPhotosPage() {
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-slate-800 rounded-xl animate-pulse" />
+            <div key={i} className="aspect-square bg-[#f8f7f5] rounded-xl animate-pulse" />
           ))}
         </div>
       ) : media.length > 0 ? (

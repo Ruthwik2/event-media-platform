@@ -250,12 +250,12 @@ export default function UploadPage() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="mt-4 pt-4 border-t border-slate-700">
+              <div className="mt-4 pt-4 border-t border-[#e7e3dd]">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-slate-200">Create New Album</h3>
+                  <h3 className="text-sm font-semibold text-[#4a4540]">Create New Album</h3>
                   <button
                     onClick={() => setShowCreateAlbum(false)}
-                    className="p-1 hover:bg-slate-700 rounded text-slate-400"
+                    className="p-1 hover:bg-[#f0ede8] rounded text-slate-400"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -327,7 +327,7 @@ export default function UploadPage() {
         className={`card border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
           isDragActive
             ? 'border-primary-500 bg-primary-500/5'
-            : 'border-slate-700 hover:border-slate-600'
+            : 'border-[#e7e3dd] hover:border-slate-600'
         }`}
       >
         <input {...getInputProps()} />
@@ -336,7 +336,7 @@ export default function UploadPage() {
           <p className="text-primary-400 font-medium">Drop files here...</p>
         ) : (
           <>
-            <p className="text-slate-300 font-medium">Drag & drop files here</p>
+            <p className="text-[#6b6560] font-medium">Drag & drop files here</p>
             <p className="text-sm text-slate-500 mt-1">or click to browse • Max 20 files, 100MB each</p>
             <p className="text-xs text-slate-600 mt-2">Supports: JPEG, PNG, GIF, WebP, MP4, MOV, AVI, WebM</p>
           </>
@@ -366,7 +366,7 @@ export default function UploadPage() {
                   exit={{ opacity: 0, scale: 0.8 }}
                   className="relative group"
                 >
-                  <div className="aspect-square rounded-lg overflow-hidden bg-slate-800 border border-slate-700">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-[#f8f7f5] border border-[#e7e3dd]">
                     {f.file.type.startsWith('image/') ? (
                       <img src={f.preview} alt="" className="w-full h-full object-cover" />
                     ) : (

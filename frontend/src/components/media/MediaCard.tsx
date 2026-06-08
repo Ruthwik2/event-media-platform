@@ -56,7 +56,7 @@ export default function MediaCard({ media, compact, naturalHeight, thumbnailOnly
 
   return (
     <div
-      className={`relative group rounded-xl overflow-hidden bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 ${
+      className={`relative group rounded-xl overflow-hidden bg-white/[0.03] border border-[#e7e3dd] hover:border-white/[0.12] transition-all duration-200 ${
         naturalHeight ? '' : 'aspect-square'
       }`}
     >

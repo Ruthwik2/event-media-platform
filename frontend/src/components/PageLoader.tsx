@@ -69,7 +69,7 @@ export default function PageLoader() {
           position: absolute;
           top: 0;
           height: 100%;
-          background: linear-gradient(90deg, #0ea5e9, #6366f1, #38bdf8);
+          background: linear-gradient(90deg, #16706b, #16706b, #3f9e97);
           border-radius: 0 2px 2px 0;
         }
         .page-loader-bar.loading {

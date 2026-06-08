@@ -255,9 +255,9 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
         <motion.div
           initial={{ x: 300 }}
           animate={{ x: 0 }}
-          className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col h-full overflow-hidden"
+          className="w-80 bg-slate-900 border-l border-[#e7e3dd] flex flex-col h-full overflow-hidden"
         >
-          <div className="p-4 border-b border-slate-800">
+          <div className="p-4 border-b border-[#e7e3dd]">
             <div className="flex items-center gap-3">
               {media.uploader?.avatar ? (
                 <img src={media.uploader.avatar} alt="" className="w-8 h-8 rounded-full" />
@@ -273,11 +273,11 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
                 </p>
               </div>
             </div>
-            {media.caption && <p className="text-sm text-slate-300 mt-3">{media.caption}</p>}
+            {media.caption && <p className="text-sm text-[#6b6560] mt-3">{media.caption}</p>}
             {media.tags && media.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {media.tags.map((tag) => (
-                  <span key={tag} className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">
+                  <span key={tag} className="text-[10px] bg-[#f8f7f5] text-slate-400 px-1.5 py-0.5 rounded">
                     #{tag}
                   </span>
                 ))}
@@ -286,10 +286,10 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
           </div>
 
           {/* Actions */}
-          <div className="p-3 border-b border-slate-800 flex items-center gap-1">
+          <div className="p-3 border-b border-[#e7e3dd] flex items-center gap-1">
             <button
               onClick={handleLike}
-              className={`p-2 rounded-lg transition-colors ${liked ? 'text-red-400 bg-red-900/20' : 'text-slate-400 hover:bg-slate-800'}`}
+              className={`p-2 rounded-lg transition-colors ${liked ? 'text-red-400 bg-red-900/20' : 'text-slate-400 hover:bg-[#f8f7f5]'}`}
             >
               <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
             </button>
@@ -297,7 +297,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
 
             <button
               onClick={() => setShowComments(!showComments)}
-              className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5] transition-colors"
             >
               <MessageCircle className="w-5 h-5" />
             </button>
@@ -305,16 +305,16 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
 
             <button
               onClick={handleFavourite}
-              className={`p-2 rounded-lg transition-colors ${favourited ? 'text-yellow-400 bg-yellow-900/20' : 'text-slate-400 hover:bg-slate-800'}`}
+              className={`p-2 rounded-lg transition-colors ${favourited ? 'text-yellow-400 bg-yellow-900/20' : 'text-slate-400 hover:bg-[#f8f7f5]'}`}
             >
               <Bookmark className={`w-5 h-5 ${favourited ? 'fill-current' : ''}`} />
             </button>
 
-            <button onClick={handleShare} className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors">
+            <button onClick={handleShare} className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5] transition-colors">
               <Share2 className="w-5 h-5" />
             </button>
 
-            <button onClick={handleDownload} className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors ml-auto">
+            <button onClick={handleDownload} className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5] transition-colors ml-auto">
               <Download className="w-5 h-5" />
             </button>
 
@@ -322,15 +322,15 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
               <div className="relative">
                 <button
                   onClick={() => setShowMenu(!showMenu)}
-                  className="p-2 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
+                  className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5] transition-colors"
                 >
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
                 {showMenu && (
-                  <div className="absolute right-0 top-10 card border border-slate-700 py-1 w-36 z-10">
+                  <div className="absolute right-0 top-10 card border border-[#e7e3dd] py-1 w-36 z-10">
                     <button
                       onClick={handleDelete}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-slate-800 w-full"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-[#f8f7f5] w-full"
                     >
                       <Trash2 className="w-4 h-4" /> Delete
                     </button>
@@ -340,11 +340,11 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
             )}
           </div>
 
-          <div className="p-3 border-b border-slate-800">
+          <div className="p-3 border-b border-[#e7e3dd]">
             <button
               type="button"
               onClick={handleOpenTagModal}
-              className="w-full flex items-center justify-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
+              className="w-full flex items-center justify-center gap-2 rounded-lg border border-[#e7e3dd] px-3 py-2 text-sm text-[#6b6560] hover:bg-[#f8f7f5]"
             >
               <Tag className="w-4 h-4" />
               Tag User
@@ -356,12 +356,12 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
             {comments.map((comment) => (
               <div key={comment.id} className="text-sm">
                 <div className="flex items-start gap-2">
-                  <div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
+                  <div className="w-6 h-6 bg-[#f0ede8] rounded-full flex items-center justify-center text-[10px] flex-shrink-0">
                     {comment.user?.fullName?.[0]}
                   </div>
                   <div>
                     <span className="font-medium text-xs">{comment.user?.username}</span>
-                    <p className="text-slate-300 text-xs mt-0.5">{comment.content}</p>
+                    <p className="text-[#6b6560] text-xs mt-0.5">{comment.content}</p>
                     <p className="text-[10px] text-slate-600 mt-1">
                       {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                     </p>
@@ -375,7 +375,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
           </div>
 
           {user && (
-            <form onSubmit={handleComment} className="p-3 border-t border-slate-800">
+            <form onSubmit={handleComment} className="p-3 border-t border-[#e7e3dd]">
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -387,7 +387,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
                 <button
                   type="submit"
                   disabled={!newComment.trim()}
-                  className="p-2 text-primary-400 hover:bg-slate-800 rounded-lg disabled:opacity-50"
+                  className="p-2 text-primary-400 hover:bg-[#f8f7f5] rounded-lg disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -408,7 +408,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
               <button
                 type="button"
                 onClick={() => setShowTagModal(false)}
-                className="p-2 rounded-lg text-slate-400 hover:bg-slate-800"
+                className="p-2 rounded-lg text-slate-400 hover:bg-[#f8f7f5]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -436,7 +436,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
                     type="button"
                     onClick={() => handleTagUser(candidate.id)}
                     disabled={taggingUserId === candidate.id}
-                    className="w-full flex items-center gap-3 rounded-lg border border-slate-800 p-3 text-left hover:bg-slate-800 disabled:opacity-60"
+                    className="w-full flex items-center gap-3 rounded-lg border border-[#e7e3dd] p-3 text-left hover:bg-[#f8f7f5] disabled:opacity-60"
                   >
                     {candidate.avatar ? (
                       <img src={candidate.avatar} alt="" className="w-9 h-9 rounded-full" />

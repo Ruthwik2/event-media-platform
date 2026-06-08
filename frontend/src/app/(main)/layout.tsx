@@ -39,7 +39,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   // Show minimal spinner during hydration — avoids blank null flash
   if (!hydrated) {
     return (
-      <div className="min-h-screen bg-[#080d14] flex items-center justify-center">
+      <div className="min-h-screen bg-[#faf9f7] flex items-center justify-center">
         <div className="flex items-center gap-1.5">
           {[0, 1, 2].map((i) => (
             <div

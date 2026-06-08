@@ -15,12 +15,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0ea5e9',
+  themeColor: '#16706b',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -33,15 +33,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             position="top-right"
             toastOptions={{
               style: {
-                background: 'rgba(10,15,25,0.95)',
-                color: '#e2e8f0',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '14px',
-                backdropFilter: 'blur(20px)',
+                background: '#ffffff',
+                color: '#2a2724',
+                border: '1px solid #e7e3dd',
+                borderRadius: '12px',
                 fontSize: '13px',
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                 fontWeight: '500',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                boxShadow: '0 8px 28px rgba(42,39,36,0.12)',
               },
             }}
           />

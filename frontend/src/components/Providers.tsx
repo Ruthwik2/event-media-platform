@@ -29,7 +29,7 @@ function SocketProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const storedTheme = localStorage.getItem('theme') || 'dark';
+    const storedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(storedTheme);
 
     if (storedTheme !== 'system') return;

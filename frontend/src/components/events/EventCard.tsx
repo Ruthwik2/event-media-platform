@@ -37,7 +37,7 @@ export default function EventCard({ event }: Props) {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <div className="w-12 h-12 bg-white/[0.04] rounded-2xl flex items-center justify-center border border-white/[0.06]">
+                <div className="w-12 h-12 bg-white/[0.04] rounded-2xl flex items-center justify-center border border-[#e7e3dd]">
                   <Calendar className="w-6 h-6 text-slate-700" />
                 </div>
               </div>
@@ -56,7 +56,7 @@ export default function EventCard({ event }: Props) {
             {/* Category badge */}
             {event.category && (
               <div className="absolute bottom-3 left-3">
-                <span className="text-[10px] px-2 py-1 bg-black/50 backdrop-blur-sm text-slate-300 rounded-lg border border-white/[0.08] font-medium">
+                <span className="text-[10px] px-2 py-1 bg-black/50 backdrop-blur-sm text-[#6b6560] rounded-lg border border-[#e7e3dd] font-medium">
                   {event.category}
                 </span>
               </div>
@@ -71,14 +71,14 @@ export default function EventCard({ event }: Props) {
                   setShowShare(true);
                 }}
                 title="Share QR"
-                className="absolute bottom-3 right-3 p-1.5 rounded-lg bg-slate-900/80 border border-slate-700/60 text-slate-400 hover:text-primary-400 hover:border-primary-500/50 hover:bg-primary-600/20 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm z-10"
+                className="absolute bottom-3 right-3 p-1.5 rounded-lg bg-white border border-[#e7e3dd] text-slate-400 hover:text-primary-400 hover:border-primary-500/50 hover:bg-primary-600/20 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm z-10"
               >
                 <QrCode className="w-3.5 h-3.5" />
               </button>
             )}
 
             {showRequestHint && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40">
+              <div className="absolute inset-0 flex items-center justify-center bg-[#f0ede8]">
                 <div className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/10">
                   <Lock className="w-5 h-5 text-slate-400" />
                 </div>
@@ -88,7 +88,7 @@ export default function EventCard({ event }: Props) {
 
           {/* Content */}
           <div className="p-4 pt-3.5">
-            <h3 className="font-semibold text-sm text-slate-100 line-clamp-1 group-hover:text-primary-400 transition-colors duration-150 leading-snug">
+            <h3 className="font-semibold text-sm text-[#2a2724] line-clamp-1 group-hover:text-primary-400 transition-colors duration-150 leading-snug">
               {event.name}
             </h3>
             {event.description && (

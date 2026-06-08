@@ -155,11 +155,11 @@ export default function AlbumDetailPage() {
   if (loading) {
     return (
       <div className="space-y-5 max-w-5xl mx-auto">
-        <div className="h-8 w-1/3 bg-slate-800 rounded-lg animate-pulse" />
-        <div className="h-24 bg-slate-800 rounded-2xl animate-pulse" />
+        <div className="h-8 w-1/3 bg-[#f8f7f5] rounded-lg animate-pulse" />
+        <div className="h-24 bg-[#f8f7f5] rounded-2xl animate-pulse" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-slate-800 rounded-xl animate-pulse" />
+            <div key={i} className="aspect-square bg-[#f8f7f5] rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function AlbumDetailPage() {
       <div className="space-y-4 max-w-5xl mx-auto">
         <Link
           href="/events"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors group"
+          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#4a4540] transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           Back to Events
@@ -237,7 +237,7 @@ export default function AlbumDetailPage() {
     <div className="space-y-6 max-w-5xl mx-auto">
       <Link
         href={`/events/${album.eventId}`}
-        className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors group"
+        className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-[#4a4540] transition-colors group"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Back to Event
@@ -248,7 +248,7 @@ export default function AlbumDetailPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex items-start justify-between gap-4 p-5 rounded-2xl border border-slate-800/80 bg-slate-900/60"
+        className="flex items-start justify-between gap-4 p-5 rounded-2xl border border-[#e7e3dd]/80 bg-[#f8f7f5]"
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
@@ -260,7 +260,7 @@ export default function AlbumDetailPage() {
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
                   onKeyDown={handleRenameKeyDown}
-                  className="flex-1 bg-slate-800 border border-primary-600 rounded-lg px-3 py-1.5 text-xl font-extrabold text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
+                  className="flex-1 bg-[#f8f7f5] border border-primary-600 rounded-lg px-3 py-1.5 text-xl font-extrabold text-[#2a2724] focus:outline-none focus:ring-2 focus:ring-primary-500 min-w-0"
                   maxLength={120}
                   disabled={renameSaving}
                 />
@@ -275,7 +275,7 @@ export default function AlbumDetailPage() {
                 <button
                   onClick={cancelRename}
                   disabled={renameSaving}
-                  className="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
+                  className="p-1.5 rounded-lg bg-[#f0ede8] hover:bg-[#e7e3dd] text-[#6b6560] transition-colors"
                   title="Cancel"
                 >
                   <XIcon className="w-4 h-4" />
@@ -283,12 +283,12 @@ export default function AlbumDetailPage() {
               </div>
             ) : (
               <div className="flex items-center gap-2 group/title">
-                <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">{album.name}</h1>
+                <h1 className="text-2xl font-extrabold text-[#2a2724] tracking-tight">{album.name}</h1>
                 {canManage && (
                   <button
                     onClick={startRename}
                     title="Rename album"
-                    className="p-1.5 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-700/60 transition-all opacity-0 group-hover/title:opacity-100"
+                    className="p-1.5 rounded-lg text-slate-600 hover:text-[#4a4540] hover:bg-[#f0ede8]/60 transition-all opacity-0 group-hover/title:opacity-100"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
@@ -376,13 +376,13 @@ export default function AlbumDetailPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="text-center py-20 rounded-2xl border border-dashed border-slate-800 bg-slate-900/30"
+          className="text-center py-20 rounded-2xl border border-dashed border-[#e7e3dd] bg-slate-900/30"
         >
-          <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900 border border-slate-700/60 flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900 border border-[#e7e3dd] flex items-center justify-center">
             <ImageIcon className="w-9 h-9 text-slate-600" />
           </div>
 
-          <h3 className="text-lg font-bold text-slate-300 mb-2">No media yet</h3>
+          <h3 className="text-lg font-bold text-[#6b6560] mb-2">No media yet</h3>
           <p className="text-slate-500 text-sm mb-7 max-w-xs mx-auto leading-relaxed">
             Upload photos and videos to start filling this album
           </p>
@@ -396,7 +396,7 @@ export default function AlbumDetailPage() {
             </Link>
           )}
 
-          <div className="mt-6 inline-flex items-center gap-2 bg-slate-900/70 border border-slate-800 rounded-xl px-4 py-2.5">
+          <div className="mt-6 inline-flex items-center gap-2 bg-slate-900/70 border border-[#e7e3dd] rounded-xl px-4 py-2.5">
             <Info className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
             <span className="text-xs text-slate-600">
               Supports JPG, PNG, MP4 and more · Up to 100 MB per file

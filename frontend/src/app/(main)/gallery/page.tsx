@@ -17,26 +17,26 @@ const LIMIT = 12;
 /* ─── Skeleton post ─────────────────────────────────────── */
 function SkeletonPost() {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden animate-pulse">
+    <div className="bg-slate-900 border border-[#e7e3dd] rounded-xl overflow-hidden animate-pulse">
       {/* header */}
       <div className="flex items-center gap-3 px-4 py-3">
-        <div className="w-9 h-9 rounded-full bg-slate-800" />
+        <div className="w-9 h-9 rounded-full bg-[#f8f7f5]" />
         <div className="flex-1 space-y-1.5">
-          <div className="h-3 bg-slate-800 rounded w-28" />
-          <div className="h-2.5 bg-slate-800 rounded w-16" />
+          <div className="h-3 bg-[#f8f7f5] rounded w-28" />
+          <div className="h-2.5 bg-[#f8f7f5] rounded w-16" />
         </div>
       </div>
       {/* image */}
-      <div className="aspect-square bg-slate-800" />
+      <div className="aspect-square bg-[#f8f7f5]" />
       {/* actions */}
       <div className="px-4 py-3 space-y-2">
         <div className="flex gap-3">
-          <div className="w-6 h-6 bg-slate-800 rounded" />
-          <div className="w-6 h-6 bg-slate-800 rounded" />
-          <div className="w-6 h-6 bg-slate-800 rounded" />
+          <div className="w-6 h-6 bg-[#f8f7f5] rounded" />
+          <div className="w-6 h-6 bg-[#f8f7f5] rounded" />
+          <div className="w-6 h-6 bg-[#f8f7f5] rounded" />
         </div>
-        <div className="h-3 bg-slate-800 rounded w-20" />
-        <div className="h-3 bg-slate-800 rounded w-48" />
+        <div className="h-3 bg-[#f8f7f5] rounded w-20" />
+        <div className="h-3 bg-[#f8f7f5] rounded w-48" />
       </div>
     </div>
   );
@@ -48,7 +48,7 @@ function Avatar({ src, name, size = 'md' }: { src?: string; name?: string; size?
   const cls = size === 'sm' ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm';
   const initials = (name || '?').charAt(0).toUpperCase();
   return err || !src ? (
-    <div className={`${cls} rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-semibold flex-shrink-0`}>
+    <div className={`${cls} rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold flex-shrink-0`}>
       {initials}
     </div>
   ) : (
@@ -166,7 +166,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden"
+      className="bg-slate-900 border border-[#e7e3dd] rounded-xl overflow-hidden"
     >
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 py-3">
@@ -177,7 +177,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
             <p className="text-xs text-slate-500 mt-0.5">{timeAgo}</p>
           </div>
         </div>
-        <button className="text-slate-500 hover:text-slate-300 p-1 rounded-lg transition-colors">
+        <button className="text-slate-500 hover:text-[#4a4540] p-1 rounded-lg transition-colors">
           <MoreHorizontal className="w-5 h-5" />
         </button>
       </div>
@@ -206,7 +206,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
             />
           )
         ) : (
-          <div className="aspect-square flex items-center justify-center bg-slate-800">
+          <div className="aspect-square flex items-center justify-center bg-[#f8f7f5]">
             {isVideo ? <Film className="w-12 h-12 text-slate-600" /> : <Camera className="w-12 h-12 text-slate-600" />}
           </div>
         )}
@@ -249,7 +249,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
             >
               <Heart
                 className={`w-6 h-6 transition-all duration-200 ${
-                  liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-slate-300 hover:text-slate-100'
+                  liked ? 'fill-rose-500 text-rose-500 scale-110' : 'text-[#6b6560] hover:text-[#2a2724]'
                 }`}
               />
             </button>
@@ -261,14 +261,14 @@ function InstagramPost({ media, onDelete }: PostProps) {
               className="p-2 rounded-full transition-colors"
               aria-label="Comment"
             >
-              <MessageCircle className="w-6 h-6 text-slate-300 hover:text-slate-100" />
+              <MessageCircle className="w-6 h-6 text-[#6b6560] hover:text-[#2a2724]" />
             </button>
             <button
               onClick={handleDownload}
               className="p-2 rounded-full transition-colors"
               aria-label="Download"
             >
-              <Download className="w-6 h-6 text-slate-300 hover:text-slate-100" />
+              <Download className="w-6 h-6 text-[#6b6560] hover:text-[#2a2724]" />
             </button>
           </div>
           {/* Right: save */}
@@ -279,7 +279,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
           >
             <Bookmark
               className={`w-6 h-6 transition-all duration-200 ${
-                saved ? 'fill-white text-white' : 'text-slate-300 hover:text-slate-100'
+                saved ? 'fill-white text-white' : 'text-[#6b6560] hover:text-[#2a2724]'
               }`}
             />
           </button>
@@ -301,7 +301,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
                 {caption.slice(0, 100)}
                 <button
                   onClick={() => setCaptionExpanded(true)}
-                  className="text-slate-400 hover:text-slate-200 ml-1"
+                  className="text-slate-400 hover:text-[#2a2724] ml-1"
                 >
                   more
                 </button>
@@ -321,7 +321,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
         {(media._count?.comments ?? 0) > 0 && (
           <button
             onClick={toggleComments}
-            className="text-sm text-slate-400 hover:text-slate-200 mt-1.5 transition-colors"
+            className="text-sm text-slate-400 hover:text-[#2a2724] mt-1.5 transition-colors"
           >
             {showComments ? 'Hide comments' : `View all ${media._count?.comments} comments`}
           </button>
@@ -343,7 +343,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
                     <Avatar src={c.user?.avatar} name={c.user?.username} size="sm" />
                     <div className="text-sm flex-1 min-w-0">
                       <span className="font-semibold mr-1.5">{c.user?.username}</span>
-                      <span className="text-slate-300 break-words">{c.content}</span>
+                      <span className="text-[#6b6560] break-words">{c.content}</span>
                       <p className="text-[11px] text-slate-500 mt-0.5">
                         {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
                       </p>
@@ -356,7 +356,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
         </AnimatePresence>
 
         {/* Add comment */}
-        <div className="flex items-center gap-2 mt-3 pb-3 border-t border-slate-800 pt-3">
+        <div className="flex items-center gap-2 mt-3 pb-3 border-t border-[#e7e3dd] pt-3">
           <Avatar src={user?.avatar} name={user?.username || 'You'} size="sm" />
           <div className="flex-1 flex items-center gap-2">
             <input
@@ -366,7 +366,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleComment()}
-              className="flex-1 bg-transparent text-sm placeholder-slate-600 outline-none text-slate-200"
+              className="flex-1 bg-transparent text-sm placeholder-slate-600 outline-none text-[#4a4540]"
             />
             {newComment.trim() && (
               <button
@@ -466,7 +466,7 @@ export default function GalleryPage() {
             className="input pl-9 pr-8 w-full"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+            <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#4a4540]">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -480,7 +480,7 @@ export default function GalleryPage() {
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 mediaType === type
                   ? 'bg-primary-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700'
+                  : 'bg-[#f8f7f5] text-slate-400 hover:text-[#2a2724] hover:bg-[#f0ede8]'
               }`}
             >
               {type === '' ? 'All' : type === 'PHOTO' ? 'Photos' : 'Videos'}
@@ -493,7 +493,7 @@ export default function GalleryPage() {
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
               onClick={() => { setSearch(''); setMediaType(''); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-[#2a2724] bg-[#f8f7f5] hover:bg-[#f0ede8] transition-all"
             >
               <X className="w-3.5 h-3.5" /> Clear
             </motion.button>
@@ -537,7 +537,7 @@ export default function GalleryPage() {
           </div>
         </InfiniteScroll>
       ) : (
-        <div className="text-center py-20 bg-slate-900 border border-slate-800 rounded-xl">
+        <div className="text-center py-20 bg-slate-900 border border-[#e7e3dd] rounded-xl">
           <Camera className="w-14 h-14 text-slate-700 mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">No media found</h3>
           <p className="text-slate-400 text-sm max-w-xs mx-auto">

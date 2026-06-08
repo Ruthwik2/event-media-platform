@@ -82,7 +82,7 @@ export default function HomePage() {
         />
         {/* Glow orb */}
         <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-blue-600/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-primary-600/8 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10">
           {loading ? (
@@ -140,9 +140,9 @@ export default function HomePage() {
       {/* Stats */}
       <motion.section {...fadeUp(0.05)} className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Photos & Videos', value: stats.media, icon: Image, color: 'text-sky-400', bg: 'bg-sky-500/8', glow: 'rgba(14,165,233,0.15)' },
-          { label: 'Events', value: stats.events, icon: Calendar, color: 'text-emerald-400', bg: 'bg-emerald-500/8', glow: 'rgba(16,185,129,0.15)' },
-          { label: 'Albums', value: stats.albums, icon: TrendingUp, color: 'text-violet-400', bg: 'bg-violet-500/8', glow: 'rgba(139,92,246,0.15)' },
+          { label: 'Photos & Videos', value: stats.media, icon: Image, color: 'text-primary-400', bg: 'bg-primary-500/8', glow: 'rgba(22, 112, 107,0.15)' },
+          { label: 'Events', value: stats.events, icon: Calendar, color: 'text-emerald-600', bg: 'bg-emerald-500/8', glow: 'rgba(16,185,129,0.15)' },
+          { label: 'Albums', value: stats.albums, icon: TrendingUp, color: 'text-primary-400', bg: 'bg-primary-500/8', glow: 'rgba(22, 112, 107,0.15)' },
           { label: 'Members', value: stats.users, icon: Users, color: 'text-amber-400', bg: 'bg-amber-500/8', glow: 'rgba(245,158,11,0.15)' },
         ].map(({ label, value, icon: Icon, color, bg }, i) => (
           <motion.div
@@ -199,7 +199,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="text-center py-16 card">
-            <div className="w-14 h-14 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 bg-[#f0ede8] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Image className="w-7 h-7 text-slate-600" />
             </div>
             <p className="text-slate-500 font-medium">No media uploaded yet</p>
@@ -236,7 +236,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="text-center py-16 card">
-            <div className="w-14 h-14 bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 bg-[#f0ede8] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-7 h-7 text-slate-600" />
             </div>
             <p className="text-slate-500 font-medium">No events yet</p>

@@ -46,7 +46,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-slate-950 via-slate-900 to-primary-950">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -54,14 +54,14 @@ export default function LoginPage() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-[0_8px_32px_rgba(22, 112, 107,0.45)] ring-1 ring-white/20">
             <Camera className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold gradient-text">Welcome Back</h1>
           <p className="text-slate-400 mt-2">Sign in to your EventMedia account</p>
         </div>
 
-        <div className="card p-6">
+        <div className="glass-panel p-6 sm:p-7">
           <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div>
               <label className="label">Email</label>
@@ -108,7 +108,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#4a4540]"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -135,7 +135,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <div className="mt-6 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+          <div className="mt-6 p-3 rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md">
             <p className="text-xs text-slate-400 mb-2 font-medium">Demo Accounts:</p>
             <div className="space-y-1 text-xs text-slate-500">
               <p>Admin: admin@eventmedia.com / Password123!</p>

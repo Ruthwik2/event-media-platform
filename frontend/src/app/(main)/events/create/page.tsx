@@ -82,7 +82,7 @@ export default function CreateEventPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Link href="/events" className="flex items-center gap-2 text-slate-400 hover:text-slate-200 mb-6">
+      <Link href="/events" className="flex items-center gap-2 text-slate-400 hover:text-[#2a2724] mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Events
       </Link>
 

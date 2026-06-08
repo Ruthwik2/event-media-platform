@@ -22,7 +22,7 @@ switch (type) {
 case 'LIKE':
 return <Heart className="w-4 h-4 text-red-400" />;
 case 'COMMENT':
-return <MessageCircle className="w-4 h-4 text-blue-400" />;
+return <MessageCircle className="w-4 h-4 text-primary-400" />;
 case 'TAG':
 return <Tag className="w-4 h-4 text-green-400" />;
 case 'ACCESS_REQUEST':
@@ -73,9 +73,9 @@ transition={{ delay: i * 0.03 }}
 onClick={() => handleNotificationClick(notification)}
 className={`card p-4 flex items-start gap-3 transition-colors ${
 !notification.isRead ? 'border-primary-800 bg-primary-900/10' : ''
-} ${href ? 'cursor-pointer hover:bg-slate-800/50' : ''}`}
+} ${href ? 'cursor-pointer hover:bg-[#f0ede8]' : ''}`}
 >
-<div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center flex-shrink-0">
+<div className="w-8 h-8 rounded-full bg-[#f8f7f5] flex items-center justify-center flex-shrink-0">
 {getIcon(notification.type)}
 </div>
 <div className="flex-1 min-w-0">

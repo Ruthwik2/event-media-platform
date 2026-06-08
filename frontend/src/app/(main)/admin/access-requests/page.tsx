@@ -155,11 +155,11 @@ export default function AccessRequestsPage() {
       </div>
 
       {/* Main Tabs */}
-      <div className="flex gap-1 border-b border-slate-700">
+      <div className="flex gap-1 border-b border-[#e7e3dd]">
         <button
           onClick={() => setTab('members')}
           className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            tab === 'members' ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-slate-200'
+            tab === 'members' ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -173,7 +173,7 @@ export default function AccessRequestsPage() {
         <button
           onClick={() => setTab('media')}
           className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            tab === 'media' ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-slate-200'
+            tab === 'media' ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
           }`}
         >
           <Calendar className="w-4 h-4" />
@@ -184,11 +184,11 @@ export default function AccessRequestsPage() {
       {/* ── MEMBERS TAB ── */}
       {tab === 'members' && (
         <>
-          <div className="flex gap-1 border-b border-slate-700/50">
+          <div className="flex gap-1 border-b border-[#e7e3dd]">
             {(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as FilterType[]).map(f => (
               <button key={f} onClick={() => setMemberFilter(f)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  memberFilter === f ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-slate-200'
+                  memberFilter === f ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
                 }`}
               >
                 {f.charAt(0) + f.slice(1).toLowerCase()}
@@ -197,7 +197,7 @@ export default function AccessRequestsPage() {
           </div>
 
           {loadingMembers ? (
-            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-slate-800 rounded-xl animate-pulse" />)}</div>
+            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-[#f8f7f5] rounded-xl animate-pulse" />)}</div>
           ) : members.length === 0 ? (
             <div className="text-center py-16 card">
               <Users className="w-16 h-16 text-slate-600 mx-auto mb-4" />
@@ -213,7 +213,7 @@ export default function AccessRequestsPage() {
                       {member.user.avatar ? (
                         <img src={member.user.avatar} alt={member.user.fullName} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
                           {member.user.fullName?.[0] ?? '?'}
                         </div>
                       )}
@@ -222,7 +222,7 @@ export default function AccessRequestsPage() {
                           <span className="font-medium">{member.user.fullName}</span>
                           <span className="text-xs text-slate-400">@{member.user.username}</span>
                           <StatusBadge status={member.status} />
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-900/40 text-blue-400 border border-blue-800/50">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary-900/40 text-primary-400 border border-primary-800/50">
                             Viewer → Club Member
                           </span>
                         </div>
@@ -256,11 +256,11 @@ export default function AccessRequestsPage() {
       {/* ── MEDIA ACCESS TAB ── */}
       {tab === 'media' && (
         <>
-          <div className="flex gap-1 border-b border-slate-700/50">
+          <div className="flex gap-1 border-b border-[#e7e3dd]">
             {(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as FilterType[]).map(f => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  filter === f ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-slate-200'
+                  filter === f ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
                 }`}
               >
                 {f.charAt(0) + f.slice(1).toLowerCase()}
@@ -269,7 +269,7 @@ export default function AccessRequestsPage() {
           </div>
 
           {loadingRequests ? (
-            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-slate-800 rounded-xl animate-pulse" />)}</div>
+            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-[#f8f7f5] rounded-xl animate-pulse" />)}</div>
           ) : requests.length === 0 ? (
             <div className="text-center py-16 card">
               <ShieldCheck className="w-16 h-16 text-slate-600 mx-auto mb-4" />
@@ -282,7 +282,7 @@ export default function AccessRequestsPage() {
                 <motion.div key={request.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="card p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
                         {(request as any).user?.fullName?.[0] ?? '?'}
                       </div>
                       <div className="min-w-0">
@@ -291,7 +291,7 @@ export default function AccessRequestsPage() {
                           <span className="text-xs text-slate-400">@{(request as any).user?.username}</span>
                           <StatusBadge status={request.status} />
                           <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
-                            request.type === 'EVENT' ? 'bg-blue-900/40 text-blue-400 border-blue-800/50' : 'bg-purple-900/40 text-purple-400 border-purple-800/50'
+                            request.type === 'EVENT' ? 'bg-primary-900/40 text-primary-400 border-primary-800/50' : 'bg-primary-900/40 text-primary-400 border-primary-800/50'
                           }`}>
                             {request.type === 'EVENT' ? <Calendar className="w-3 h-3" /> : <ImageIcon className="w-3 h-3" />}
                             {request.type}
@@ -299,7 +299,7 @@ export default function AccessRequestsPage() {
                         </div>
                         <p className="text-sm text-slate-400 mt-1">
                           Requested access to:{' '}
-                          <span className="text-slate-200 font-medium">{(request as any).target?.name ?? 'Unknown'}</span>
+                          <span className="text-[#4a4540] font-medium">{(request as any).target?.name ?? 'Unknown'}</span>
                           {request.type === 'ALBUM' && (request as any).target?.event && (
                             <span className="text-slate-500"> ({(request as any).target.event.name})</span>
                           )}

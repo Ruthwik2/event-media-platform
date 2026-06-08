@@ -79,7 +79,7 @@ export default function EventSharePage() {
           <div className="w-16 h-16 bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-1 ring-red-800/40">
             <Lock className="w-8 h-8 text-red-400" />
           </div>
-          <h1 className="text-xl font-bold mb-2 text-slate-100">Link Not Found</h1>
+          <h1 className="text-xl font-bold mb-2 text-[#2a2724]">Link Not Found</h1>
           <p className="text-slate-400 text-sm leading-relaxed">
             This share link is invalid or has been revoked by the event organiser.
           </p>
@@ -95,7 +95,7 @@ export default function EventSharePage() {
           <div className="w-16 h-16 bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <AlertTriangle className="w-8 h-8 text-amber-400" />
           </div>
-          <h1 className="text-xl font-bold mb-2 text-slate-100">Something went wrong</h1>
+          <h1 className="text-xl font-bold mb-2 text-[#2a2724]">Something went wrong</h1>
           <p className="text-slate-400 text-sm">Unable to load the event. Please try again later.</p>
         </div>
       </div>
@@ -109,18 +109,18 @@ export default function EventSharePage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl overflow-hidden border border-slate-800/80 bg-gradient-to-br from-primary-950/70 via-slate-900 to-blue-950/50"
+          className="rounded-2xl overflow-hidden border border-[#e7e3dd]/80 bg-gradient-to-br from-primary-950/70 via-slate-900 to-primary-900/50"
         >
           <div className="px-7 pt-7 pb-5">
             <div className="flex flex-wrap gap-2 mb-3">
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-red-900/40 text-red-400 border-red-800/60">
                 <Lock className="w-3 h-3" /> Private
               </span>
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-slate-800/80 text-slate-300 border-slate-700/60">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-[#f8f7f5] text-[#6b6560] border-[#e7e3dd]">
                 {event.category}
               </span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-100">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#2a2724]">
               {event.name}
             </h1>
             {event.description && (
@@ -129,7 +129,7 @@ export default function EventSharePage() {
               </p>
             )}
           </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 px-7 py-4 border-t border-slate-800/60 bg-slate-950/40">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 px-7 py-4 border-t border-[#e7e3dd]/60 bg-slate-950/40">
             <span className="flex items-center gap-1.5 text-sm text-slate-400">
               <Calendar className="w-3.5 h-3.5 text-primary-400" />
               {format(new Date(event.startDate), 'MMM dd, yyyy')}
@@ -147,7 +147,7 @@ export default function EventSharePage() {
         </motion.div>
 
         {/* Guest notice */}
-        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-900/20 border border-amber-700/40">
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200">
           <Lock className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-amber-200/80 leading-relaxed">
             You&apos;re viewing this private event via a guest share link. Some albums may still
@@ -157,7 +157,7 @@ export default function EventSharePage() {
 
         {/* Albums */}
         <div>
-          <h2 className="text-base font-bold text-slate-200 mb-4">
+          <h2 className="text-base font-bold text-[#4a4540] mb-4">
             Albums
             <span className="ml-2 text-sm font-normal text-slate-500">
               ({event.albums.length})
@@ -165,7 +165,7 @@ export default function EventSharePage() {
           </h2>
 
           {event.albums.length === 0 ? (
-            <div className="text-center py-16 rounded-2xl border border-dashed border-slate-800 bg-slate-900/40">
+            <div className="text-center py-16 rounded-2xl border border-dashed border-[#e7e3dd] bg-[#f0ede8]">
               <FolderOpen className="w-10 h-10 text-slate-600 mx-auto mb-3" />
               <p className="text-slate-400 text-sm">No albums in this event yet.</p>
             </div>
@@ -179,7 +179,7 @@ export default function EventSharePage() {
                   transition={{ delay: i * 0.05 }}
                 >
                   <Link href={`/events/albums/${album.id}`}>
-                    <div className="rounded-2xl overflow-hidden border border-slate-800/80 bg-slate-900 hover:border-primary-700/70 hover:shadow-lg cursor-pointer transition-all duration-200 hover:-translate-y-0.5">
+                    <div className="rounded-2xl overflow-hidden border border-[#e7e3dd]/80 bg-slate-900 hover:border-primary-700/70 hover:shadow-lg cursor-pointer transition-all duration-200 hover:-translate-y-0.5">
                       <div className="h-36 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden">
                         {album.coverImage ? (
                           <img
@@ -204,14 +204,14 @@ export default function EventSharePage() {
                             </span>
                           )}
                         </div>
-                        <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 text-xs text-slate-300 bg-slate-900/75 px-2 py-0.5 rounded-md">
+                        <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1 text-xs text-[#6b6560] bg-slate-900/75 px-2 py-0.5 rounded-md">
                           <Images className="w-3 h-3" />
                           {album._count.media}
                         </div>
                       </div>
                       <div className="px-4 py-3 flex items-center justify-between">
                         <div className="min-w-0">
-                          <h3 className="font-semibold text-slate-100 truncate">{album.name}</h3>
+                          <h3 className="font-semibold text-[#2a2724] truncate">{album.name}</h3>
                           {album.description && (
                             <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{album.description}</p>
                           )}
