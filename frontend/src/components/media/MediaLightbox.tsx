@@ -249,17 +249,17 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
       <div className="flex w-full h-full" onClick={(e) => e.stopPropagation()}>
         {/* Main Image */}
         <div className="flex-1 relative flex items-center justify-center p-4">
-          <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full hover:bg-black/70">
+          <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-black/60 text-white rounded-full hover:bg-black/80 transition-colors">
             <X className="w-5 h-5" />
           </button>
 
           {currentIndex > 0 && (
-            <button onClick={navigatePrev} className="absolute left-4 z-10 p-2 bg-black/50 rounded-full hover:bg-black/70">
+            <button onClick={navigatePrev} className="absolute left-4 z-10 p-2 bg-black/60 text-white rounded-full hover:bg-black/80 transition-colors">
               <ChevronLeft className="w-6 h-6" />
             </button>
           )}
           {currentIndex < allMedia.length - 1 && (
-            <button onClick={navigateNext} className="absolute right-4 z-10 p-2 bg-black/50 rounded-full hover:bg-black/70">
+            <button onClick={navigateNext} className="absolute right-4 z-10 p-2 bg-black/60 text-white rounded-full hover:bg-black/80 transition-colors">
               <ChevronRight className="w-6 h-6" />
             </button>
           )}
