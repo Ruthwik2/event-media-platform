@@ -83,8 +83,8 @@ export default function LoginPage() {
               Capture every <span className="text-primary-200">moment</span>, share every story.
             </h1>
             <p className="mt-5 text-base xl:text-lg text-white/80 leading-relaxed">
-              Your club&apos;s media hub. Browse event galleries and relive every
-              moment together.
+              The one place your club keeps every photo and video from every
+              event — organised, searchable, and shared with everyone.
             </p>
 
             <ul className="mt-8 space-y-3">
@@ -145,8 +145,14 @@ export default function LoginPage() {
                   type="text"
                   value={email}
                   onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (emailError) setEmailError(validateEmail(e.target.value));
+                    // Strip whitespace so trailing/leading spaces never linger in
+                    // the field — and tell the user if we removed any.
+                    const cleaned = e.target.value.replace(/\s/g, '');
+                    if (cleaned !== e.target.value) {
+                      toast.error('Spaces are not allowed in the email address', { id: 'login-email-space' });
+                    }
+                    setEmail(cleaned);
+                    if (emailError) setEmailError(validateEmail(cleaned));
                   }}
                   onBlur={() => setEmailError(validateEmail(email))}
                   onFocus={() => setIsEditable(true)}

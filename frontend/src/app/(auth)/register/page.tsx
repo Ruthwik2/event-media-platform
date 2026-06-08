@@ -24,11 +24,28 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // Email and password must not contain spaces anywhere — strip them as the
+    // user types and surface a popup so they know what happened.
+    if (name === 'email' || name === 'password') {
+      const cleaned = value.replace(/\s/g, '');
+      if (cleaned !== value) {
+        toast.error(`Spaces are not allowed in the ${name}`, { id: `register-${name}-space` });
+      }
+      setFormData({ ...formData, [name]: cleaned });
+      return;
+    }
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Safety net in case spaces slip in via autofill/paste — the inputs already
+    // strip them, but never send an email/password containing whitespace.
+    if (/\s/.test(formData.email) || /\s/.test(formData.password)) {
+      toast.error('Email and password cannot contain spaces');
+      return;
+    }
     if (formData.password !== confirmPassword) {
       setPasswordMismatch(true);
       toast.error('Passwords do not match');
@@ -165,7 +182,7 @@ export default function RegisterPage() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => {
-                    setConfirmPassword(e.target.value);
+                    setConfirmPassword(e.target.value.replace(/\s/g, ''));
                     setPasswordMismatch(false);
                   }}
                   onFocus={() => setIsEditable(true)}

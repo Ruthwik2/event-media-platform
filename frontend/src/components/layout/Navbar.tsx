@@ -7,7 +7,7 @@ import { useNotificationStore } from '@/store/notificationStore';
 import {
   Bell, Search, User, LogOut, Upload, Home, Calendar,
   Image, Settings, Menu, X, Camera, ChevronDown, Bookmark,
-  Users, ShieldCheck, Lock,
+  Users, ShieldCheck, Lock, ScanFace,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -57,7 +57,7 @@ export default function Navbar() {
     ...(user
       ? [
           { href: '/favourites', label: 'Favourites', icon: Bookmark },
-          { href: '/my-photos', label: 'My Photos', icon: Camera },
+          { href: '/my-photos', label: 'My Photos', icon: ScanFace },
         ]
       : []),
   ];
