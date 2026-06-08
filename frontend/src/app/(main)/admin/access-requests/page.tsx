@@ -159,7 +159,7 @@ export default function AccessRequestsPage() {
         <button
           onClick={() => setTab('members')}
           className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            tab === 'members' ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
+            tab === 'members' ? 'border-[#16706b] text-[#16706b]' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -173,7 +173,7 @@ export default function AccessRequestsPage() {
         <button
           onClick={() => setTab('media')}
           className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            tab === 'media' ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
+            tab === 'media' ? 'border-[#16706b] text-[#16706b]' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
           }`}
         >
           <Calendar className="w-4 h-4" />
@@ -188,7 +188,7 @@ export default function AccessRequestsPage() {
             {(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as FilterType[]).map(f => (
               <button key={f} onClick={() => setMemberFilter(f)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  memberFilter === f ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
+                  memberFilter === f ? 'border-[#16706b] text-[#16706b]' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
                 }`}
               >
                 {f.charAt(0) + f.slice(1).toLowerCase()}
@@ -260,7 +260,7 @@ export default function AccessRequestsPage() {
             {(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as FilterType[]).map(f => (
               <button key={f} onClick={() => setFilter(f)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  filter === f ? 'border-primary-500 text-primary-400' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
+                  filter === f ? 'border-[#16706b] text-[#16706b]' : 'border-transparent text-slate-400 hover:text-[#2a2724]'
                 }`}
               >
                 {f.charAt(0) + f.slice(1).toLowerCase()}

@@ -6,7 +6,7 @@ import { Media, Comment } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import {
   Search, X, Heart, MessageCircle, Bookmark,
-  Send, Play, Film, Camera, Download, Tag,
+  Send, Play, Film, Camera, Download, Tag, ArrowUp,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
@@ -18,7 +18,7 @@ const LIMIT = 12;
 /* ─── Skeleton post ─────────────────────────────────────── */
 function SkeletonPost() {
   return (
-    <div className="bg-slate-900 border border-[#e7e3dd] rounded-xl overflow-hidden animate-pulse">
+    <div className="bg-white border border-[#e7e3dd] rounded-xl overflow-hidden animate-pulse">
       {/* header */}
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="w-9 h-9 rounded-full bg-[#f8f7f5]" />
@@ -169,7 +169,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-slate-900 border border-[#e7e3dd] rounded-xl overflow-hidden"
+      className="bg-white border border-[#e7e3dd] rounded-xl overflow-hidden"
     >
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 py-3">
@@ -422,18 +422,235 @@ function InstagramPost({ media, onDelete }: PostProps) {
   );
 }
 
+/* sessionStorage key for preserving the feed across navigation so that
+   returning from a post/profile lands on the same image, not a re-fetched one. */
+const FEED_CACHE_KEY = 'gallery-feed-cache';
+
+interface FeedCache {
+  media: Media[];
+  page: number;
+  hasMore: boolean;
+  total: number;
+  search: string;
+  mediaType: string;
+  scrollY: number;
+  // Id of the post nearest the top of the viewport, plus how far it was
+  // scrolled past its own top. Anchoring to a post element is immune to the
+  // feed's total height changing as lazy images load — pixel scrollY is not.
+  anchorId: string | null;
+  anchorOffset: number;
+}
+
+function readFeedCache(): FeedCache | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(FEED_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as FeedCache) : null;
+  } catch {
+    return null;
+  }
+}
+
 /* ─── Gallery Page ──────────────────────────────────────── */
 export default function GalleryPage() {
-  const [media, setMedia] = useState<Media[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState('');
-  const [mediaType, setMediaType] = useState('');
+  // Restore from cache synchronously on first render so the same posts are
+  // already mounted before the browser tries to restore scroll position.
+  const cacheRef = useRef<FeedCache | null>(readFeedCache());
+  const cached = cacheRef.current;
+
+  console.log('[GALLERY] mount — cached?', !!cached, cached ? {
+    items: cached.media?.length, page: cached.page,
+    scrollY: cached.scrollY, anchorId: cached.anchorId, anchorOffset: cached.anchorOffset,
+  } : null);
+
+  const [media, setMedia] = useState<Media[]>(cached?.media ?? []);
+  const [loading, setLoading] = useState(!cached);
+  const [page, setPage] = useState(cached?.page ?? 1);
+  const [hasMore, setHasMore] = useState(cached?.hasMore ?? true);
+  const [total, setTotal] = useState(cached?.total ?? 0);
+  const [search, setSearch] = useState(cached?.search ?? '');
+  const [mediaType, setMediaType] = useState(cached?.mediaType ?? '');
 
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(cached?.search ?? '');
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // True only for the very first render that hydrated from cache — used to
+  // skip the reset-and-refetch effect once so we keep the restored feed.
+  const restoredFromCache = useRef(!!cached);
+
+  // Scroll container for this feed: the layout may scroll on <main> rather
+  // than the window, so detect which element actually scrolls.
+  const getScroller = useCallback((): HTMLElement | null => {
+    if (typeof document === 'undefined') return null;
+    const main = document.querySelector('main') as HTMLElement | null;
+    if (main && main.scrollHeight > main.clientHeight + 4) return main;
+    return (document.scrollingElement as HTMLElement) || document.documentElement;
+  }, []);
+
+  useEffect(() => {
+    const scroller = getScroller();
+    const target: HTMLElement | Window = scroller && scroller !== document.documentElement ? scroller : window;
+    const onScroll = () => {
+      const y = target === window ? window.scrollY : (target as HTMLElement).scrollTop;
+      setShowScrollTop(y > 600);
+    };
+    target.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => target.removeEventListener('scroll', onScroll);
+  }, [getScroller]);
+
+  const scrollToTop = () => {
+    const scroller = getScroller();
+    if (scroller && scroller !== document.documentElement) scroller.scrollTo({ top: 0, behavior: 'smooth' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Find the post currently nearest the top of the viewport + how far we've
+  // scrolled past its top. This anchor survives the feed height changing as
+  // lazy images load, which a raw pixel offset does not.
+  const computeAnchor = useCallback((): { anchorId: string | null; anchorOffset: number } => {
+    if (typeof document === 'undefined') return { anchorId: null, anchorOffset: 0 };
+    const posts = Array.from(document.querySelectorAll<HTMLElement>('[data-media-id]'));
+    for (const el of posts) {
+      const rect = el.getBoundingClientRect();
+      // First post whose bottom is still below the top edge = the one we're on.
+      if (rect.bottom > 80) {
+        return { anchorId: el.dataset.mediaId ?? null, anchorOffset: Math.max(0, -rect.top) };
+      }
+    }
+    return { anchorId: null, anchorOffset: 0 };
+  }, []);
+
+  // Keep the latest feed state in a ref so we can persist it on unmount/navigation.
+  const stateRef = useRef<FeedCache>({
+    media, page, hasMore, total, search, mediaType, scrollY: 0, anchorId: null, anchorOffset: 0,
+  });
+  stateRef.current = {
+    media, page, hasMore, total, search, mediaType,
+    scrollY: 0, anchorId: null, anchorOffset: 0,
+  };
+
+  const persistFeed = useCallback(() => {
+    try {
+      const scroller = getScroller();
+      const scrollY = scroller && scroller !== document.documentElement && scroller !== document.scrollingElement
+        ? scroller.scrollTop
+        : window.scrollY;
+      const { anchorId, anchorOffset } = computeAnchor();
+      console.log('[GALLERY] persist', { scrollY, anchorId, anchorOffset, items: stateRef.current.media.length });
+      sessionStorage.setItem(
+        FEED_CACHE_KEY,
+        JSON.stringify({ ...stateRef.current, scrollY, anchorId, anchorOffset }),
+      );
+    } catch { /* quota / serialization — ignore */ }
+  }, [getScroller, computeAnchor]);
+
+  // Restore by scrolling the anchor post back to where it was. Retries across
+  // frames because the post element may not exist yet and its images grow the
+  // layout after mount; each frame re-aligns the anchor until it's stable.
+  const restoreAnchor = useCallback((anchorId: string | null, anchorOffset: number, fallbackY: number) => {
+    let raf = 0;
+    let tries = 0;
+    let aborted = false;
+    const maxTries = 120; // ~2s at 60fps — enough for images to settle
+
+    const onUserScroll = (e: Event) => { if (e.isTrusted) aborted = true; };
+    window.addEventListener('wheel', onUserScroll, { passive: true });
+    window.addEventListener('touchmove', onUserScroll, { passive: true });
+    window.addEventListener('keydown', onUserScroll);
+    const cleanup = () => {
+      window.removeEventListener('wheel', onUserScroll);
+      window.removeEventListener('touchmove', onUserScroll);
+      window.removeEventListener('keydown', onUserScroll);
+    };
+
+    const scrollTo = (y: number) => {
+      const scroller = getScroller();
+      const top = Math.max(0, y);
+      if (scroller && scroller !== document.documentElement && scroller !== document.scrollingElement) {
+        scroller.scrollTop = top;
+      } else {
+        window.scrollTo(0, top);
+      }
+    };
+    const currentTop = () => {
+      const scroller = getScroller();
+      if (scroller && scroller !== document.documentElement && scroller !== document.scrollingElement) {
+        return scroller.scrollTop;
+      }
+      return window.scrollY;
+    };
+
+    let stableFrames = 0;
+    const attempt = () => {
+      if (aborted) { cleanup(); return; }
+
+      const el = anchorId
+        ? document.querySelector<HTMLElement>(`[data-media-id="${anchorId}"]`)
+        : null;
+
+      let aligned = false;
+      if (el) {
+        // Move so the anchor post's top sits `anchorOffset` px below the
+        // viewport top — getBoundingClientRect().top is viewport-relative,
+        // which is exactly what we want regardless of which element scrolls.
+        const delta = el.getBoundingClientRect().top - anchorOffset;
+        if (tries < 3) console.log('[GALLERY] attempt', tries, 'found el, delta', Math.round(delta), 'currentTop', Math.round(currentTop()));
+        if (Math.abs(delta) <= 1) aligned = true;
+        else scrollTo(currentTop() + delta);
+      } else if (fallbackY > 0) {
+        if (tries < 3) console.log('[GALLERY] attempt', tries, 'NO el for anchorId', anchorId, '— using fallbackY', fallbackY);
+        scrollTo(fallbackY);
+      } else if (tries < 3) {
+        console.log('[GALLERY] attempt', tries, 'NO el, NO fallback');
+      }
+
+      // Stop once the anchor has held its position for a few frames (layout
+      // settled), instead of fighting the user for the full window.
+      stableFrames = aligned ? stableFrames + 1 : 0;
+      tries += 1;
+      if (stableFrames < 5 && tries < maxTries) {
+        raf = requestAnimationFrame(attempt);
+      } else {
+        cleanup();
+      }
+    };
+    raf = requestAnimationFrame(attempt);
+    return () => { aborted = true; cancelAnimationFrame(raf); cleanup(); };
+  }, [getScroller]);
+
+  // Persist on scroll (throttled) and on unmount/navigation.
+  useEffect(() => {
+    const scroller = getScroller();
+    // Document-level scrolling dispatches on window, not on the scrollingElement.
+    const target: HTMLElement | Window =
+      scroller && scroller !== document.documentElement && scroller !== document.scrollingElement
+        ? scroller
+        : window;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { persistFeed(); ticking = false; });
+    };
+    target.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('pagehide', persistFeed);
+    return () => {
+      target.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pagehide', persistFeed);
+      persistFeed();
+    };
+  }, [persistFeed, getScroller]);
+
+  // On fresh mount with a cached feed, restore the anchor post once rendered.
+  useEffect(() => {
+    console.log('[GALLERY] restore effect — cached?', !!cached, 'anchorId', cached?.anchorId, 'scrollY', cached?.scrollY);
+    if (cached && (cached.anchorId || (cached.scrollY ?? 0) > 0)) {
+      return restoreAnchor(cached.anchorId ?? null, cached.anchorOffset ?? 0, cached.scrollY ?? 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
@@ -442,6 +659,12 @@ export default function GalleryPage() {
   }, [search]);
 
   useEffect(() => {
+    // Skip the reset+refetch on the first render after restoring from cache —
+    // the cached feed is already shown. Subsequent filter changes refetch.
+    if (restoredFromCache.current) {
+      restoredFromCache.current = false;
+      return;
+    }
     setMedia([]);
     setPage(1);
     setHasMore(true);
@@ -498,7 +721,7 @@ export default function GalleryPage() {
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
-            placeholder="Search…"
+            placeholder="Search by tags, events, people…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input pl-9 pr-8 w-full"
@@ -563,22 +786,23 @@ export default function GalleryPage() {
         >
           <div className="space-y-5">
             {media.map((item) => (
-              <InstagramPost
-                key={item.id}
-                media={item}
-                onDelete={(id) => {
-                  setMedia((prev) => prev.filter((m) => m.id !== id));
-                  setTotal((t) => t - 1);
-                }}
-              />
+              <div key={item.id} data-media-id={item.id}>
+                <InstagramPost
+                  media={item}
+                  onDelete={(id) => {
+                    setMedia((prev) => prev.filter((m) => m.id !== id));
+                    setTotal((t) => t - 1);
+                  }}
+                />
+              </div>
             ))}
           </div>
         </InfiniteScroll>
       ) : (
-        <div className="text-center py-20 bg-slate-900 border border-[#e7e3dd] rounded-xl">
-          <Camera className="w-14 h-14 text-slate-700 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No media found</h3>
-          <p className="text-slate-400 text-sm max-w-xs mx-auto">
+        <div className="text-center py-20 bg-white border border-[#e7e3dd] rounded-xl">
+          <Camera className="w-14 h-14 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2 text-[#2a2724]">No media found</h3>
+          <p className="text-slate-500 text-sm max-w-xs mx-auto">
             {hasActiveFilters
               ? 'No results match your filters. Try broadening your search.'
               : 'No public media has been uploaded yet.'}
@@ -590,6 +814,22 @@ export default function GalleryPage() {
           )}
         </div>
       )}
+
+      {/* Scroll-to-top */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={scrollToTop}
+            aria-label="Scroll to top"
+            className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-primary-600 hover:bg-primary-700 text-white shadow-lg flex items-center justify-center transition-colors active:scale-90"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

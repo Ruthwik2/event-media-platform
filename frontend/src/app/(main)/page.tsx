@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 import { Event, Media } from '@/types';
 import {
   Calendar, Image, Users, ArrowRight, Pencil, Sparkles,
-  Compass, Heart, Flame, ScanFace, FolderOpen,
+  Compass, Heart, ScanFace, FolderOpen,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MediaCard from '@/components/media/MediaCard';
@@ -189,9 +189,6 @@ export default function HomePage() {
         <motion.section {...fadeUp(0.1)}>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-                <Flame className="w-4 h-4" />
-              </span>
               <div>
                 <h2 className="text-lg font-bold tracking-tight">Trending Now</h2>
                 <p className="text-xs text-slate-600 mt-0.5">Most-liked photos across all events</p>

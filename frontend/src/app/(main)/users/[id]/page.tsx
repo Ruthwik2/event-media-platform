@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { User } from '@/types';
@@ -10,7 +10,16 @@ type PublicProfile = Partial<User> & { isPrivate?: boolean };
 
 export default function PublicProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
+
+  // Return through history so the previous page (e.g. the gallery feed) is
+  // restored at the same scroll position / same post, instead of a fresh
+  // /gallery push that remounts and scrolls to the top.
+  const goBack = () => {
+    if (window.history.length > 1) router.back();
+    else router.push('/gallery');
+  };
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -57,9 +66,9 @@ export default function PublicProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <Link href="/gallery" className="flex items-center gap-2 text-slate-400 hover:text-[#2a2724] text-sm">
+      <button onClick={goBack} className="flex items-center gap-2 text-slate-400 hover:text-[#2a2724] text-sm">
         <ArrowLeft className="w-4 h-4" /> Back
-      </Link>
+      </button>
 
       <div className="card p-6">
         <div className="flex items-center gap-4">
