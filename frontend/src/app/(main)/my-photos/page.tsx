@@ -113,7 +113,7 @@ export default function MyPhotosPage() {
               <img
                 src={selfieUrl}
                 alt="Your selfie"
-                className="w-20 h-20 rounded-full object-cover border-2 border-slate-600"
+                className="w-20 h-20 rounded-full object-cover border-2 border-[#e7e3dd]"
               />
             ) : (
               <div className="w-20 h-20 rounded-full bg-[#f0ede8] border-2 border-dashed border-slate-500 flex items-center justify-center">
@@ -154,7 +154,7 @@ export default function MyPhotosPage() {
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-[#f8f7f5] rounded-xl animate-pulse" />
+            <div key={i} className="aspect-square skeleton rounded-xl" />
           ))}
         </div>
       ) : media.length > 0 ? (

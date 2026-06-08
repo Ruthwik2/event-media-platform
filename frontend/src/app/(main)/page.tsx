@@ -72,24 +72,23 @@ export default function HomePage() {
         {...fadeUp(0)}
         className="hero-surface p-8 md:p-12"
       >
-        {/* Decorative grid lines */}
+        {/* Soft teal wash — gives the warm-paper hero presence without the
+            dark-theme grid/orbs that rendered invisibly on white. */}
         <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
+            background:
+              'radial-gradient(60% 80% at 0% 0%, rgba(22,112,107,0.10) 0%, transparent 60%),' +
+              'radial-gradient(50% 70% at 100% 100%, rgba(22,112,107,0.06) 0%, transparent 60%)',
           }}
         />
-        {/* Glow orb */}
-        <div className="absolute -top-16 -right-16 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-primary-600/8 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10">
           {loading ? (
             <div className="h-14 md:h-20 w-72 skeleton mb-3" />
           ) : (
             <motion.div {...fadeUp(0.05)} className="flex items-center gap-3 mb-3 flex-wrap">
-              <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-none">
+              <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-none">
                 {clubName || 'Event Media'}
               </h1>
               {isAdmin && (
@@ -135,10 +134,10 @@ export default function HomePage() {
       {/* Stats */}
       <motion.section {...fadeUp(0.05)} className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Photos & Videos', value: stats.media, icon: Image, color: 'text-primary-400', bg: 'bg-primary-500/8', glow: 'rgba(22, 112, 107,0.15)' },
-          { label: 'Events', value: stats.events, icon: Calendar, color: 'text-emerald-600', bg: 'bg-emerald-500/8', glow: 'rgba(16,185,129,0.15)' },
-          { label: 'Albums', value: stats.albums, icon: TrendingUp, color: 'text-primary-400', bg: 'bg-primary-500/8', glow: 'rgba(22, 112, 107,0.15)' },
-          { label: 'Members', value: stats.users, icon: Users, color: 'text-amber-400', bg: 'bg-amber-500/8', glow: 'rgba(245,158,11,0.15)' },
+          { label: 'Photos & Videos', value: stats.media, icon: Image, color: 'text-primary-600', bg: 'bg-primary-500/10' },
+          { label: 'Events', value: stats.events, icon: Calendar, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+          { label: 'Albums', value: stats.albums, icon: TrendingUp, color: 'text-primary-600', bg: 'bg-primary-500/10' },
+          { label: 'Members', value: stats.users, icon: Users, color: 'text-amber-600', bg: 'bg-amber-500/10' },
         ].map(({ label, value, icon: Icon, color, bg }, i) => (
           <motion.div
             key={label}
@@ -189,8 +188,8 @@ export default function HomePage() {
             <div className="w-14 h-14 bg-[#f0ede8] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-7 h-7 text-slate-600" />
             </div>
-            <p className="text-slate-500 font-medium">No events yet</p>
-            <p className="text-slate-700 text-sm mt-1">Events will appear here once created</p>
+            <p className="text-slate-700 font-medium">No events yet</p>
+            <p className="text-slate-500 text-sm mt-1">Events will appear here once created</p>
           </div>
         )}
       </motion.section>
@@ -234,8 +233,8 @@ export default function HomePage() {
             <div className="w-14 h-14 bg-[#f0ede8] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Image className="w-7 h-7 text-slate-600" />
             </div>
-            <p className="text-slate-500 font-medium">No media uploaded yet</p>
-            <p className="text-slate-700 text-sm mt-1">Start by uploading your first photo</p>
+            <p className="text-slate-700 font-medium">No media uploaded yet</p>
+            <p className="text-slate-500 text-sm mt-1">Start by uploading your first photo</p>
           </div>
         )}
       </motion.section>

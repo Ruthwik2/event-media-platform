@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { Eye, EyeOff, Camera, Mail, Lock, ArrowRight, Images, Users, Heart } from 'lucide-react';
+import { Eye, EyeOff, Camera, Mail, Lock, ArrowRight, Images, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -13,7 +13,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // understands the app before signing in.
 const HIGHLIGHTS = [
   { icon: Images, text: 'Browse event galleries' },
-  { icon: Users, text: 'Discover photographers' },
   { icon: Heart, text: 'Relive every moment together' },
 ];
 
@@ -83,8 +82,8 @@ export default function LoginPage() {
               Capture every <span className="text-primary-200">moment</span>, share every story.
             </h1>
             <p className="mt-5 text-base xl:text-lg text-white/80 leading-relaxed">
-              Your club&apos;s media hub. Browse event galleries, discover photographers,
-              and relive every moment together.
+              Your club&apos;s media hub. Browse event galleries and relive every
+              moment together.
             </p>
 
             <ul className="mt-8 space-y-3">

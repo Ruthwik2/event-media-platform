@@ -175,11 +175,11 @@ export default function AlbumDetailPage() {
   if (loading) {
     return (
       <div className="space-y-5 max-w-5xl mx-auto">
-        <div className="h-8 w-1/3 bg-[#f8f7f5] rounded-lg animate-pulse" />
-        <div className="h-24 bg-[#f8f7f5] rounded-2xl animate-pulse" />
+        <div className="h-8 w-1/3 skeleton rounded-lg" />
+        <div className="h-24 skeleton rounded-2xl" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-[#f8f7f5] rounded-xl animate-pulse" />
+            <div key={i} className="aspect-square skeleton rounded-xl" />
           ))}
         </div>
       </div>
@@ -198,8 +198,8 @@ export default function AlbumDetailPage() {
           Back to Events
         </Link>
         <div className="flex flex-col items-center justify-center py-20 text-center card mt-6 rounded-2xl">
-          <div className="w-16 h-16 bg-red-900/25 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-1 ring-red-800/40">
-            <ShieldAlert className="w-8 h-8 text-red-400" />
+          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-1 ring-red-200">
+            <ShieldAlert className="w-8 h-8 text-red-600" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Access Restricted</h1>
           <p className="text-slate-400 max-w-sm mb-6 text-sm leading-relaxed">
@@ -208,14 +208,14 @@ export default function AlbumDetailPage() {
           {user?.role === 'PHOTOGRAPHER' && (
             <>
               {requestStatus === 'PENDING' && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-yellow-900/25 border border-yellow-700/40 rounded-xl text-yellow-400 mb-4 text-sm">
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 mb-4 text-sm">
                   <Clock className="w-4 h-4 flex-shrink-0" />
                   <span>Access request pending admin review</span>
                 </div>
               )}
               {requestStatus === 'REJECTED' && (
                 <div className="flex flex-col items-center gap-3 mb-4">
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-red-900/25 border border-red-700/40 rounded-xl text-red-400 text-sm">
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
                     <XCircle className="w-4 h-4 flex-shrink-0" />
                     <span>Your previous request was rejected</span>
                   </div>
@@ -318,11 +318,11 @@ export default function AlbumDetailPage() {
 
             {!isRenaming && (
               album.visibility === 'PRIVATE' ? (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-900/40 text-red-400 border border-red-800/50">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
                   <Lock className="w-3 h-3" /> Private
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-900/40 text-green-400 border border-green-800/50">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <Globe className="w-3 h-3" /> Public
                 </span>
               )

@@ -76,8 +76,8 @@ export default function EventSharePage() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
         <div className="card p-10 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-1 ring-red-800/40">
-            <Lock className="w-8 h-8 text-red-400" />
+          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-1 ring-red-200">
+            <Lock className="w-8 h-8 text-red-600" />
           </div>
           <h1 className="text-xl font-bold mb-2 text-[#2a2724]">Link Not Found</h1>
           <p className="text-slate-400 text-sm leading-relaxed">
@@ -92,7 +92,7 @@ export default function EventSharePage() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
         <div className="card p-10 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
+          <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <AlertTriangle className="w-8 h-8 text-amber-400" />
           </div>
           <h1 className="text-xl font-bold mb-2 text-[#2a2724]">Something went wrong</h1>
@@ -113,7 +113,7 @@ export default function EventSharePage() {
         >
           <div className="px-7 pt-7 pb-5">
             <div className="flex flex-wrap gap-2 mb-3">
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-red-900/40 text-red-400 border-red-800/60">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-red-50 text-red-600 border-red-200">
                 <Lock className="w-3 h-3" /> Private
               </span>
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-[#f8f7f5] text-[#6b6560] border-[#e7e3dd]">
@@ -195,11 +195,11 @@ export default function EventSharePage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent" />
                         <div className="absolute top-2.5 left-2.5">
                           {album.visibility === 'PRIVATE' ? (
-                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-900/85 text-red-400 border border-red-800/50">
+                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-900/85 text-red-600 border border-red-200">
                               <Lock className="w-2.5 h-2.5" /> Private
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-900/85 text-green-400 border border-green-800/50">
+                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-900/85 text-emerald-700 border border-emerald-200">
                               Album
                             </span>
                           )}

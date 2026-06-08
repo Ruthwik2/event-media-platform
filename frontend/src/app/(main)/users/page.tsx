@@ -71,12 +71,12 @@ export default function UsersPage() {
   const getRoleBadgeColor = (role: string, isApproved?: boolean) => {
     switch (role) {
       case 'ADMIN':
-        return 'bg-red-900/50 text-red-400 border-red-800';
+        return 'bg-red-50 text-red-600 border-red-200';
       case 'PHOTOGRAPHER':
         return 'bg-primary-900/50 text-primary-400 border-primary-800';
       case 'CLUB_MEMBER':
         return isApproved === false
-          ? 'bg-yellow-900/50 text-yellow-400 border-yellow-800'
+          ? 'bg-amber-50 text-amber-700 border-amber-200'
           : 'bg-primary-900/50 text-primary-400 border-primary-800';
       default:
         return 'bg-[#f8f7f5] text-slate-400 border-[#e7e3dd]';
@@ -139,7 +139,7 @@ export default function UsersPage() {
         <div className="card p-4">
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-12 bg-[#f8f7f5] rounded animate-pulse" />
+              <div key={i} className="h-12 skeleton rounded" />
             ))}
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function UsersPage() {
                                 : u.role.charAt(0) + u.role.slice(1).toLowerCase()}
                           </span>
                           {u.pendingClubRequest && (
-                            <span className="badge border bg-yellow-900/50 text-yellow-400 border-yellow-800 text-xs">
+                            <span className="badge border bg-amber-50 text-amber-700 border-amber-200 text-xs">
                               Club Member pending
                             </span>
                           )}
@@ -204,7 +204,7 @@ export default function UsersPage() {
                         {u.id !== user?.id && (
                           <button
                             onClick={() => handleDeleteUser(u.id, u.fullName)}
-                            className="p-2 text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete user"
                           >
                             <Trash2 className="w-4 h-4" />

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { Settings, Shield, Bell, Palette, Eye, EyeOff, Trash2, Download } from 'lucide-react';
+import { Settings, Shield, Bell, Palette, Eye, EyeOff, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 
@@ -98,10 +98,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleExportData = async () => {
-    toast.success('Your data export has been initiated. You will receive an email shortly.');
-  };
-
   const handleDeleteAccount = async () => {
     if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       return;
@@ -166,8 +162,8 @@ export default function SettingsPage() {
       {/* Privacy Settings */}
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-green-900/50 rounded-lg flex items-center justify-center">
-            <Shield className="w-5 h-5 text-green-400" />
+          <div className="w-10 h-10 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-center">
+            <Shield className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
             <h2 className="font-semibold">Privacy</h2>
@@ -204,8 +200,8 @@ export default function SettingsPage() {
       {/* Change Password */}
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-yellow-900/50 rounded-lg flex items-center justify-center">
-            <Settings className="w-5 h-5 text-yellow-400" />
+          <div className="w-10 h-10 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-center">
+            <Settings className="w-5 h-5 text-amber-600" />
           </div>
           <div>
             <h2 className="font-semibold">Change Password</h2>
@@ -299,27 +295,14 @@ export default function SettingsPage() {
 
         <div className="space-y-3">
           <button
-            onClick={handleExportData}
-            className="w-full flex items-center justify-between p-3 rounded-lg bg-[#f8f7f5] hover:bg-[#f0ede8] transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <Download className="w-5 h-5 text-slate-400" />
-              <div className="text-left">
-                <p className="text-sm font-medium">Export Your Data</p>
-                <p className="text-xs text-slate-500">Download all your data in JSON format</p>
-              </div>
-            </div>
-          </button>
-
-          <button
             onClick={handleDeleteAccount}
-            className="w-full flex items-center justify-between p-3 rounded-lg bg-red-900/20 hover:bg-red-900/30 border border-red-900/50 transition-colors"
+            className="w-full flex items-center justify-between p-3 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <Trash2 className="w-5 h-5 text-red-400" />
+              <Trash2 className="w-5 h-5 text-red-600" />
               <div className="text-left">
-                <p className="text-sm font-medium text-red-400">Delete Account</p>
-                <p className="text-xs text-red-400/70">Permanently delete your account and all data</p>
+                <p className="text-sm font-medium text-red-700">Delete Account</p>
+                <p className="text-xs text-red-500">Permanently delete your account and all data</p>
               </div>
             </div>
           </button>

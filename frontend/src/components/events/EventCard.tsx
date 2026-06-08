@@ -28,7 +28,7 @@ export default function EventCard({ event }: Props) {
       <Link href={`/events/${event.id}`}>
         <div className="card overflow-hidden transition-all duration-200 group cursor-pointer h-full hover:border-primary-500/30">
           {/* Cover */}
-          <div className="h-40 relative overflow-hidden bg-gradient-to-br from-slate-900 to-[#080d14]">
+          <div className="h-40 relative overflow-hidden bg-gradient-to-br from-primary-50 to-primary-100">
             {event.coverImage ? (
               <img
                 src={event.coverImage}
@@ -37,14 +37,16 @@ export default function EventCard({ event }: Props) {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <div className="w-12 h-12 bg-white/[0.04] rounded-2xl flex items-center justify-center border border-[#e7e3dd]">
-                  <Calendar className="w-6 h-6 text-slate-700" />
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center border border-[#e7e3dd]">
+                  <Calendar className="w-6 h-6 text-primary-600" />
                 </div>
               </div>
             )}
 
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#080d14]/90 via-transparent to-transparent" />
+            {/* Gradient overlay — only meaningful over a real cover image */}
+            {event.coverImage && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+            )}
 
             {/* Visibility badge */}
             <div className="absolute top-3 right-3">
@@ -56,7 +58,7 @@ export default function EventCard({ event }: Props) {
             {/* Category badge */}
             {event.category && (
               <div className="absolute bottom-3 left-3">
-                <span className="text-[10px] px-2 py-1 bg-black/50 backdrop-blur-sm text-[#6b6560] rounded-lg border border-[#e7e3dd] font-medium">
+                <span className="text-[10px] px-2 py-1 bg-white/90 backdrop-blur-sm text-[#4a4540] rounded-lg border border-[#e7e3dd] font-medium">
                   {event.category}
                 </span>
               </div>
@@ -79,8 +81,8 @@ export default function EventCard({ event }: Props) {
 
             {showRequestHint && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#f0ede8]">
-                <div className="w-10 h-10 bg-black/50 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/10">
-                  <Lock className="w-5 h-5 text-slate-400" />
+                <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center border border-[#e7e3dd] shadow-sm">
+                  <Lock className="w-5 h-5 text-primary-600" />
                 </div>
               </div>
             )}
@@ -99,7 +101,7 @@ export default function EventCard({ event }: Props) {
                 <Lock className="w-3 h-3" /> Click to request access
               </p>
             )}
-            <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-white/[0.05] text-xs text-slate-600">
+            <div className="flex items-center gap-3 mt-3.5 pt-3 border-t border-[#e7e3dd] text-xs text-slate-600">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3 h-3" />
                 {format(new Date(event.startDate), 'MMM dd, yyyy')}

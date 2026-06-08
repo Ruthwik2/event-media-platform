@@ -86,7 +86,7 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center py-6 gap-3"
               >
-                <CheckCircle2 className="w-14 h-14 text-green-400" />
+                <CheckCircle2 className="w-14 h-14 text-emerald-600" />
                 <p className="text-white font-semibold text-lg">Saved!</p>
                 <p className="text-slate-400 text-sm text-center">
                   <span className="text-white font-medium">{clubName}</span> is now your club name.
@@ -138,11 +138,11 @@ export default function ClubSetupModal({ onComplete, onDismiss }: ClubSetupModal
                     onChange={(e) => { setClubName(e.target.value); setError(''); }}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                     placeholder="e.g. Photography Club, NIT Warangal"
-                    className="w-full bg-[#f8f7f5] border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors text-sm"
+                    className="input px-4 py-3"
                     autoFocus
                   />
                   {error && (
-                    <p className="mt-2 text-red-400 text-xs flex items-center gap-1">
+                    <p className="mt-2 text-red-500 text-xs flex items-center gap-1">
                       <span>⚠</span> {error}
                     </p>
                   )}

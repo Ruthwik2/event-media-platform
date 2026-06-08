@@ -126,17 +126,17 @@ export default function AccessRequestsPage() {
 
   const StatusBadge = ({ status }: { status: string }) => {
     if (status === 'PENDING') return (
-      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-yellow-900/40 text-yellow-400 border border-yellow-700/50">
+      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
         <Clock className="w-3 h-3" /> Pending
       </span>
     );
     if (status === 'APPROVED') return (
-      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-900/40 text-green-400 border border-green-800/50">
+      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
         <CheckCircle className="w-3 h-3" /> Approved
       </span>
     );
     return (
-      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-900/40 text-red-400 border border-red-800/50">
+      <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
         <XCircle className="w-3 h-3" /> Declined
       </span>
     );
@@ -197,7 +197,7 @@ export default function AccessRequestsPage() {
           </div>
 
           {loadingMembers ? (
-            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-[#f8f7f5] rounded-xl animate-pulse" />)}</div>
+            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 skeleton" />)}</div>
           ) : members.length === 0 ? (
             <div className="text-center py-16 card">
               <Users className="w-16 h-16 text-slate-600 mx-auto mb-4" />
@@ -269,7 +269,7 @@ export default function AccessRequestsPage() {
           </div>
 
           {loadingRequests ? (
-            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 bg-[#f8f7f5] rounded-xl animate-pulse" />)}</div>
+            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-24 skeleton" />)}</div>
           ) : requests.length === 0 ? (
             <div className="text-center py-16 card">
               <ShieldCheck className="w-16 h-16 text-slate-600 mx-auto mb-4" />

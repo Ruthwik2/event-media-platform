@@ -89,8 +89,8 @@ export default function AlbumSharePage() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
-          <div className="w-16 h-16 rounded-2xl bg-red-900/30 border border-red-700/40 flex items-center justify-center mx-auto mb-5">
-            <Lock className="w-8 h-8 text-red-400" />
+          <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-5">
+            <Lock className="w-8 h-8 text-red-600" />
           </div>
           <h1 className="text-xl font-bold text-[#2a2724] mb-2">Link Not Found</h1>
           <p className="text-slate-400 text-sm leading-relaxed">
@@ -127,7 +127,7 @@ export default function AlbumSharePage() {
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="font-bold text-[#2a2724] truncate">{album.name}</h1>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-900/40 text-emerald-600 border border-emerald-800/50 flex-shrink-0">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex-shrink-0">
                 Shared Album
               </span>
             </div>

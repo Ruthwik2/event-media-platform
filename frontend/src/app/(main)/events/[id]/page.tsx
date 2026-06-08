@@ -140,12 +140,12 @@ export default function EventDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6 max-w-5xl mx-auto">
-        <div className="h-8 w-32 bg-[#f8f7f5] rounded-lg animate-pulse" />
-        <div className="h-56 bg-[#f8f7f5] rounded-2xl animate-pulse" />
-        <div className="h-6 w-48 bg-[#f8f7f5] rounded animate-pulse" />
+        <div className="h-8 w-32 skeleton rounded-lg" />
+        <div className="h-56 skeleton rounded-2xl" />
+        <div className="h-6 w-48 skeleton rounded" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-44 bg-[#f8f7f5] rounded-2xl animate-pulse" />
+            <div key={i} className="h-44 skeleton rounded-2xl" />
           ))}
         </div>
       </div>
@@ -157,8 +157,8 @@ export default function EventDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <div className="card p-10 max-w-md w-full">
-          <div className="w-16 h-16 bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-1 ring-red-800/40">
-            <ShieldAlert className="w-8 h-8 text-red-400" />
+          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-5 ring-1 ring-red-200">
+            <ShieldAlert className="w-8 h-8 text-red-600" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Access Restricted</h1>
           <p className="text-slate-400 mb-6 text-sm leading-relaxed">
@@ -167,14 +167,14 @@ export default function EventDetailPage() {
           {user?.role === 'PHOTOGRAPHER' && (
             <div className="space-y-3 mb-6">
               {requestStatus === 'PENDING' && (
-                <div className="flex items-center gap-2 px-4 py-3 bg-yellow-900/20 border border-yellow-700/40 rounded-xl text-yellow-400 text-sm">
+                <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-sm">
                   <Clock className="w-4 h-4 flex-shrink-0" />
                   <span>Access request pending admin review</span>
                 </div>
               )}
               {requestStatus === 'REJECTED' && (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 px-4 py-3 bg-red-900/20 border border-red-700/40 rounded-xl text-red-400 text-sm">
+                  <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
                     <XCircle className="w-4 h-4 flex-shrink-0" />
                     <span>Your previous request was rejected</span>
                   </div>
@@ -242,7 +242,7 @@ export default function EventDetailPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="rounded-2xl overflow-hidden border border-[#e7e3dd]/80 bg-gradient-to-br from-primary-950/70 via-slate-900 to-primary-900/50"
+        className="rounded-2xl overflow-hidden border border-[#e7e3dd] bg-gradient-to-br from-primary-50 via-white to-primary-100/60"
       >
         {/* Hero body */}
         <div className="px-7 pt-7 pb-5">
@@ -253,8 +253,8 @@ export default function EventDetailPage() {
                 <span
                   className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${
                     event.visibility === 'PUBLIC'
-                      ? 'bg-green-900/40 text-green-400 border-green-800/60'
-                      : 'bg-red-900/40 text-red-400 border-red-800/60'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-red-50 text-red-700 border-red-200'
                   }`}
                 >
                   {event.visibility === 'PUBLIC' ? (
@@ -354,7 +354,7 @@ export default function EventDetailPage() {
                   <button
                     onClick={() => setConfirmDeleteEvent(true)}
                     title="Delete event"
-                    className="p-2 hover:bg-red-600/20 border border-[#e7e3dd]/80 hover:border-red-500/50 text-slate-500 hover:text-red-400 rounded-xl transition-all"
+                    className="p-2 hover:bg-red-600/20 border border-[#e7e3dd]/80 hover:border-red-500/50 text-slate-500 hover:text-red-600 rounded-xl transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -475,7 +475,7 @@ export default function EventDetailPage() {
                             <FolderOpen className="w-9 h-9 text-slate-400" />
                           </div>
                         )}
-                        {album.coverImage && <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />}
+                        {album.coverImage && <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />}
 
                         {/* Visibility badge */}
                         <div className="absolute top-2.5 left-2.5">

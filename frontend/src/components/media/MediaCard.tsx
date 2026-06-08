@@ -22,8 +22,8 @@ export default function MediaCard({ media, compact, naturalHeight, thumbnailOnly
   const renderVisual = (className: string, fallbackIconSize: string) => {
     if (imgError || !src) {
       return (
-        <div className="w-full h-full flex items-center justify-center bg-white/[0.03]">
-          {isVideo ? <Play className={`${fallbackIconSize} text-slate-700`} /> : <ImageIcon className={`${fallbackIconSize} text-slate-700`} />}
+        <div className="w-full h-full flex items-center justify-center bg-[#f0ede8]">
+          {isVideo ? <Play className={`${fallbackIconSize} text-slate-500`} /> : <ImageIcon className={`${fallbackIconSize} text-slate-500`} />}
         </div>
       );
     }
@@ -56,7 +56,7 @@ export default function MediaCard({ media, compact, naturalHeight, thumbnailOnly
 
   return (
     <div
-      className={`relative group rounded-xl overflow-hidden bg-white/[0.03] border border-[#e7e3dd] hover:border-white/[0.12] transition-all duration-200 ${
+      className={`relative group rounded-xl overflow-hidden bg-[#f0ede8] border border-[#e7e3dd] hover:border-primary-500/40 transition-all duration-200 ${
         naturalHeight ? '' : 'aspect-square'
       }`}
     >
@@ -84,10 +84,10 @@ export default function MediaCard({ media, compact, naturalHeight, thumbnailOnly
           />
         )
       ) : (
-        <div className={`w-full flex items-center justify-center bg-white/[0.03] ${naturalHeight ? 'h-40' : 'h-full'}`}>
+        <div className={`w-full flex items-center justify-center bg-[#f0ede8] ${naturalHeight ? 'h-40' : 'h-full'}`}>
           {isVideo
-            ? <Play className="w-8 h-8 text-slate-700" />
-            : <ImageIcon className="w-8 h-8 text-slate-700" />
+            ? <Play className="w-8 h-8 text-slate-500" />
+            : <ImageIcon className="w-8 h-8 text-slate-500" />
           }
         </div>
       )}

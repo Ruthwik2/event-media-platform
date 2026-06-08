@@ -327,7 +327,7 @@ export default function UploadPage() {
         className={`card border-2 border-dashed p-8 text-center cursor-pointer transition-colors ${
           isDragActive
             ? 'border-primary-500 bg-primary-500/5'
-            : 'border-[#e7e3dd] hover:border-slate-600'
+            : 'border-[#e7e3dd] hover:border-primary-400'
         }`}
       >
         <input {...getInputProps()} />

@@ -187,7 +187,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
 
       {/* ── Media ── */}
       <div
-        className="relative bg-slate-950 select-none"
+        className="relative bg-[#f0ede8] select-none"
         onDoubleClick={handleDoubleTap}
       >
         {!imgError && src ? (

@@ -208,8 +208,8 @@ export default function MediaDetailPage() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="aspect-video bg-[#f8f7f5] rounded-xl animate-pulse" />
-        <div className="h-8 w-1/3 bg-[#f8f7f5] rounded animate-pulse" />
+        <div className="aspect-video skeleton" />
+        <div className="h-8 w-1/3 skeleton" />
       </div>
     );
   }
@@ -247,7 +247,7 @@ export default function MediaDetailPage() {
                 <button
                   onClick={handleLike}
                   className={`p-2 rounded-lg transition-colors ${
-                    liked ? 'text-red-400 bg-red-900/20' : 'text-slate-400 hover:bg-[#f8f7f5]'
+                    liked ? 'text-red-600 bg-red-50' : 'text-slate-400 hover:bg-[#f8f7f5]'
                   }`}
                 >
                   <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
@@ -265,7 +265,7 @@ export default function MediaDetailPage() {
                 <button
                   onClick={handleFavourite}
                   className={`p-2 rounded-lg transition-colors ml-2 ${
-                    favourited ? 'text-yellow-400 bg-yellow-900/20' : 'text-slate-400 hover:bg-[#f8f7f5]'
+                    favourited ? 'text-amber-700 bg-amber-50' : 'text-slate-400 hover:bg-[#f8f7f5]'
                   }`}
                 >
                   <Bookmark className={`w-5 h-5 ${favourited ? 'fill-current' : ''}`} />
@@ -300,7 +300,7 @@ export default function MediaDetailPage() {
                       <div className="absolute right-0 top-10 card border border-[#e7e3dd] py-1 w-36 z-10">
                         <button
                           onClick={handleDelete}
-                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-[#f8f7f5] w-full"
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-[#f8f7f5] w-full"
                         >
                           <Trash2 className="w-4 h-4" /> Delete
                         </button>

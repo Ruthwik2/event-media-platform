@@ -313,7 +313,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
           <div className="p-3 border-b border-[#e7e3dd] flex items-center gap-1">
             <button
               onClick={handleLike}
-              className={`p-2 rounded-lg transition-colors ${liked ? 'text-red-400 bg-red-900/20' : 'text-slate-400 hover:bg-[#f8f7f5]'}`}
+              className={`p-2 rounded-lg transition-colors ${liked ? 'text-red-600 bg-red-50' : 'text-slate-400 hover:bg-[#f8f7f5]'}`}
             >
               <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
             </button>
@@ -329,7 +329,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
 
             <button
               onClick={handleFavourite}
-              className={`p-2 rounded-lg transition-colors ${favourited ? 'text-yellow-400 bg-yellow-900/20' : 'text-slate-400 hover:bg-[#f8f7f5]'}`}
+              className={`p-2 rounded-lg transition-colors ${favourited ? 'text-amber-700 bg-amber-50' : 'text-slate-400 hover:bg-[#f8f7f5]'}`}
             >
               <Bookmark className={`w-5 h-5 ${favourited ? 'fill-current' : ''}`} />
             </button>
@@ -354,7 +354,7 @@ export default function MediaLightbox({ media, allMedia, onClose, onNavigate, on
                   <div className="absolute right-0 top-10 card border border-[#e7e3dd] py-1 w-36 z-10">
                     <button
                       onClick={handleDelete}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-[#f8f7f5] w-full"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-[#f8f7f5] w-full"
                     >
                       <Trash2 className="w-4 h-4" /> Delete
                     </button>
