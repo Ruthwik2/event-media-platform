@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { Eye, EyeOff, Camera, Mail, Lock, ArrowRight, Images, Heart } from 'lucide-react';
+import { Eye, EyeOff, Camera, Mail, Lock, ArrowRight, Images, Heart, ScanFace } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
@@ -13,6 +13,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // understands the app before signing in.
 const HIGHLIGHTS = [
   { icon: Images, text: 'Browse event galleries' },
+  { icon: ScanFace, text: 'Find your photos with AI face recognition' },
   { icon: Heart, text: 'Relive every moment together' },
 ];
 
