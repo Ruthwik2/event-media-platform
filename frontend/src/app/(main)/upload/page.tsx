@@ -107,8 +107,8 @@ export default function UploadPage() {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'],
       'video/*': ['.mp4', '.mpeg', '.mov', '.avi', '.webm'],
     },
-    maxSize: 100 * 1024 * 1024,
-    maxFiles: 20,
+    maxSize: 1024 * 1024 * 1024,
+    maxFiles: 200,
   });
 
   const removeFile = (index: number) => {
@@ -337,7 +337,7 @@ export default function UploadPage() {
         ) : (
           <>
             <p className="text-[#6b6560] font-medium">Drag & drop files here</p>
-            <p className="text-sm text-slate-500 mt-1">or click to browse • Max 20 files, 100MB each</p>
+            <p className="text-sm text-slate-500 mt-1">or click to browse • Max 200 files, 1GB each</p>
             <p className="text-xs text-slate-600 mt-2">Supports: JPEG, PNG, GIF, WebP, MP4, MOV, AVI, WebM</p>
           </>
         )}

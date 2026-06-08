@@ -18,7 +18,7 @@ router.get('/:id', optionalAuth, getMediaItem);
 router.get('/:id/comments', optionalAuth, getComments);
 router.get('/:id/download', authenticate, downloadMedia);
 
-router.post('/upload', authenticate, authorize('ADMIN', 'PHOTOGRAPHER'), upload.array('files', 20), uploadMedia);
+router.post('/upload', authenticate, authorize('ADMIN', 'PHOTOGRAPHER'), upload.array('files', 200), uploadMedia);
 router.delete('/:id', authenticate, authorize('ADMIN', 'PHOTOGRAPHER'), deleteMedia);
 router.post('/:id/like', authenticate, likeMedia);
 router.post('/:id/comment', authenticate, commentOnMedia);

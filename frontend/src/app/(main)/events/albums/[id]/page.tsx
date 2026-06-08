@@ -399,7 +399,7 @@ export default function AlbumDetailPage() {
           <div className="mt-6 inline-flex items-center gap-2 bg-[#f8f7f5] border border-[#e7e3dd] rounded-xl px-4 py-2.5">
             <Info className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
             <span className="text-xs text-slate-500">
-              Supports JPG, PNG, MP4 and more · Up to 100 MB per file
+              Supports JPG, PNG, MP4 and more · Up to 1 GB per file
             </span>
           </div>
         </motion.div>
