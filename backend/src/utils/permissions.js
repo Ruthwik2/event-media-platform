@@ -9,10 +9,16 @@
  *  ADMIN       – always allowed
  *  CLUB_MEMBER – always allowed (public and private albums)
  *  PHOTOGRAPHER – public albums always; private albums only if they are the
- *                 event creator OR a collaborator on the album
+ *                 event creator OR a collaborator on the album. Once approved
+ *                 for a private event (hasEventAccess), the PUBLIC albums inside
+ *                 it open up too — private albums there still need their own
+ *                 collaborator/approval.
  *  VIEWER / unauthenticated – public albums only
+ *
+ * @param {boolean} hasEventAccess – whether the photographer has an APPROVED
+ *   access request for the album's parent event (see utils/accessRequests.js).
  */
-function canAccessAlbum(user, album) {
+function canAccessAlbum(user, album, hasEventAccess = false) {
   // ── Step 1: check parent event visibility ──────────────────────────────────
   const eventIsPrivate = album.event && album.event.visibility === 'PRIVATE';
   if (eventIsPrivate) {
@@ -24,7 +30,10 @@ function canAccessAlbum(user, album) {
       const isCollaborator = collaborators.some(
         (c) => (c.userId || (c.user && c.user.id)) === user.id
       );
-      return isEventCreator || isCollaborator;
+      if (isEventCreator || isCollaborator) return true;
+      // Approved for the event → public albums are now open; private ones aren't.
+      if (hasEventAccess) return album.visibility === 'PUBLIC';
+      return false;
     }
     return false; // VIEWER — blocked by private event
   }

@@ -49,6 +49,23 @@ describe('canAccessAlbum', () => {
     expect(canAccessAlbum(other, album)).toBe(false);
   });
 
+  test('photographer approved for the private event can enter its PUBLIC albums', () => {
+    const other = { id: 'p2', role: 'PHOTOGRAPHER' };
+    const album = { visibility: 'PUBLIC', event: privateEvent, collaborators: [] };
+    // hasEventAccess = true (admin approved their event request)
+    expect(canAccessAlbum(other, album, true)).toBe(true);
+  });
+
+  test('photographer approved for the private event still cannot enter its PRIVATE albums', () => {
+    const other = { id: 'p2', role: 'PHOTOGRAPHER' };
+    const album = { visibility: 'PRIVATE', event: privateEvent, collaborators: [] };
+    // Event access does not grant private-album access — that needs its own request.
+    expect(canAccessAlbum(other, album, true)).toBe(false);
+    // But a collaborator on that private album still gets in.
+    const collabAlbum = { visibility: 'PRIVATE', event: privateEvent, collaborators: [{ userId: 'p2' }] };
+    expect(canAccessAlbum(other, collabAlbum, true)).toBe(true);
+  });
+
   test('photographer who is a collaborator can enter a private album', () => {
     const other = { id: 'p2', role: 'PHOTOGRAPHER' };
     const album = {

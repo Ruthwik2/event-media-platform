@@ -2,8 +2,9 @@ const prisma = require('../config/database');
 const QRCode = require('qrcode');
 const { uploadToS3 } = require('../services/s3Service');
 const { randomBytes } = require('crypto');
+const { hasApprovedEventAccess } = require('../utils/accessRequests');
 // ── Permission helpers ────────────────────────────────────────────────────────
-function canAccessAlbum(user, album) {
+function canAccessAlbum(user, album, hasEventAccess = false) {
   const isApprovedMember = user && user.role === 'CLUB_MEMBER' && user.isApproved === true;
 
   // ── Step 1: check parent event visibility ──────────────────────────────────
@@ -18,7 +19,11 @@ function canAccessAlbum(user, album) {
       const isCollaborator = collaborators.some(
         (c) => (c.userId || (c.user && c.user.id)) === user.id
       );
-      return isEventCreator || isCollaborator;
+      if (isEventCreator || isCollaborator) return true;
+      // Approved for the private event → public albums inside open up; private
+      // albums there still need their own collaborator/approval.
+      if (hasEventAccess) return album.visibility === 'PUBLIC';
+      return false;
     }
     return false;
   }
@@ -164,7 +169,8 @@ _count: { select: { media: true } },
 if (!album) {
 return res.status(404).json({ success: false, message: 'Album not found' });
 }
-if (!canAccessAlbum(req.user, album)) {
+const hasEventAccess = await hasApprovedEventAccess(req.user, album.event?.id);
+if (!canAccessAlbum(req.user, album, hasEventAccess)) {
 // For photographers, also return their current request status
 let requestStatus = null;
 if (req.user && req.user.role === 'PHOTOGRAPHER') {

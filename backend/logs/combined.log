@@ -21131,3 +21131,27 @@
 {"level":"info","message":"192.168.65.1 - - [09/Jun/2026:17:24:28 +0000] \"POST /api/media/c52a09f0-8471-41bc-8c9e-7de3aa6a584e/favourite HTTP/1.1\" 200 34 \"-\" \"curl/8.7.1\"","timestamp":"2026-06-09T17:24:28.655Z"}
 {"level":"info","message":"192.168.65.1 - - [09/Jun/2026:17:24:28 +0000] \"GET /api/media/favourites HTTP/1.1\" 200 998 \"-\" \"curl/8.7.1\"","timestamp":"2026-06-09T17:24:28.670Z"}
 {"level":"info","message":"192.168.65.1 - - [09/Jun/2026:17:24:28 +0000] \"POST /api/media/c52a09f0-8471-41bc-8c9e-7de3aa6a584e/favourite HTTP/1.1\" 200 35 \"-\" \"curl/8.7.1\"","timestamp":"2026-06-09T17:24:28.687Z"}
+{"level":"info","message":"🚀 Server running on port 5000","timestamp":"2026-06-09T17:51:51.138Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-09T17:51:51.140Z"}
+{"level":"info","message":"🌐 Frontend URL: http://localhost:3000","timestamp":"2026-06-09T17:51:51.141Z"}
+{"level":"info","message":"🚀 Server running on port 5000","timestamp":"2026-06-09T17:52:05.445Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-09T17:52:05.446Z"}
+{"level":"info","message":"🌐 Frontend URL: http://localhost:3000","timestamp":"2026-06-09T17:52:05.447Z"}
+{"level":"info","message":"🚀 Server running on port 5000","timestamp":"2026-06-09T17:52:18.225Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-09T17:52:18.227Z"}
+{"level":"info","message":"🌐 Frontend URL: http://localhost:3000","timestamp":"2026-06-09T17:52:18.227Z"}
+{"level":"info","message":"🚀 Server running on port 5000","timestamp":"2026-06-09T17:52:24.794Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-09T17:52:24.795Z"}
+{"level":"info","message":"🌐 Frontend URL: http://localhost:3000","timestamp":"2026-06-09T17:52:24.795Z"}
+{"level":"info","message":"🚀 Server running on port 5000","timestamp":"2026-06-09T17:52:31.029Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-09T17:52:31.031Z"}
+{"level":"info","message":"🌐 Frontend URL: http://localhost:3000","timestamp":"2026-06-09T17:52:31.031Z"}
+{"level":"info","message":"🚀 Server running on port 5000","timestamp":"2026-06-09T17:52:48.018Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-09T17:52:48.019Z"}
+{"level":"info","message":"🌐 Frontend URL: http://localhost:3000","timestamp":"2026-06-09T17:52:48.019Z"}
+{"level":"info","message":"🚀 Server running on port 5000","timestamp":"2026-06-09T17:52:55.131Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-09T17:52:55.132Z"}
+{"level":"info","message":"🌐 Frontend URL: http://localhost:3000","timestamp":"2026-06-09T17:52:55.132Z"}
+{"level":"info","message":"🚀 Server running on port 5000","timestamp":"2026-06-09T17:53:07.796Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-09T17:53:07.798Z"}
+{"level":"info","message":"🌐 Frontend URL: http://localhost:3000","timestamp":"2026-06-09T17:53:07.798Z"}

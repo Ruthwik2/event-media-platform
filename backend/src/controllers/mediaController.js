@@ -8,6 +8,7 @@ const { notifyLike, notifyComment, notifyTag } = require('../services/notificati
 
 // Access-control helpers — single source of truth in utils/permissions.js
 const { canAccessAlbum, canAccessMedia, mediaVisibilityWhere } = require('../utils/permissions');
+const { hasApprovedEventAccess } = require('../utils/accessRequests');
 // ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -159,7 +160,8 @@ const getMedia = async (req, res) => {
       if (!album) {
         return res.status(404).json({ success: false, message: 'Album not found' });
       }
-      if (!canAccessAlbum(req.user, album)) {
+      const hasEventAccess = await hasApprovedEventAccess(req.user, album.eventId);
+      if (!canAccessAlbum(req.user, album, hasEventAccess)) {
         return res.status(403).json({ success: false, message: 'Access denied' });
       }
       where.albumId = albumId;
