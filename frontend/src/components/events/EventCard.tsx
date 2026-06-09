@@ -1,14 +1,41 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Event } from '@/types';
 import { Calendar, MapPin, Image, Lock, FolderOpen, QrCode } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuthStore } from '@/store/authStore';
+import api from '@/lib/axios';
 import ShareEventModal from '@/components/events/ShareEventModal';
 
 interface Props {
   event: Event;
+}
+
+// The set of private-event IDs this photographer has been APPROVED for. Fetched
+// once (concurrent cards share the in-flight request) from an endpoint that has
+// always existed, so the lock clears as soon as access is granted — even if the
+// newer getEvents `hasAccess` annotation isn't deployed yet. Cleared after each
+// resolve so a later page visit re-fetches fresh approvals.
+let approvedEventsInFlight: Promise<Set<string>> | null = null;
+function getApprovedEventIds(): Promise<Set<string>> {
+  if (!approvedEventsInFlight) {
+    approvedEventsInFlight = api
+      .get('/events/my-access-requests?status=APPROVED')
+      .then((res) => {
+        const rows = res.data?.data || [];
+        return new Set<string>(
+          rows
+            .filter((r: any) => r.type === 'EVENT' && r.status === 'APPROVED')
+            .map((r: any) => String(r.targetId))
+        );
+      })
+      .catch(() => new Set<string>())
+      .finally(() => {
+        approvedEventsInFlight = null;
+      });
+  }
+  return approvedEventsInFlight;
 }
 
 export default function EventCard({ event }: Props) {
@@ -18,9 +45,26 @@ export default function EventCard({ event }: Props) {
   const isPrivate = event.visibility === 'PRIVATE';
   const isOwner =
     user?.role === 'ADMIN' || user?.id === (event.creator as any)?.id;
-  // Backend (getEvents) marks events this photographer can already open — once
-  // their event access request is approved, drop the "request access" lock.
-  const hasAccess = (event as any).hasAccess === true;
+
+  // For a photographer on a private event they don't own, look up whether their
+  // event access request was approved (via the always-deployed endpoint).
+  const [approvedEventIds, setApprovedEventIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let active = true;
+    if (user?.role === 'PHOTOGRAPHER' && isPrivate && !isOwner) {
+      getApprovedEventIds().then((ids) => {
+        if (active) setApprovedEventIds(ids);
+      });
+    }
+    return () => {
+      active = false;
+    };
+  }, [user?.role, isPrivate, isOwner]);
+
+  // Access = backend annotation (getEvents) OR the approved-requests lookup above.
+  // Once granted, drop the "request access" lock so the cover photo shows through.
+  const hasAccess =
+    (event as any).hasAccess === true || approvedEventIds.has(String(event.id));
   const showRequestHint =
     isPrivate &&
     user?.role === 'PHOTOGRAPHER' &&
@@ -43,7 +87,7 @@ export default function EventCard({ event }: Props) {
               <img
                 src={event.coverImage}
                 alt={event.name}
-                className={`w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-400 ${isPrivate ? 'opacity-50' : ''}`}
+                className={`w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-400 ${isPrivate && !isOwner && !hasAccess ? 'opacity-50' : ''}`}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
