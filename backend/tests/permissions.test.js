@@ -49,21 +49,21 @@ describe('canAccessAlbum', () => {
     expect(canAccessAlbum(other, album)).toBe(false);
   });
 
-  test('photographer approved for the private event can enter its PUBLIC albums', () => {
+  test('photographer approved for the private event can enter ALL albums inside (public or private)', () => {
     const other = { id: 'p2', role: 'PHOTOGRAPHER' };
-    const album = { visibility: 'PUBLIC', event: privateEvent, collaborators: [] };
-    // hasEventAccess = true (admin approved their event request)
-    expect(canAccessAlbum(other, album, true)).toBe(true);
+    const publicAlbum = { visibility: 'PUBLIC', event: privateEvent, collaborators: [] };
+    const privateAlbum = { visibility: 'PRIVATE', event: privateEvent, collaborators: [] };
+    // hasEventAccess = true (admin approved their event request) → no per-album request
+    expect(canAccessAlbum(other, publicAlbum, true)).toBe(true);
+    expect(canAccessAlbum(other, privateAlbum, true)).toBe(true);
   });
 
-  test('photographer approved for the private event still cannot enter its PRIVATE albums', () => {
+  test('without event access, photographer is still blocked from a private event', () => {
     const other = { id: 'p2', role: 'PHOTOGRAPHER' };
-    const album = { visibility: 'PRIVATE', event: privateEvent, collaborators: [] };
-    // Event access does not grant private-album access — that needs its own request.
-    expect(canAccessAlbum(other, album, true)).toBe(false);
-    // But a collaborator on that private album still gets in.
-    const collabAlbum = { visibility: 'PRIVATE', event: privateEvent, collaborators: [{ userId: 'p2' }] };
-    expect(canAccessAlbum(other, collabAlbum, true)).toBe(true);
+    const publicAlbum = { visibility: 'PUBLIC', event: privateEvent, collaborators: [] };
+    const privateAlbum = { visibility: 'PRIVATE', event: privateEvent, collaborators: [] };
+    expect(canAccessAlbum(other, publicAlbum)).toBe(false);
+    expect(canAccessAlbum(other, privateAlbum)).toBe(false);
   });
 
   test('photographer who is a collaborator can enter a private album', () => {

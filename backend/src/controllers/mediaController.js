@@ -294,7 +294,7 @@ const getMediaItem = async (req, res) => {
       where: { id: req.params.id },
       include: {
         uploader: { select: { id: true, username: true, fullName: true, avatar: true } },
-        album: { include: { event: { select: { id: true, name: true, category: true, creatorId: true } }, collaborators: { select: { userId: true } } } },
+        album: { include: { event: { select: { id: true, name: true, category: true, creatorId: true, visibility: true } }, collaborators: { select: { userId: true } } } },
         taggedUsers: {
           include: {
             taggedUser: { select: { id: true, username: true, fullName: true, avatar: true } },
@@ -312,7 +312,8 @@ const getMediaItem = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Media not found' });
     }
 
-    if (!canAccessMedia(req.user, media)) {
+    const hasEventAccess = await hasApprovedEventAccess(req.user, media.album?.event?.id);
+    if (!canAccessMedia(req.user, media, hasEventAccess)) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
 

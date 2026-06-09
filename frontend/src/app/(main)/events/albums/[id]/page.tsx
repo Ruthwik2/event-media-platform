@@ -183,7 +183,7 @@ export default function AlbumDetailPage() {
           <h1 className="text-2xl font-bold mb-2">Access Restricted</h1>
           <p className="text-slate-400 max-w-sm mb-6 text-sm leading-relaxed">
             {accessLevel === 'EVENT'
-              ? 'This album belongs to a private event. Request access to the event to view its public albums.'
+              ? 'This album belongs to a private event. Request access to the event to view its albums.'
               : 'This album is private. You do not have permission to view its contents.'}
           </p>
           {user?.role === 'PHOTOGRAPHER' && (

@@ -19,11 +19,9 @@ function canAccessAlbum(user, album, hasEventAccess = false) {
       const isCollaborator = collaborators.some(
         (c) => (c.userId || (c.user && c.user.id)) === user.id
       );
-      if (isEventCreator || isCollaborator) return true;
-      // Approved for the private event → public albums inside open up; private
-      // albums there still need their own collaborator/approval.
-      if (hasEventAccess) return album.visibility === 'PUBLIC';
-      return false;
+      // Approved for the private event → all albums inside open, public or
+      // private. Permission is requested once at the event level, never per album.
+      return isEventCreator || isCollaborator || hasEventAccess;
     }
     return false;
   }
@@ -171,12 +169,12 @@ return res.status(404).json({ success: false, message: 'Album not found' });
 }
 const hasEventAccess = await hasApprovedEventAccess(req.user, album.event?.id);
 if (!canAccessAlbum(req.user, album, hasEventAccess)) {
-// A PUBLIC album is only ever blocked by a PRIVATE parent event, so the
-// photographer must request EVENT access (the album itself has nothing to
-// grant). A PRIVATE album is gated at the album level → request ALBUM access.
-// Tell the client which target to request against so it doesn't POST an album
-// request for a public album and get "Album is not private" back.
-const accessLevel = album.visibility === 'PUBLIC' ? 'EVENT' : 'ALBUM';
+// Any album inside a PRIVATE event is gated at the event level — one event
+// request opens every album inside it, so direct the photographer to request
+// EVENT access. A denied album in a PUBLIC event can only be a PRIVATE album,
+// which is gated per-album → request ALBUM access (becomes a collaborator).
+const eventIsPrivate = album.event?.visibility === 'PRIVATE';
+const accessLevel = eventIsPrivate ? 'EVENT' : 'ALBUM';
 const targetId = accessLevel === 'EVENT' ? album.event?.id : album.id;
 // For photographers, also return their current request status (for the matching
 // target) so the UI can show pending/rejected state.

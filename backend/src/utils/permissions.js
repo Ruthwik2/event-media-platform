@@ -10,9 +10,8 @@
  *  CLUB_MEMBER – always allowed (public and private albums)
  *  PHOTOGRAPHER – public albums always; private albums only if they are the
  *                 event creator OR a collaborator on the album. Once approved
- *                 for a private event (hasEventAccess), the PUBLIC albums inside
- *                 it open up too — private albums there still need their own
- *                 collaborator/approval.
+ *                 for a private event (hasEventAccess), EVERY album inside it
+ *                 opens up — public or private — with no per-album request.
  *  VIEWER / unauthenticated – public albums only
  *
  * @param {boolean} hasEventAccess – whether the photographer has an APPROVED
@@ -30,10 +29,9 @@ function canAccessAlbum(user, album, hasEventAccess = false) {
       const isCollaborator = collaborators.some(
         (c) => (c.userId || (c.user && c.user.id)) === user.id
       );
-      if (isEventCreator || isCollaborator) return true;
-      // Approved for the event → public albums are now open; private ones aren't.
-      if (hasEventAccess) return album.visibility === 'PUBLIC';
-      return false;
+      // Approved for the private event → all albums inside open, public or
+      // private. Permission is requested once at the event level, never per album.
+      return isEventCreator || isCollaborator || hasEventAccess;
     }
     return false; // VIEWER — blocked by private event
   }
@@ -62,14 +60,18 @@ function canAccessAlbum(user, album, hasEventAccess = false) {
  *  PHOTOGRAPHER        – always allowed for public media;
  *                        for private media only if they uploaded it;
  *                        media inside a private album follows album rules
+ *                        (so event access opens those albums' media too)
  *  VIEWER / unauthenticated – public media only, and only in public albums
+ *
+ * @param {boolean} hasEventAccess – passed through to canAccessAlbum for the
+ *   parent-album gate (see utils/accessRequests.js).
  */
-function canAccessMedia(user, media) {
+function canAccessMedia(user, media, hasEventAccess = false) {
   const album = media.album || null;
 
   // If the parent album is private, apply album-level check first
   if (album && album.visibility === 'PRIVATE') {
-    if (!canAccessAlbum(user, album)) return false;
+    if (!canAccessAlbum(user, album, hasEventAccess)) return false;
   }
 
   // Now check media-level visibility
