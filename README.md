@@ -1,58 +1,39 @@
 # Event & Media Management Platform
 
-A full-stack platform for managing event photography — organize photos and videos into events and albums, share them via QR codes and guest links, and let attendees instantly find every picture they appear in using AWS Rekognition face recognition.
+A full-stack app for managing event photography. You organize photos and videos into events and albums, share them with guests over QR codes or token links, and people can find the pictures they show up in using face recognition (AWS Rekognition). I built this for a club setting where one team shoots a lot of events and everyone wants their own photos back without scrolling through a thousand images.
 
-Built for clubs, photography teams, and event organizers who need a single place to upload, moderate, organize, and distribute event media.
+There's a diagram and a walkthrough of the main request flows in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) if you want the big picture before digging into the code.
 
-📐 **Architecture diagram & request flows:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+## What it does
 
----
+Events hold albums, albums hold media, and visibility (public or private) is set per event and per album. Photographers and admins upload in bulk — up to 200 files in one go — and `sharp` handles thumbnails and compression on the way in.
 
-## Features
+The face-recognition piece is the part I cared most about. A user uploads a reference selfie, the backend indexes their face into a Rekognition collection, and after that the "My Photos" view returns every image they appear in. On upload, Rekognition also pulls labels off each image (which feeds tag-based search), and those labels get turned into a short auto caption. The same upload path runs content moderation and flags anything questionable for an admin to look at.
 
-- **Events & Albums** — Organize media into events, each containing one or more albums. Public/private visibility per event and album.
-- **Media uploads** — Bulk upload up to 200 photos/videos at once. Automatic thumbnail generation, image compression, and metadata extraction via [`sharp`](https://sharp.pixelplumbing.com/).
-- **AI face recognition (AWS Rekognition)** — Users upload a reference selfie; the platform indexes their face and lets them find every photo they appear in ("My Photos").
-- **AI labels, captions & moderation** — On upload, AWS Rekognition automatically labels images (powering tag-based search), synthesizes a short AI caption from those labels, and runs content moderation that flags unsafe images for admin review.
-- **Photo tagging** — Tag users in photos, including positional tags pinned to a spot on the image.
-- **Social features** — Likes, threaded comments, favourites, and download tracking.
-- **QR codes & share tokens** — Generate a QR code / shareable link for an event or album so guests can view media without an account.
-- **Real-time notifications** — Socket.IO pushes live notifications (tags, likes, comments, approvals).
-- **Role-based access control** — Four roles: `ADMIN`, `PHOTOGRAPHER`, `CLUB_MEMBER`, `VIEWER`.
-- **Approval workflows** — Club membership requests and photographer access requests to private events/albums, with admin approve/reject.
-- **Album collaborators** — Grant additional users edit access to an album.
-- **Club branding** — Configurable single-club name/settings.
-- **Watermarking** — SVG text watermarks applied to downloaded photos.
+Other things that are in here:
 
----
+- Tagging people in photos, including positional tags pinned to a spot on the image.
+- The usual social layer: likes, threaded comments, favourites, and download tracking.
+- QR codes and share tokens so guests can view an event or album without an account.
+- Live notifications over Socket.IO for tags, likes, comments, and approvals.
+- Approval workflows. Club membership requests and photographer access requests to private events/albums both go through an admin approve/reject queue.
+- Album collaborators, so you can give someone else edit rights on a single album.
+- A single configurable club name/branding row.
+- SVG text watermarks composited onto downloaded photos.
 
-## Tech Stack
+Roles are `ADMIN`, `PHOTOGRAPHER`, `CLUB_MEMBER`, and `VIEWER`. More on what each can do further down.
 
-### Backend
-- **Node.js + Express** — REST API
-- **Prisma ORM** + **PostgreSQL**
-- **Socket.IO** — real-time notifications
-- **AWS SDK v3** — S3 (storage) + Rekognition (face recognition, image labels, AI captions, content moderation)
-- **sharp** + **canvas** — image processing, thumbnails, watermarks
-- **JWT** (`jsonwebtoken`) auth, **bcryptjs** password hashing
-- **multer** / **multer-s3** uploads, **qrcode** generation
-- **helmet**, **cors**, **express-rate-limit**, **compression**, **winston** logging
+## Tech stack
 
-### Frontend
-- **Next.js 14** (App Router) + **React 18** + **TypeScript**
-- **Tailwind CSS** + **Radix UI** + **lucide-react** / **Heroicons**
-- **Zustand** — state management
-- **axios** — API client, **socket.io-client** — realtime
-- **react-hook-form** + **zod** — forms & validation
-- **react-dropzone**, lightbox galleries, **react-player**, **framer-motion**
+Backend is Node + Express with Prisma over PostgreSQL. Real-time is Socket.IO. AWS comes in through the v3 SDK — S3 for storage and Rekognition for faces, labels, captions, and moderation. Image work (thumbnails, watermarks) is all `sharp`; the watermark is an SVG composited on with `sharp`'s `.composite()`. Auth is JWT (`jsonwebtoken`) with `bcryptjs` for hashing, uploads go through `multer`/`multer-s3`, QR codes via `qrcode`, plus the usual `helmet`/`cors`/`express-rate-limit`/`compression` and `winston` for logs.
 
-### Infrastructure
-- **Docker** / **docker-compose** for the full stack
-- Storage is **S3 (optional) with local filesystem fallback** — toggle with `USE_S3`
+Heads up on one thing: `canvas` and `node-cron` are still in `backend/package.json` but nothing in `src` imports them. They're leftovers, not part of the actual pipeline — don't go looking for cron jobs or a `canvas` render path, there aren't any.
 
----
+Frontend is Next.js 14 (App Router) with React 18 and TypeScript. Styling is Tailwind plus Radix UI and lucide/Heroicons for icons. State lives in Zustand, data fetching is `axios`, realtime is `socket.io-client`, and forms are `react-hook-form` + `zod`. Uploads use `react-dropzone`, and there's `react-player` and a couple of lightbox libraries for the gallery viewing.
 
-## Project Structure
+For infra it's Docker / docker-compose for the whole stack. Storage is local disk by default and S3 when you flip `USE_S3=true`.
+
+## Project layout
 
 ```
 .
@@ -60,109 +41,102 @@ Built for clubs, photography teams, and event organizers who need a single place
 ├── backend/
 │   ├── Dockerfile
 │   ├── prisma/
-│   │   ├── schema.prisma        # Data model (User, Event, Album, Media, …)
+│   │   ├── schema.prisma        # data model (User, Event, Album, Media, …)
 │   │   ├── migrations/          # SQL migrations
-│   │   └── seed.js              # Seeds admin/photographer/member + demo event
+│   │   └── seed.js              # seeds admin/photographer/member + a demo event
 │   └── src/
-│       ├── app.js               # Express app entry point
+│       ├── app.js               # Express entry point
 │       ├── config/              # database, aws, socket, logger
 │       ├── controllers/         # auth, event, album, media, notification, settings
-│       ├── routes/              # Express routers (mounted under /api/*)
+│       ├── routes/              # routers mounted under /api/*
 │       ├── middleware/          # auth (JWT/RBAC), upload (multer), errorHandler
 │       └── services/            # s3Service, rekognitionService, imageService, notificationService
 └── frontend/
     └── src/
-        ├── app/                 # Next.js App Router pages ((auth) + (main) groups)
-        ├── components/          # UI, media, events, albums, layout, admin
+        ├── app/                 # App Router pages, in (auth) and (main) groups
+        ├── components/          # ui, media, events, albums, layout, admin
         ├── hooks/               # useSocket
         ├── store/               # Zustand stores (auth, notifications)
         ├── lib/                 # axios client, utils
-        └── types/               # shared TypeScript types
+        └── types/               # shared TS types
 ```
 
----
+## Getting started
 
-## Getting Started
+You'll need either Docker + Docker Compose, or Node 20+ with a Postgres instance you can point at.
 
-### Prerequisites
-- [Docker](https://www.docker.com/) & Docker Compose, **or**
-- Node.js 20+ and a local PostgreSQL instance
+### With Docker
 
-### Option A — Run everything with Docker (recommended)
-
-This spins up PostgreSQL, the backend (with migrations + seed), and the frontend.
+This is the fastest path. It brings up Postgres, the backend (running migrations and the seed), and the frontend in one shot.
 
 ```bash
-# 1. Create env files from the examples
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
-
-# 2. Build and start the whole stack
 docker compose up --build
 ```
 
-Services:
-| Service   | URL                       |
-|-----------|---------------------------|
-| Frontend  | http://localhost:3000     |
-| Backend   | http://localhost:5001/api |
-| Postgres  | localhost:5433            |
+Once it's up:
 
-On first boot the backend runs `prisma migrate deploy` and seeds the database automatically.
+| Service  | URL                       |
+|----------|---------------------------|
+| Frontend | http://localhost:3000     |
+| Backend  | http://localhost:5001/api |
+| Postgres | localhost:5433            |
 
-### Option B — Run locally without Docker
+The backend host port is 5001 mapped to 5000 in the container, and Postgres is on 5433 to stay out of the way of any local Postgres on 5432. One thing worth knowing: the frontend service in `docker-compose.yml` hard-codes `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SOCKET_URL` in its `environment:` block, so for the Docker path those two values come from compose, not from `frontend/.env`.
 
-**Backend**
+### Locally, without Docker
+
+Backend:
+
 ```bash
 cd backend
-cp .env.example .env          # then edit DATABASE_URL, JWT_SECRET, etc.
+cp .env.example .env          # set DATABASE_URL, JWT_SECRET, etc.
 npm install
-npx prisma migrate dev        # apply migrations
-npm run prisma:seed           # seed demo users + event
-npm run dev                   # starts on PORT (default 5000)
+npx prisma migrate dev
+npm run prisma:seed
+npm run dev                   # listens on PORT, which defaults to 5000
 ```
 
-**Frontend**
+Frontend:
+
 ```bash
 cd frontend
 cp .env.example .env          # point NEXT_PUBLIC_API_URL at your backend
 npm install --legacy-peer-deps
-npm run dev                   # starts on http://localhost:3000
+npm run dev
 ```
 
----
+The `--legacy-peer-deps` isn't optional — a couple of the frontend libraries have peer-dependency ranges that npm will otherwise refuse to resolve, and you'll hit an install error without it. If you're running the backend on a different host/port than the frontend expects, set `FRONTEND_URL` on the backend so CORS lets the browser through. I lost a chunk of time to CORS early on; the allowed origins are `http://localhost:3000` plus whatever you put in `FRONTEND_URL` (it accepts a comma-separated list and strips trailing slashes).
 
-## Environment Variables
+## Environment variables
 
 ### Backend (`backend/.env`)
+
 | Variable | Description |
 |---|---|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `JWT_SECRET` | Secret for signing JWTs |
-| `JWT_EXPIRES_IN` | Token lifetime (e.g. `7d`) |
-| `PORT` | Backend port (default `5000`) |
-| `NODE_ENV` | `development` / `production` |
-| `BACKEND_URL` | Public backend URL (used to build local upload URLs) |
-| `FRONTEND_URL` | Allowed CORS origin |
+| `JWT_SECRET` | secret for signing JWTs |
+| `JWT_EXPIRES_IN` | token lifetime, e.g. `7d` |
+| `PORT` | backend port, defaults to 5000 |
+| `NODE_ENV` | `development` or `production` |
+| `BACKEND_URL` | public backend URL, used to build local upload URLs |
+| `FRONTEND_URL` | allowed CORS origin(s), comma-separated |
 | `USE_S3` | `true` to store media in S3, `false` for local disk |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | AWS credentials (for S3 + Rekognition) |
-| `AWS_REGION` | AWS region (e.g. `us-east-1`) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | AWS credentials, for S3 and Rekognition |
+| `AWS_REGION` | AWS region, e.g. `us-east-1` |
 | `AWS_S3_BUCKET` | S3 bucket name |
 | `REKOGNITION_COLLECTION_ID` | Rekognition face collection ID |
 
-> **Note:** AWS is optional. With `USE_S3=false` and no AWS credentials, media is stored on local disk and face-recognition features degrade gracefully (face search returns no matches, labels/moderation fall back to safe defaults). Face recognition requires S3, since Rekognition reads images from your S3 bucket.
+AWS setup is fiddly and you don't need it to develop locally — skip it. With `USE_S3=false` and no credentials, media goes to local disk, face search just returns no matches, and the labels/captions/moderation step is skipped. The catch is that face recognition is coupled to S3: Rekognition reads the images out of your bucket, so if you want "My Photos" working you need both `USE_S3=true` and the AWS keys.
 
 ### Frontend (`frontend/.env`)
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL (e.g. `http://localhost:5001/api`) |
-| `NEXT_PUBLIC_SOCKET_URL` | Socket.IO server URL (e.g. `http://localhost:5001`) |
 
----
+Two vars: `NEXT_PUBLIC_API_URL` (the backend API base, `http://localhost:5001/api`) and `NEXT_PUBLIC_SOCKET_URL` (the Socket.IO server, `http://localhost:5001`).
 
-## Seeded Accounts
+## Seeded accounts
 
-After seeding, you can log in with:
+After the seed runs, these three accounts exist:
 
 | Role         | Email                          | Password       |
 |--------------|--------------------------------|----------------|
@@ -170,86 +144,67 @@ After seeding, you can log in with:
 | Photographer | `photographer@eventmedia.com`  | `Password123!` |
 | Club Member  | `member@eventmedia.com`        | `Password123!` |
 
-> ⚠️ These are demo credentials — change or remove them before deploying to production.
+These are obviously just for local dev — change or remove them before anything goes near production. The seed is idempotent (it upserts), and it also creates a demo event ("Annual Cultural Fest 2024") with one album ("Opening Ceremony") so the app isn't empty on first run. There's no seeded VIEWER; VIEWER is the default role you get when you register yourself.
 
----
+## API overview
 
-## API Overview
-
-Base URL: `/api`. Authenticated routes expect an `Authorization: Bearer <token>` header.
+Everything is under `/api`, and authenticated routes want an `Authorization: Bearer <token>` header.
 
 | Resource | Base path | Highlights |
 |---|---|---|
-| **Auth** | `/api/auth` | register, login, profile, avatar/selfie upload, users, password change, membership requests |
-| **Events** | `/api/events` | CRUD, categories, QR code, share tokens, guest access by token, access requests |
-| **Albums** | `/api/albums` | CRUD, rename, QR code, share tokens, guest access by token, collaborators, access requests |
-| **Media** | `/api/media` | bulk upload, search, my-photos (face search), favourites, like, comment, tag, download, analytics |
-| **Notifications** | `/api/notifications` | list, mark read, delete |
-| **Settings** | `/api/settings` | club settings (name/branding) |
+| Auth | `/api/auth` | register, login, profile, avatar/selfie upload, users, password change, membership requests |
+| Events | `/api/events` | CRUD, categories, QR code, share tokens, guest access by token, access requests |
+| Albums | `/api/albums` | CRUD, rename, QR code, share tokens, guest access by token, collaborators, access requests |
+| Media | `/api/media` | bulk upload, search, my-photos (face search), favourites, like, comment, tag, download, analytics |
+| Notifications | `/api/notifications` | list, mark read, delete |
+| Settings | `/api/settings` | club name / branding |
 
-Health check: `GET /health`.
+The health check is `GET /health`, and note it's not under `/api`.
 
-### Roles & permissions
-- **ADMIN** — full control; approves membership and access requests; manages club settings.
-- **PHOTOGRAPHER** — creates events, uploads/deletes media, requests access to private events/albums.
-- **CLUB_MEMBER** — views content, tags, likes, comments, favourites.
-- **VIEWER** — default role on registration; read/social access.
+### Who can do what
 
----
+- ADMIN has full control, approves membership and access requests, and owns club settings.
+- PHOTOGRAPHER creates events, uploads and deletes media, and can request access to private events/albums.
+- CLUB_MEMBER views content and does the social stuff: tagging, liking, commenting, favouriting.
+- VIEWER is the default on registration, with read and social access.
 
-## Available Scripts
+## Scripts
 
-### Backend (`backend/`)
-| Script | Description |
+Backend:
+
+| Script | What it does |
 |---|---|
-| `npm run dev` | Start with nodemon (hot reload) |
-| `npm start` | Start the server |
-| `npm run prisma:generate` | Regenerate Prisma client |
-| `npm run prisma:migrate` | Create & apply a dev migration |
-| `npm run prisma:studio` | Open Prisma Studio (DB GUI) |
-| `npm run prisma:seed` | Seed the database |
-| `npm test` | Run the Jest unit-test suite |
+| `npm run dev` | start with nodemon |
+| `npm start` | start the server |
+| `npm run prisma:generate` | regenerate the Prisma client |
+| `npm run prisma:migrate` | create and apply a dev migration |
+| `npm run prisma:studio` | open Prisma Studio |
+| `npm run prisma:seed` | seed the database |
+| `npm test` | run the Jest suite |
+| `npm run test:watch` | Jest in watch mode |
 
-### Frontend (`frontend/`)
-| Script | Description |
-|---|---|
-| `npm run dev` | Start Next.js dev server |
-| `npm run build` | Production build |
-| `npm start` | Start the production server |
-| `npm run lint` | Run ESLint |
+Frontend: `npm run dev`, `npm run build`, `npm start`, and `npm run lint` — the standard Next.js four.
 
----
-
-## Testing
-
-Backend unit tests run with **Jest** and cover the access-control logic (role-based
-album/media visibility) and the AI caption synthesis — no database or AWS connection
-required, so they run fast and offline:
+## Tests
 
 ```bash
 cd backend
 npm test
 ```
 
----
+The Jest suite is small and deliberately doesn't touch the database or AWS. It covers two things: the access-control logic in `utils/permissions.js` (role-based album and media visibility, and the Prisma `where` filters it builds), and the caption synthesis in `rekognitionService.js` (`buildCaptionFromLabels`). Both are pure functions, so the tests run anywhere without any setup.
 
-## Data Model
+## Data model
 
-Full schema reference (ER diagram + every table): [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md).
-Core entities (see [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma)):
+The full reference, with an ER diagram and every table, is in [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md). The source of truth is [backend/prisma/schema.prisma](backend/prisma/schema.prisma). The short version of the core entities:
 
-- **User** — auth, role, profile, privacy settings, reference selfie & `faceId`
-- **Event** → has many **Albums**
-- **Album** → has many **Media**; supports collaborators, QR code, share token
-- **Media** — photo/video with thumbnail, AI caption, tags, face IDs, visibility, and moderation flag/labels
-- **Like**, **Comment** (threaded), **Favourite**, **Download** — engagement
-- **MediaTag** — user tags with optional `x`/`y` position
-- **Notification** — real-time user notifications
-- **AccessRequest** — photographer requests for private events/albums
-- **ClubSettings** — single-row club branding
-
----
+- **User** — auth, role, profile, privacy flags, reference selfie and `faceId`.
+- **Event** has many **Albums**; **Album** has many **Media** and can have collaborators, a QR code, and a share token.
+- **Media** is a photo or video with a thumbnail, AI caption, tags, face IDs, visibility, and a moderation flag plus labels.
+- **Like**, **Comment** (threaded via `parentId`), **Favourite**, and **Download** make up the engagement side.
+- **MediaTag** is a user tag with an optional `x`/`y` position.
+- **Notification**, **AccessRequest** (photographer requests for private events/albums), and a single-row **ClubSettings** round it out.
 
 ## License
 
-No license file is currently included. Add one (e.g. MIT) before public distribution.
+There's no license file in here yet. Add one (MIT or whatever fits) before distributing this publicly.
