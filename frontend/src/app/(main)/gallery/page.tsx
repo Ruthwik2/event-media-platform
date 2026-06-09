@@ -175,6 +175,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
       <div className="flex items-center justify-between px-4 py-3">
         <Link
           href={media.uploader?.id ? `/users/${media.uploader.id}` : '#'}
+          onClick={markGalleryReturn}
           className="flex items-center gap-3 group"
         >
           <Avatar src={media.uploader?.avatar} name={uploaderName} />
@@ -320,6 +321,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
               <Link
                 key={t}
                 href={`/search?tags=${encodeURIComponent(t)}`}
+                onClick={markGalleryReturn}
                 className="text-primary-400 hover:text-primary-600 hover:underline"
               >
                 #{t}
@@ -339,6 +341,7 @@ function InstagramPost({ media, onDelete }: PostProps) {
                 <Link
                   key={mt.id}
                   href={`/users/${mt.taggedUser?.id}`}
+                  onClick={markGalleryReturn}
                   className="inline-flex items-center gap-1.5 bg-[#f8f7f5] hover:bg-[#f0ede8] rounded-full pl-1 pr-2 py-0.5 group"
                 >
                   {mt.taggedUser?.avatar ? (
@@ -426,6 +429,17 @@ function InstagramPost({ media, onDelete }: PostProps) {
    returning from a post/profile lands on the same image, not a re-fetched one. */
 const FEED_CACHE_KEY = 'gallery-feed-cache';
 
+/* Marker set the moment the user follows a link OUT of the gallery (to a
+   profile, tag search, etc.). Scroll position is only restored when this marker
+   is present on the next mount — i.e. the user is returning. A fresh entry
+   (navbar / logo click) has no marker, so the gallery opens at the top. */
+const RETURN_MARKER_KEY = 'gallery-return';
+
+/** Call right before navigating away from the gallery so a later return restores scroll. */
+export function markGalleryReturn() {
+  try { sessionStorage.setItem(RETURN_MARKER_KEY, '1'); } catch { /* ignore */ }
+}
+
 interface FeedCache {
   media: Media[];
   page: number;
@@ -457,11 +471,6 @@ export default function GalleryPage() {
   // already mounted before the browser tries to restore scroll position.
   const cacheRef = useRef<FeedCache | null>(readFeedCache());
   const cached = cacheRef.current;
-
-  console.log('[GALLERY] mount — cached?', !!cached, cached ? {
-    items: cached.media?.length, page: cached.page,
-    scrollY: cached.scrollY, anchorId: cached.anchorId, anchorOffset: cached.anchorOffset,
-  } : null);
 
   const [media, setMedia] = useState<Media[]>(cached?.media ?? []);
   const [loading, setLoading] = useState(!cached);
@@ -538,7 +547,6 @@ export default function GalleryPage() {
         ? scroller.scrollTop
         : window.scrollY;
       const { anchorId, anchorOffset } = computeAnchor();
-      console.log('[GALLERY] persist', { scrollY, anchorId, anchorOffset, items: stateRef.current.media.length });
       sessionStorage.setItem(
         FEED_CACHE_KEY,
         JSON.stringify({ ...stateRef.current, scrollY, anchorId, anchorOffset }),
@@ -596,14 +604,10 @@ export default function GalleryPage() {
         // viewport top — getBoundingClientRect().top is viewport-relative,
         // which is exactly what we want regardless of which element scrolls.
         const delta = el.getBoundingClientRect().top - anchorOffset;
-        if (tries < 3) console.log('[GALLERY] attempt', tries, 'found el, delta', Math.round(delta), 'currentTop', Math.round(currentTop()));
         if (Math.abs(delta) <= 1) aligned = true;
         else scrollTo(currentTop() + delta);
       } else if (fallbackY > 0) {
-        if (tries < 3) console.log('[GALLERY] attempt', tries, 'NO el for anchorId', anchorId, '— using fallbackY', fallbackY);
         scrollTo(fallbackY);
-      } else if (tries < 3) {
-        console.log('[GALLERY] attempt', tries, 'NO el, NO fallback');
       }
 
       // Stop once the anchor has held its position for a few frames (layout
@@ -643,10 +647,17 @@ export default function GalleryPage() {
     };
   }, [persistFeed, getScroller]);
 
-  // On fresh mount with a cached feed, restore the anchor post once rendered.
+  // Restore the prior scroll position ONLY when the user is returning from a
+  // gallery sub-page (profile / tag search). A fresh entry — navbar or logo
+  // click — has no return marker, so the gallery opens at the top (post 1).
   useEffect(() => {
-    console.log('[GALLERY] restore effect — cached?', !!cached, 'anchorId', cached?.anchorId, 'scrollY', cached?.scrollY);
-    if (cached && (cached.anchorId || (cached.scrollY ?? 0) > 0)) {
+    let isReturn = false;
+    try {
+      isReturn = sessionStorage.getItem(RETURN_MARKER_KEY) === '1';
+      sessionStorage.removeItem(RETURN_MARKER_KEY); // consume — one restore per return
+    } catch { /* ignore */ }
+
+    if (isReturn && cached && (cached.anchorId || (cached.scrollY ?? 0) > 0)) {
       return restoreAnchor(cached.anchorId ?? null, cached.anchorOffset ?? 0, cached.scrollY ?? 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
