@@ -235,6 +235,7 @@ npm test
 
 ## Data Model
 
+Full schema reference (ER diagram + every table): [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md).
 Core entities (see [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma)):
 
 - **User** — auth, role, profile, privacy settings, reference selfie & `faceId`

@@ -129,9 +129,10 @@ erDiagram
     Media ||--o{ Download : tracked_by
     User ||--o{ Notification : receives
     User ||--o{ AccessRequest : makes
-    ClubSettings ||--|| ClubSettings : singleton
 ```
 
-See [`backend/prisma/schema.prisma`](../backend/prisma/schema.prisma) for the
-authoritative schema and [`backend/prisma/migrations/`](../backend/prisma/migrations/)
+See [`docs/DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) for the full entity-relationship
+diagram and table-by-table reference,
+[`backend/prisma/schema.prisma`](../backend/prisma/schema.prisma) for the
+authoritative schema, and [`backend/prisma/migrations/`](../backend/prisma/migrations/)
 for the migration history.
