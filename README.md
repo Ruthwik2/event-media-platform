@@ -4,6 +4,8 @@ A full-stack platform for managing event photography — organize photos and vid
 
 Built for clubs, photography teams, and event organizers who need a single place to upload, moderate, organize, and distribute event media.
 
+📐 **Architecture diagram & request flows:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+
 ---
 
 ## Features
@@ -11,7 +13,7 @@ Built for clubs, photography teams, and event organizers who need a single place
 - **Events & Albums** — Organize media into events, each containing one or more albums. Public/private visibility per event and album.
 - **Media uploads** — Bulk upload up to 200 photos/videos at once. Automatic thumbnail generation, image compression, and metadata extraction via [`sharp`](https://sharp.pixelplumbing.com/).
 - **AI face recognition (AWS Rekognition)** — Users upload a reference selfie; the platform indexes their face and lets them find every photo they appear in ("My Photos").
-- **AI labels & moderation** — Automatic content labeling and unsafe-content moderation on uploaded images.
+- **AI labels, captions & moderation** — On upload, AWS Rekognition automatically labels images (powering tag-based search), synthesizes a short AI caption from those labels, and runs content moderation that flags unsafe images for admin review.
 - **Photo tagging** — Tag users in photos, including positional tags pinned to a spot on the image.
 - **Social features** — Likes, threaded comments, favourites, and download tracking.
 - **QR codes & share tokens** — Generate a QR code / shareable link for an event or album so guests can view media without an account.
@@ -30,7 +32,7 @@ Built for clubs, photography teams, and event organizers who need a single place
 - **Node.js + Express** — REST API
 - **Prisma ORM** + **PostgreSQL**
 - **Socket.IO** — real-time notifications
-- **AWS SDK v3** — S3 (storage) + Rekognition (face recognition, labels, moderation)
+- **AWS SDK v3** — S3 (storage) + Rekognition (face recognition, image labels, AI captions, content moderation)
 - **sharp** + **canvas** — image processing, thumbnails, watermarks
 - **JWT** (`jsonwebtoken`) auth, **bcryptjs** password hashing
 - **multer** / **multer-s3** uploads, **qrcode** generation
@@ -206,6 +208,7 @@ Health check: `GET /health`.
 | `npm run prisma:migrate` | Create & apply a dev migration |
 | `npm run prisma:studio` | Open Prisma Studio (DB GUI) |
 | `npm run prisma:seed` | Seed the database |
+| `npm test` | Run the Jest unit-test suite |
 
 ### Frontend (`frontend/`)
 | Script | Description |
@@ -217,6 +220,26 @@ Health check: `GET /health`.
 
 ---
 
+## Testing & CI
+
+Backend unit tests run with **Jest** and cover the access-control logic (role-based
+album/media visibility) and the AI caption synthesis — no database or AWS connection
+required, so they run fast and offline:
+
+```bash
+cd backend
+npm test
+```
+
+A **GitHub Actions** pipeline ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
+runs on every push/PR to `main` and:
+
+1. **Backend** — spins up a PostgreSQL service, applies Prisma migrations (`migrate deploy`), and runs the Jest suite.
+2. **Frontend** — lints and builds the Next.js app.
+3. **Docker** — builds both the backend and frontend images (after the above pass).
+
+---
+
 ## Data Model
 
 Core entities (see [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma)):
@@ -224,7 +247,7 @@ Core entities (see [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma
 - **User** — auth, role, profile, privacy settings, reference selfie & `faceId`
 - **Event** → has many **Albums**
 - **Album** → has many **Media**; supports collaborators, QR code, share token
-- **Media** — photo/video with thumbnail, AI caption, tags, face IDs, visibility
+- **Media** — photo/video with thumbnail, AI caption, tags, face IDs, visibility, and moderation flag/labels
 - **Like**, **Comment** (threaded), **Favourite**, **Download** — engagement
 - **MediaTag** — user tags with optional `x`/`y` position
 - **Notification** — real-time user notifications

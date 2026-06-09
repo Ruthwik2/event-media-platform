@@ -2,111 +2,12 @@ const prisma = require('../config/database');
 const path = require('path');
 const fs = require('fs');
 const { uploadToS3, deleteFromS3, getS3ObjectStream } = require('../services/s3Service');
-const { detectLabels, searchFacesByImage } = require('../services/rekognitionService');
+const { detectLabels, searchFacesByImage, moderateContent, generateCaption } = require('../services/rekognitionService');
 const { generateThumbnail, getImageMetadata, addWatermark } = require('../services/imageService');
 const { notifyLike, notifyComment, notifyTag } = require('../services/notificationService');
 
-// ── Permission helpers ────────────────────────────────────────────────────────
-/**
- * Determines whether a requesting user may access a given album.
- *
- * Rules:
- *  ADMIN       – always allowed
- *  CLUB_MEMBER – always allowed (public and private albums)
- *  PHOTOGRAPHER – public albums always; private albums only if they are the
- *                 event creator OR a collaborator on the album
- *  VIEWER / unauthenticated – public albums only
- */
-function canAccessAlbum(user, album) {
-  // ── Step 1: check parent event visibility ──────────────────────────────────
-  // If the event is PRIVATE, only admins, club members, and photographers who
-  // created the event or collaborate on one of its albums may enter.
-  const eventIsPrivate = album.event && album.event.visibility === 'PRIVATE';
-  if (eventIsPrivate) {
-    if (!user) return false;
-    if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
-    if (user.role === 'PHOTOGRAPHER') {
-      const isEventCreator = album.event.creatorId === user.id;
-      const collaborators = album.collaborators || [];
-      const isCollaborator = collaborators.some(
-        c => (c.userId || (c.user && c.user.id)) === user.id
-      );
-      return isEventCreator || isCollaborator;
-    }
-    return false; // VIEWER — blocked by private event
-  }
-
-  // ── Step 2: event is public (or event info unavailable) — check album level
-  if (album.visibility === 'PUBLIC') return true;
-  // album is PRIVATE from here
-  if (!user) return false;
-  if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
-  if (user.role === 'PHOTOGRAPHER') {
-    const isEventCreator = album.event && album.event.creatorId === user.id;
-    const collaborators = album.collaborators || [];
-    const isCollaborator = collaborators.some(c => (c.userId || (c.user && c.user.id)) === user.id);
-    return isEventCreator || isCollaborator;
-  }
-  return false; // VIEWER
-}
-
-/**
- * Determines whether a requesting user may access a given media item.
- *
- * Rules:
- *  ADMIN / CLUB_MEMBER – always allowed
- *  PHOTOGRAPHER        – always allowed for public media;
- *                        for private media only if they uploaded it;
- *                        media inside a private album follows album rules
- *  VIEWER / unauthenticated – public media only, and only in public albums
- */
-function canAccessMedia(user, media) {
-  const album = media.album || null;
-
-  // If the parent album is private, apply album-level check first
-  if (album && album.visibility === 'PRIVATE') {
-    if (!canAccessAlbum(user, album)) return false;
-  }
-
-  // Now check media-level visibility
-  if (media.visibility === 'PUBLIC') return true;
-  // media is PRIVATE from here
-  if (!user) return false;
-  if (user.role === 'ADMIN' || user.role === 'CLUB_MEMBER') return true;
-  if (user.role === 'PHOTOGRAPHER') return media.uploaderId === user.id;
-  return false; // VIEWER
-}
-
-/**
- * Builds the Prisma `where` clause that restricts a media query to only the
- * items the given user is allowed to see — the same rules getMedia/searchMedia
- * apply inline, factored out so list-style endpoints (e.g. analytics) can't
- * accidentally leak private media.
- *
- * Returns `null` for ADMIN / CLUB_MEMBER (they see everything → no filter), or
- * an object suitable for spreading into a Prisma `where`.
- */
-function mediaVisibilityWhere(user) {
-  if (!user || user.role === 'VIEWER') {
-    // Public media in public albums of public events only.
-    return {
-      visibility: 'PUBLIC',
-      album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } },
-    };
-  }
-  if (user.role === 'PHOTOGRAPHER') {
-    return {
-      OR: [
-        { visibility: 'PUBLIC', album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } } },
-        { album: { event: { creatorId: user.id } } },
-        { album: { collaborators: { some: { userId: user.id } } } },
-        { uploaderId: user.id },
-      ],
-    };
-  }
-  // ADMIN and CLUB_MEMBER: no restriction.
-  return null;
-}
+// Access-control helpers — single source of truth in utils/permissions.js
+const { canAccessAlbum, canAccessMedia, mediaVisibilityWhere } = require('../utils/permissions');
 // ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -138,6 +39,9 @@ const uploadMedia = async (req, res) => {
       let tags = [];
       let width, height;
       let faceIds = [];
+      let aiCaption = null;
+      let flagged = false;
+      let moderationLabels = [];
 
       // Process image (metadata and thumbnail — requires local file)
       if (isImage && file.path) {
@@ -171,11 +75,23 @@ const uploadMedia = async (req, res) => {
         fileUrl = await uploadToS3(file, 'media');
       }
 
-      // ── AI tagging and face detection ────────────────────────────────────
+      // ── AI tagging, captioning, moderation, and face detection ────────────
       // Works for both local-upload + S3 and direct multer-S3 uploads
       // fileUrl is either from file.location (multer-S3) or set by uploadToS3 above
       if (isImage && fileUrl?.includes('amazonaws.com')) {
         tags = await detectLabels(fileUrl);
+
+        // AI caption synthesized from the detected labels
+        aiCaption = await generateCaption(fileUrl, tags);
+
+        // Content moderation — flag unsafe images so admins can review/remove them
+        const moderation = await moderateContent(fileUrl);
+        flagged = !moderation.safe;
+        moderationLabels = moderation.labels;
+        if (flagged) {
+          console.warn(`Media flagged by moderation: ${file.originalname} → ${moderationLabels.join(', ')}`);
+        }
+
         const faceMatches = await searchFacesByImage(fileUrl);
         faceIds = faceMatches.map(m => m.faceId);
       }
@@ -193,8 +109,11 @@ const uploadMedia = async (req, res) => {
           height,
           visibility: visibility || 'PUBLIC',
           caption,
+          aiCaption,
           tags,
           faceIds,
+          flagged,
+          moderationLabels,
           albumId,
           uploaderId: req.user.id,
         },

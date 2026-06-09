@@ -184,6 +184,41 @@ const detectLabels = async (imageUrl) => {
   }
 };
 
+// ─── generateCaption ─────────────────────────────────────────────────────────
+
+/**
+ * Build a human-readable caption from Rekognition labels.
+ * Rekognition has no native captioning API, so we synthesize a short phrase
+ * from the highest-confidence labels (e.g. ["beach","people","sunset"] →
+ * "Beach with people and sunset"). Returns null when no labels are available.
+ */
+const buildCaptionFromLabels = (labels) => {
+  if (!Array.isArray(labels) || labels.length === 0) return null;
+
+  // Drop overly generic labels that add no descriptive value
+  const generic = new Set(['photography', 'photo', 'image', 'person', 'human', 'face']);
+  const useful = labels.filter((l) => !generic.has(l)).slice(0, 4);
+  if (useful.length === 0) return null;
+
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  if (useful.length === 1) return cap(useful[0]);
+  const head = useful.slice(0, -1).map((l, i) => (i === 0 ? cap(l) : l)).join(', ');
+  return `${head} and ${useful[useful.length - 1]}`;
+};
+
+const generateCaption = async (imageUrl, knownLabels) => {
+  try {
+    const labels = Array.isArray(knownLabels) && knownLabels.length
+      ? knownLabels
+      : await detectLabels(imageUrl);
+    return buildCaptionFromLabels(labels);
+  } catch (err) {
+    logger.error('generateCaption error:', err.message);
+    return null;
+  }
+};
+
 // ─── moderateContent ─────────────────────────────────────────────────────────
 
 const moderateContent = async (imageUrl) => {
@@ -218,4 +253,4 @@ const deleteFace = async (faceId) => {
     logger.error('deleteFace: error', { faceId, err: err.message });
   }
 };
-module.exports = { detectLabels, indexFace, searchFacesByImage, moderateContent, ensureCollection, deleteFace };
+module.exports = { detectLabels, generateCaption, buildCaptionFromLabels, indexFace, searchFacesByImage, moderateContent, ensureCollection, deleteFace };

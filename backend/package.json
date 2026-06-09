@@ -9,7 +9,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "node prisma/seed.js"
+    "prisma:seed": "node prisma/seed.js",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@aws-sdk/client-rekognition": "^3.600.0",
@@ -38,7 +40,15 @@
     "node-cron": "^3.0.3"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "^3.1.4",
-    "prisma": "^5.16.0"
+    "prisma": "^5.16.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
   }
 }

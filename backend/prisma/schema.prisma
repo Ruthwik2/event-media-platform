@@ -129,6 +129,8 @@ model Media {
   aiCaption     String?
   tags          String[]
   faceIds       String[]
+  flagged          Boolean  @default(false)
+  moderationLabels String[]
   albumId       String
   album         Album       @relation(fields: [albumId], references: [id], onDelete: Cascade)
   uploaderId    String
