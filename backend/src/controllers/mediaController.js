@@ -76,6 +76,37 @@ function canAccessMedia(user, media) {
   if (user.role === 'PHOTOGRAPHER') return media.uploaderId === user.id;
   return false; // VIEWER
 }
+
+/**
+ * Builds the Prisma `where` clause that restricts a media query to only the
+ * items the given user is allowed to see — the same rules getMedia/searchMedia
+ * apply inline, factored out so list-style endpoints (e.g. analytics) can't
+ * accidentally leak private media.
+ *
+ * Returns `null` for ADMIN / CLUB_MEMBER (they see everything → no filter), or
+ * an object suitable for spreading into a Prisma `where`.
+ */
+function mediaVisibilityWhere(user) {
+  if (!user || user.role === 'VIEWER') {
+    // Public media in public albums of public events only.
+    return {
+      visibility: 'PUBLIC',
+      album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } },
+    };
+  }
+  if (user.role === 'PHOTOGRAPHER') {
+    return {
+      OR: [
+        { visibility: 'PUBLIC', album: { visibility: 'PUBLIC', event: { visibility: 'PUBLIC' } } },
+        { album: { event: { creatorId: user.id } } },
+        { album: { collaborators: { some: { userId: user.id } } } },
+        { uploaderId: user.id },
+      ],
+    };
+  }
+  // ADMIN and CLUB_MEMBER: no restriction.
+  return null;
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -929,6 +960,10 @@ const searchMedia = async (req, res) => {
 
 const getAnalytics = async (req, res) => {
   try {
+    // Visibility gate applied to the media lists returned below (counts stay
+    // global — they're aggregate totals, not browsable items).
+    const visibilityWhere = mediaVisibilityWhere(req.user);
+
     const [
       totalMedia, totalEvents, totalAlbums, totalUsers,
       topLiked, recentUploads, mediaByType,
@@ -938,16 +973,22 @@ const getAnalytics = async (req, res) => {
       prisma.album.count(),
       prisma.user.count(),
       prisma.media.findMany({
+        // Never surface media the caller isn't allowed to see (private media,
+        // or media in private albums/events) in analytics-driven UI.
+        where: { ...(visibilityWhere || {}) },
         orderBy: { likes: { _count: 'desc' } },
-        take: 5,
+        // Fetch a deeper pool than the homepage shows in any single section, so
+        // the hero collage and the Trending grid can draw non-overlapping slices.
+        take: 12,
         include: {
           _count: { select: { likes: true } },
           uploader: { select: { username: true } },
         },
       }),
       prisma.media.findMany({
+        where: { ...(visibilityWhere || {}) },
         orderBy: { createdAt: 'desc' },
-        take: 5,
+        take: 8,
         select: { id: true, thumbnailUrl: true, url: true, originalName: true, createdAt: true },
       }),
       prisma.media.groupBy({
