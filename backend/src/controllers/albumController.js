@@ -171,15 +171,23 @@ return res.status(404).json({ success: false, message: 'Album not found' });
 }
 const hasEventAccess = await hasApprovedEventAccess(req.user, album.event?.id);
 if (!canAccessAlbum(req.user, album, hasEventAccess)) {
-// For photographers, also return their current request status
+// A PUBLIC album is only ever blocked by a PRIVATE parent event, so the
+// photographer must request EVENT access (the album itself has nothing to
+// grant). A PRIVATE album is gated at the album level → request ALBUM access.
+// Tell the client which target to request against so it doesn't POST an album
+// request for a public album and get "Album is not private" back.
+const accessLevel = album.visibility === 'PUBLIC' ? 'EVENT' : 'ALBUM';
+const targetId = accessLevel === 'EVENT' ? album.event?.id : album.id;
+// For photographers, also return their current request status (for the matching
+// target) so the UI can show pending/rejected state.
 let requestStatus = null;
-if (req.user && req.user.role === 'PHOTOGRAPHER') {
+if (req.user && req.user.role === 'PHOTOGRAPHER' && targetId) {
 const existingRequest = await prisma.accessRequest.findUnique({
 where: {
 userId_targetId_type: {
 userId: req.user.id,
-targetId: album.id,
-type: 'ALBUM',
+targetId,
+type: accessLevel,
 },
 },
 });
@@ -188,6 +196,8 @@ requestStatus = existingRequest?.status || null;
 return res.status(403).json({
 success: false,
 message: 'Access denied',
+accessLevel,
+eventId: album.event?.id,
 requestStatus,
 });
 }

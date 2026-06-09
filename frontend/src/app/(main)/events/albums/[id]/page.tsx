@@ -38,6 +38,10 @@ export default function AlbumDetailPage() {
   const [deletingAlbum, setDeletingAlbum] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
+  // Whether the block is at the EVENT level (public album in a private event) or
+  // the ALBUM level (private album) — decides what we request access to.
+  const [accessLevel, setAccessLevel] = useState<'EVENT' | 'ALBUM'>('ALBUM');
+  const [accessEventId, setAccessEventId] = useState<string | null>(null);
   const [requesting, setRequesting] = useState(false);
 
 
@@ -70,6 +74,8 @@ export default function AlbumDetailPage() {
       if (error.response?.status === 403) {
         setAccessDenied(true);
         setRequestStatus(error.response?.data?.requestStatus ?? null);
+        setAccessLevel(error.response?.data?.accessLevel === 'EVENT' ? 'EVENT' : 'ALBUM');
+        setAccessEventId(error.response?.data?.eventId ?? null);
       } else if (error.response?.status === 404) {
         toast.error('Album not found');
         router.push('/events');
@@ -95,7 +101,14 @@ export default function AlbumDetailPage() {
   const handleRequestAccess = async () => {
     setRequesting(true);
     try {
-      await api.post(`/albums/${id}/request-access`);
+      // Public album blocked by a private event → request EVENT access; a private
+      // album → request ALBUM access. (Posting an album request for a public album
+      // fails with "Album is not private".)
+      if (accessLevel === 'EVENT' && accessEventId) {
+        await api.post(`/events/${accessEventId}/request-access`);
+      } else {
+        await api.post(`/albums/${id}/request-access`);
+      }
       toast.success('Access request sent to Admin!');
       setRequestStatus('PENDING');
     } catch (err: any) {
@@ -169,7 +182,9 @@ export default function AlbumDetailPage() {
           </div>
           <h1 className="text-2xl font-bold mb-2">Access Restricted</h1>
           <p className="text-slate-400 max-w-sm mb-6 text-sm leading-relaxed">
-            This album is private. You do not have permission to view its contents.
+            {accessLevel === 'EVENT'
+              ? 'This album belongs to a private event. Request access to the event to view its public albums.'
+              : 'This album is private. You do not have permission to view its contents.'}
           </p>
           {user?.role === 'PHOTOGRAPHER' && (
             <>
