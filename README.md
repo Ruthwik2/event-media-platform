@@ -2,8 +2,6 @@
 
 A full-stack app for managing event photography. You organize photos and videos into events and albums, share them with guests over QR codes or token links, and people can find the pictures they show up in using face recognition (AWS Rekognition). I built this for a club setting where one team shoots a lot of events and everyone wants their own photos back without scrolling through a thousand images.
 
-There's a diagram and a walkthrough of the main request flows in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) if you want the big picture before digging into the code.
-
 ## What it does
 
 Events hold albums, albums hold media, and visibility (public or private) is set per event and per album. Photographers and admins upload in bulk — up to 200 files in one go — and `sharp` handles thumbnails and compression on the way in.
@@ -196,7 +194,7 @@ The Jest suite is small and deliberately doesn't touch the database or AWS. It c
 
 ## Data model
 
-The full reference, with an ER diagram and every table, is in [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md). The source of truth is [backend/prisma/schema.prisma](backend/prisma/schema.prisma). The short version of the core entities:
+The source of truth is [backend/prisma/schema.prisma](backend/prisma/schema.prisma). The short version of the core entities:
 
 - **User** — auth, role, profile, privacy flags, reference selfie and `faceId`.
 - **Event** has many **Albums**; **Album** has many **Media** and can have collaborators, a QR code, and a share token.
@@ -204,7 +202,3 @@ The full reference, with an ER diagram and every table, is in [docs/DATABASE_SCH
 - **Like**, **Comment** (threaded via `parentId`), **Favourite**, and **Download** make up the engagement side.
 - **MediaTag** is a user tag with an optional `x`/`y` position.
 - **Notification**, **AccessRequest** (photographer requests for private events/albums), and a single-row **ClubSettings** round it out.
-
-## License
-
-There's no license file in here yet. Add one (MIT or whatever fits) before distributing this publicly.
