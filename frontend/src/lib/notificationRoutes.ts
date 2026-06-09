@@ -9,7 +9,7 @@ export const getNotificationHref = (
   }
 
   if (notification.type === 'ACCESS_REQUEST' && user?.role === 'ADMIN') {
-    return '/admin/access-requests';
+    return '/admin/access-requests?tab=media';
   }
 
   if (

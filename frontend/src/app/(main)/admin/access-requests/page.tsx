@@ -36,6 +36,12 @@ export default function AccessRequestsPage() {
   const router = useRouter();
   const [tab, setTab] = useState<TabType>('members');
 
+  // Open the tab requested via ?tab= (e.g. notifications link straight to media access)
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('tab');
+    if (requested === 'media' || requested === 'members') setTab(requested);
+  }, []);
+
   // Media access state
   const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
