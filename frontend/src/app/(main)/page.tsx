@@ -99,26 +99,26 @@ export default function HomePage() {
           }}
         />
 
-        <div className="relative z-10 grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
+        <div className="relative z-10 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-center">
           {/* Left — greeting + title + CTAs */}
           <div>
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-100 text-primary-700 text-sm font-semibold mb-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-100 text-primary-700 text-sm font-semibold mb-5">
               <Sparkles className="w-4 h-4" />
               {user ? `Welcome back, ${firstName}` : 'Your club’s media hub'}
             </div>
 
             {loading ? (
-              <div className="h-14 md:h-20 w-72 skeleton mb-3" />
+              <div className="h-14 md:h-20 w-72 skeleton mb-4" />
             ) : (
-              <motion.div {...fadeUp(0.05)} className="flex items-center gap-3 mb-3 flex-wrap">
-                <h1 className="hero-title text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-none">
+              <motion.div {...fadeUp(0.05)} className="flex items-center gap-3 mb-4 flex-wrap">
+                <h1 className="hero-title text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[0.95]">
                   {clubName || 'Event Media'}
                 </h1>
                 {isAdmin && (
                   <button
                     onClick={() => setShowClubSetup(true)}
                     title={clubName ? 'Edit club name' : 'Set club name'}
-                    className="p-2 rounded-xl text-slate-400 hover:text-primary-600 hover:bg-[#f0ede8] transition-colors flex-shrink-0"
+                    className="p-2 rounded-xl text-slate-500 hover:text-primary-600 hover:bg-[#f0ede8] transition-colors flex-shrink-0"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
@@ -126,10 +126,10 @@ export default function HomePage() {
               </motion.div>
             )}
 
-            <p className="hero-subtitle text-slate-500 text-base md:text-lg mb-7 max-w-md">
+            <p className="hero-subtitle text-base md:text-lg mb-7 max-w-lg leading-relaxed">
               {user
-                ? "Here's what's new across your club's events and galleries."
-                : 'A centralized platform for club & event photos and videos.'}
+                ? "Here's what's new across your club's events and galleries — relive the moments, find your photos, and keep everyone connected."
+                : 'A centralized platform for club & event photos and videos — every moment, organized and searchable in one place.'}
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -151,32 +151,57 @@ export default function HomePage() {
                 </>
               )}
             </div>
+
+            {/* Quick highlights — fill the left column so the hero doesn't feel empty */}
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-600">
+              <span className="inline-flex items-center gap-2">
+                <ScanFace className="w-4 h-4 text-primary-600" />
+                AI photo finder
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <FolderOpen className="w-4 h-4 text-primary-600" />
+                Organized albums
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Heart className="w-4 h-4 text-primary-600" />
+                Like &amp; save favourites
+              </span>
+            </div>
           </div>
 
           {/* Right — live stat panel (fills the previously-empty hero space) */}
           <motion.div
             {...fadeUp(0.12)}
-            className="hidden lg:block rounded-2xl border border-[#e7e3dd] bg-white/70 backdrop-blur-sm p-5 shadow-sm"
+            className="hidden lg:block rounded-2xl border border-[#e7e3dd] bg-gradient-to-br from-white to-[#f7f5f1] p-6 shadow-[0_8px_30px_rgba(42,39,36,0.08)] ring-1 ring-black/[0.02]"
           >
             <div className="flex items-center justify-between mb-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">At a glance</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-600">At a glance</p>
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-primary-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
+                Live
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {heroStats.map(({ label, value, icon: Icon }) => (
-                <div key={label} className="rounded-xl border border-[#e7e3dd] bg-white p-3">
+                <div
+                  key={label}
+                  className="rounded-xl border border-[#e7e3dd] bg-white p-3.5 shadow-sm transition-shadow hover:shadow-md"
+                >
                   <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold tracking-tight">
+                    <span className="text-2xl font-extrabold tracking-tight text-[#2a2724]">
                       {loading ? '—' : value.toLocaleString()}
                     </span>
-                    <Icon className="w-4 h-4 text-primary-600" />
+                    <span className="w-8 h-8 rounded-lg bg-primary-50 border border-primary-100 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-primary-600" />
+                    </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 font-medium">{label}</p>
+                  <p className="text-xs text-slate-600 mt-1 font-medium">{label}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-3 flex items-center gap-2 rounded-xl bg-primary-50 border border-primary-100 px-3 py-2">
+            <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-primary-50 border border-primary-100 px-3.5 py-2.5">
               <ScanFace className="w-4 h-4 text-primary-600 flex-shrink-0" />
-              <p className="text-[11px] text-primary-700 font-medium leading-tight">
+              <p className="text-xs text-primary-700 font-medium leading-tight">
                 AI face recognition finds your photos automatically
               </p>
             </div>

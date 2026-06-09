@@ -366,11 +366,11 @@
      to palette B ink + muted tones (WCAG AA on #faf9f7 / #fff). */
   html[data-theme='light'] .text-slate-300,
   html[data-theme='light'] .text-slate-400 {
-    color: #6b6560;
+    color: #5f5953;
   }
 
   html[data-theme='light'] .text-slate-500 {
-    color: #574f49;
+    color: #4d463f;
   }
 
   html[data-theme='light'] .text-white,
@@ -447,7 +447,7 @@
   }
 
   html[data-theme='light'] .hero-subtitle {
-    color: #6b6560;
+    color: #524b44;
   }
 
   .gradient-text {

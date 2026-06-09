@@ -108,16 +108,16 @@ export default function Navbar() {
 
           {/* Search */}
           <form onSubmit={handleSearch} className="hidden md:flex items-center">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" />
+            <div className="relative group">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary-600 transition-colors" />
               <input
                 type="text"
                 placeholder="Search media, events…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white border border-[#ddd8d0] hover:border-[#cfc9be] focus:border-primary-600
-                           text-sm text-[#4a4540] rounded-xl pl-9 pr-4 py-2 w-44 focus:w-60 transition-all duration-300
-                           focus:outline-none focus:ring-2 focus:ring-primary-500/20 placeholder-slate-400"
+                className="bg-[#f4f1ec] border border-[#e0dbd2] hover:bg-white hover:border-[#cfc9be] focus:bg-white focus:border-primary-600
+                           text-sm text-[#3a3631] rounded-full pl-10 pr-4 py-2 w-56 focus:w-72 transition-all duration-300
+                           focus:outline-none focus:ring-2 focus:ring-primary-500/25 placeholder-slate-500 shadow-inner"
               />
             </div>
           </form>
