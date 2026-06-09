@@ -220,7 +220,7 @@ Health check: `GET /health`.
 
 ---
 
-## Testing & CI
+## Testing
 
 Backend unit tests run with **Jest** and cover the access-control logic (role-based
 album/media visibility) and the AI caption synthesis — no database or AWS connection
@@ -230,13 +230,6 @@ required, so they run fast and offline:
 cd backend
 npm test
 ```
-
-A **GitHub Actions** pipeline ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
-runs on every push/PR to `main` and:
-
-1. **Backend** — spins up a PostgreSQL service, applies Prisma migrations (`migrate deploy`), and runs the Jest suite.
-2. **Frontend** — lints and builds the Next.js app.
-3. **Docker** — builds both the backend and frontend images (after the above pass).
 
 ---
 
