@@ -436,7 +436,7 @@ const FEED_CACHE_KEY = 'gallery-feed-cache';
 const RETURN_MARKER_KEY = 'gallery-return';
 
 /** Call right before navigating away from the gallery so a later return restores scroll. */
-export function markGalleryReturn() {
+function markGalleryReturn() {
   try { sessionStorage.setItem(RETURN_MARKER_KEY, '1'); } catch { /* ignore */ }
 }
 
