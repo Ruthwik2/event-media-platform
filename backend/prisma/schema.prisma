@@ -5,7 +5,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Pooled connection (Neon -pooler host) — used by the app at runtime.
   url      = env("DATABASE_URL")
+  // Direct, non-pooled connection — used by `prisma migrate deploy`. Migrations
+  // take a Postgres advisory lock, which can't be held over Neon's PgBouncer
+  // pooler (causes P1002 "advisory lock timeout"), so they must run direct.
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
