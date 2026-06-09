@@ -168,6 +168,10 @@ export default function EventDetailPage() {
   if (!event) return null;
 
   const isOwner = user?.id === (event.creator as any)?.id || user?.role === 'ADMIN';
+  // Reaching this point means the user can view the event (the accessDenied
+  // branch above already filters everyone else out), so any logged-in non-VIEWER
+  // can share its QR/link. Guest-access controls stay owner-only via canManage.
+  const canShare = !!user && user.role !== 'VIEWER';
   const canCreateAlbum = user && ['ADMIN', 'PHOTOGRAPHER'].includes(user.role);
   const canDeleteAlbum = (_album: Album) =>
     user?.role === 'ADMIN' || user?.id === (event.creator as any)?.id;
@@ -248,18 +252,20 @@ export default function EventDetailPage() {
             </div>
 
             {/* Action buttons */}
-            {isOwner && (
+            {canShare && (
               <div className="flex-shrink-0 mt-1 flex items-center gap-2">
-                {/* Edit button */}
-                <button
-                  onClick={() => setShowEditEvent(true)}
-                  title="Edit event details"
-                  className="p-2 hover:bg-primary-600/20 border border-[#e7e3dd]/80 hover:border-primary-500/50 text-slate-500 hover:text-primary-600 rounded-xl transition-all"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
+                {/* Edit button — owner/admin only */}
+                {isOwner && (
+                  <button
+                    onClick={() => setShowEditEvent(true)}
+                    title="Edit event details"
+                    className="p-2 hover:bg-primary-600/20 border border-[#e7e3dd]/80 hover:border-primary-500/50 text-slate-500 hover:text-primary-600 rounded-xl transition-all"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
 
-                {/* Share button */}
+                {/* Share button — anyone who can view the event */}
                 <button
                   onClick={() => setShowShare(true)}
                   title="Share event"
@@ -268,8 +274,8 @@ export default function EventDetailPage() {
                   <QrCode className="w-4 h-4" />
                 </button>
 
-                {/* Delete button */}
-                {confirmDeleteEvent ? (
+                {/* Delete button — owner/admin only */}
+                {isOwner && (confirmDeleteEvent ? (
                   <div className="flex items-center gap-2 bg-white rounded-xl p-2 border border-red-200 shadow-lg">
                     <span className="text-xs text-red-600 px-1 font-medium">Delete event?</span>
                     <button
@@ -293,7 +299,7 @@ export default function EventDetailPage() {
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                )}
+                ))}
               </div>
             )}
           </div>

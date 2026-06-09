@@ -661,6 +661,7 @@ const getFavourites = async (req, res) => {
             include: {
               uploader: { select: { id: true, username: true, fullName: true, avatar: true } },
               _count: { select: { likes: true, comments: true } },
+              likes: { where: { userId: req.user.id }, select: { id: true } },
             },
           },
         },
@@ -671,9 +672,17 @@ const getFavourites = async (req, res) => {
       prisma.favourite.count({ where: { userId: req.user.id } }),
     ]);
 
+    // Every item here is, by definition, one of the caller's favourites — so
+    // tag each with isFavourited:true (and the per-user isLiked) so the
+    // lightbox opened from this page shows the bookmark/heart already filled.
     res.json({
       success: true,
-      data: favourites.map(f => f.media),
+      data: favourites.map(f => ({
+        ...f.media,
+        isLiked: f.media.likes?.length > 0,
+        isFavourited: true,
+        likes: undefined,
+      })),
       pagination: { total, page: parseInt(page), limit: parseInt(limit) },
     });
   } catch (error) {

@@ -22,6 +22,12 @@ export default function EventCard({ event }: Props) {
     isPrivate &&
     user?.role === 'PHOTOGRAPHER' &&
     user?.id !== (event.creator as any)?.id;
+  // Anyone who can see the event (admins, photographers, club members) can share
+  // its QR/link. VIEWERs and photographers still locked out of a private event
+  // (showRequestHint) don't get the button. Guest-access controls stay owner-only
+  // via canManage below.
+  const canShare =
+    isOwner || (!!user && user.role !== 'VIEWER' && !showRequestHint);
 
   return (
     <>
@@ -64,8 +70,8 @@ export default function EventCard({ event }: Props) {
               </div>
             )}
 
-            {/* QR Share button — visible on hover for owners/admins */}
-            {isOwner && (
+            {/* QR Share button — visible on hover for anyone who can access the event */}
+            {canShare && (
               <button
                 onClick={(e) => {
                   e.preventDefault();

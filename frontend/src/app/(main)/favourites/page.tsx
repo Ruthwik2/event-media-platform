@@ -53,7 +53,7 @@ export default function FavouritesPage() {
         <div className="text-center py-16 card">
           <Heart className="w-16 h-16 text-slate-600 mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">No favourites yet</h3>
-          <p className="text-slate-400">Like media to see them here</p>
+          <p className="text-slate-400">Save media to see them here</p>
         </div>
       )}
 

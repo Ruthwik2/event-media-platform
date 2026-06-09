@@ -61,9 +61,13 @@ function Avatar({ src, name, size = 'md' }: { src?: string; name?: string; size?
 interface PostProps {
   media: Media;
   onDelete: (id: string) => void;
+  // Lift favourite state to the parent so the persisted feed cache stays in
+  // sync — otherwise revisiting the gallery (which restores from cache without
+  // refetching) shows a freshly-favourited post with an uncoloured bookmark.
+  onToggleFavourite: (id: string, favourited: boolean) => void;
 }
 
-function InstagramPost({ media, onDelete }: PostProps) {
+function InstagramPost({ media, onDelete, onToggleFavourite }: PostProps) {
   const { user } = useAuthStore();
   const isVideo = media.mediaType === 'VIDEO';
   const [imgError, setImgError] = useState(false);
@@ -122,12 +126,15 @@ function InstagramPost({ media, onDelete }: PostProps) {
   const handleSave = async () => {
     if (!user) { toast.error('Please login to save'); return; }
     const wasSaved = saved;
-    setSaved(!wasSaved);
+    const next = !wasSaved;
+    setSaved(next);
+    onToggleFavourite(media.id, next);
     try {
       await api.post(`/media/${media.id}/favourite`);
-      toast.success(wasSaved ? 'Removed from favourites' : 'Added to favourites');
+      toast.success(next ? 'Added to favourites' : 'Removed from favourites');
     } catch {
       setSaved(wasSaved);
+      onToggleFavourite(media.id, wasSaved);
       toast.error('Failed to update favourites');
     }
   };
@@ -712,6 +719,12 @@ export default function GalleryPage() {
     fetchMedia(next);
   };
 
+  // Mirror a post's favourite state into the feed list so it survives the
+  // sessionStorage cache (the gallery restores from cache without refetching).
+  const handleToggleFavourite = useCallback((id: string, favourited: boolean) => {
+    setMedia((prev) => prev.map((m) => (m.id === id ? { ...m, isFavourited: favourited } : m)));
+  }, []);
+
   const hasActiveFilters = search || mediaType;
 
   return (
@@ -800,6 +813,7 @@ export default function GalleryPage() {
               <div key={item.id} data-media-id={item.id}>
                 <InstagramPost
                   media={item}
+                  onToggleFavourite={handleToggleFavourite}
                   onDelete={(id) => {
                     setMedia((prev) => prev.filter((m) => m.id !== id));
                     setTotal((t) => t - 1);

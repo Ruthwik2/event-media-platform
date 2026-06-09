@@ -21123,3 +21123,11 @@
 {"level":"info","message":"192.168.65.1 - - [09/Jun/2026:14:08:17 +0000] \"GET /api/media/analytics HTTP/1.1\" 304 - \"http://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","timestamp":"2026-06-09T14:08:17.636Z"}
 {"level":"info","message":"192.168.65.1 - - [09/Jun/2026:14:08:17 +0000] \"GET /api/media?limit=8&sortBy=createdAt&sortOrder=desc HTTP/1.1\" 304 - \"http://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","timestamp":"2026-06-09T14:08:17.641Z"}
 {"level":"info","message":"192.168.65.1 - - [09/Jun/2026:14:08:17 +0000] \"GET /api/media/analytics HTTP/1.1\" 304 - \"http://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36\"","timestamp":"2026-06-09T14:08:17.650Z"}
+{"level":"info","message":"🚀 Server running on port 5000","timestamp":"2026-06-09T17:23:22.989Z"}
+{"level":"info","message":"📡 Environment: development","timestamp":"2026-06-09T17:23:22.995Z"}
+{"level":"info","message":"🌐 Frontend URL: http://localhost:3000","timestamp":"2026-06-09T17:23:22.995Z"}
+{"level":"info","message":"192.168.65.1 - - [09/Jun/2026:17:24:28 +0000] \"POST /api/auth/login HTTP/1.1\" 200 810 \"-\" \"curl/8.7.1\"","timestamp":"2026-06-09T17:24:28.528Z"}
+{"level":"info","message":"192.168.65.1 - - [09/Jun/2026:17:24:28 +0000] \"GET /api/media?limit=1 HTTP/1.1\" 200 1046 \"-\" \"curl/8.7.1\"","timestamp":"2026-06-09T17:24:28.639Z"}
+{"level":"info","message":"192.168.65.1 - - [09/Jun/2026:17:24:28 +0000] \"POST /api/media/c52a09f0-8471-41bc-8c9e-7de3aa6a584e/favourite HTTP/1.1\" 200 34 \"-\" \"curl/8.7.1\"","timestamp":"2026-06-09T17:24:28.655Z"}
+{"level":"info","message":"192.168.65.1 - - [09/Jun/2026:17:24:28 +0000] \"GET /api/media/favourites HTTP/1.1\" 200 998 \"-\" \"curl/8.7.1\"","timestamp":"2026-06-09T17:24:28.670Z"}
+{"level":"info","message":"192.168.65.1 - - [09/Jun/2026:17:24:28 +0000] \"POST /api/media/c52a09f0-8471-41bc-8c9e-7de3aa6a584e/favourite HTTP/1.1\" 200 35 \"-\" \"curl/8.7.1\"","timestamp":"2026-06-09T17:24:28.687Z"}
