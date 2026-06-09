@@ -163,7 +163,7 @@ The health check is `GET /health`, and note it's not under `/api`.
 
 - ADMIN has full control, approves membership and access requests, and owns club settings.
 - PHOTOGRAPHER creates events, uploads and deletes media, and can request access to private events/albums.
-- CLUB_MEMBER views content and does the social stuff: tagging, liking, commenting, favouriting.
+- CLUB_MEMBER views private and public content and does the social stuff: tagging, liking, commenting, favouriting.
 - VIEWER is the default on registration, with read and social access.
 
 ## Scripts
