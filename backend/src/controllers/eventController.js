@@ -109,9 +109,37 @@ take: parseInt(limit),
 }),
 prisma.event.count({ where }),
 ]);
+// Annotate each event with whether THIS photographer can already open it, so the
+// card shows the cover instead of a "request access" lock once they're approved.
+let data = events;
+if (req.user && req.user.role === 'PHOTOGRAPHER') {
+const privateIds = events
+.filter((e) => e.visibility === 'PRIVATE')
+.map((e) => e.id);
+let approvedIds = new Set();
+if (privateIds.length) {
+const approved = await prisma.accessRequest.findMany({
+where: {
+userId: req.user.id,
+type: 'EVENT',
+status: 'APPROVED',
+targetId: { in: privateIds },
+},
+select: { targetId: true },
+});
+approvedIds = new Set(approved.map((r) => r.targetId));
+}
+data = events.map((e) => ({
+...e,
+hasAccess:
+e.visibility === 'PUBLIC' ||
+e.creatorId === req.user.id ||
+approvedIds.has(e.id),
+}));
+}
 res.json({
 success: true,
-data: events,
+data,
 pagination: {
 total,
 page: parseInt(page),

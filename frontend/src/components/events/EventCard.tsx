@@ -18,10 +18,14 @@ export default function EventCard({ event }: Props) {
   const isPrivate = event.visibility === 'PRIVATE';
   const isOwner =
     user?.role === 'ADMIN' || user?.id === (event.creator as any)?.id;
+  // Backend (getEvents) marks events this photographer can already open — once
+  // their event access request is approved, drop the "request access" lock.
+  const hasAccess = (event as any).hasAccess === true;
   const showRequestHint =
     isPrivate &&
     user?.role === 'PHOTOGRAPHER' &&
-    user?.id !== (event.creator as any)?.id;
+    user?.id !== (event.creator as any)?.id &&
+    !hasAccess;
   // Anyone who can see the event (admins, photographers, club members) can share
   // its QR/link. VIEWERs and photographers still locked out of a private event
   // (showRequestHint) don't get the button. Guest-access controls stay owner-only
