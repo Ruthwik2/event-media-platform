@@ -38,12 +38,32 @@ initializeSocket(server);
 
 // Security middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({
-  origin: process.env.FRONTEND_URL?.replace(/\/$/, '') || 'http://localhost:3000',
+
+// Allowed CORS origins. FRONTEND_URL may be a single URL or a comma-separated
+// list (e.g. "https://app.vercel.app,https://www.mydomain.com"); localhost is
+// always allowed for local dev. Trailing slashes are stripped so values copied
+// from a browser bar still match.
+const allowedOrigins = [
+  'http://localhost:3000',
+  ...(process.env.FRONTEND_URL?.split(',') || []),
+]
+  .map((o) => o.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Allow non-browser clients (curl, server-to-server, health checks) that
+    // send no Origin header, plus any explicitly allow-listed origin.
+    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origin ${origin} not allowed by CORS`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-}));
-app.options(/.*/, cors());
+};
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 // Rate limiting
 app.use('/api/', rateLimit({
